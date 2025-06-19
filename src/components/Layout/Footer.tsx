@@ -31,7 +31,7 @@ const Footer: React.FC = () => {
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
               Elevating your mobile experience with premium accessories that combine cutting-edge technology, 
-              exceptional quality stunning design. Your device deserves the best.
+              exceptional quality plus stunning design. Your device deserves the best.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-purple-500 transition-all duration-300">
