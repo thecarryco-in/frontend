@@ -28,7 +28,7 @@ const sendOTPEmail = async (email, otp, name) => {
     await resend.emails.send({
       from: 'The CarryCo <noreply@mobilevault.com>',
       to: email,
-      subject: 'Verify Your Email - MobileVault',
+      subject: 'Verify Your Email - The CarryCo',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
           <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
