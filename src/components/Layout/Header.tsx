@@ -63,7 +63,7 @@ const Header: React.FC = () => {
             </div>
             <div className="hidden sm:block">
               <span className="text-white font-bold text-2xl bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                MobileVault
+                The CarryCo
               </span>
               <div className="text-xs text-gray-400 font-medium">Premium Accessories</div>
             </div>
