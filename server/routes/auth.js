@@ -26,7 +26,7 @@ const generateOTP = () => {
 const sendOTPEmail = async (email, otp, name) => {
   try {
     await resend.emails.send({
-      from: 'MobileVault <noreply@mobilevault.com>',
+      from: 'The CarryCo <noreply@mobilevault.com>',
       to: email,
       subject: 'Verify Your Email - MobileVault',
       html: `
