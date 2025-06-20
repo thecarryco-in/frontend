@@ -117,7 +117,7 @@ const Footer: React.FC = () => {
                   <Mail className="w-5 h-5 text-cyan-400 group-hover:text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-medium">hello@mobilevault.com</p>
+                  <p className="text-white font-medium">thecarryco.in@gmail.com</p>
                   <p className="text-gray-400 text-xs">24/7 Support Available</p>
                 </div>
               </div>
