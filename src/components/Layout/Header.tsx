@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Search, ShoppingCart, User, Menu, X, Heart, Smartphone } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Search, ShoppingCart, User, Menu, X, Heart, Smartphone, LogOut } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { itemCount } = useCart();
+  const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,6 +33,16 @@ const Header: React.FC = () => {
   const isActive = (href: string) => {
     if (href === '/') return location.pathname === '/';
     return location.pathname.startsWith(href);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsUserMenuOpen(false);
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
@@ -96,31 +110,90 @@ const Header: React.FC = () => {
 
           {/* Right Side Icons */}
           <div className="flex items-center space-x-4">
-            <button className="relative p-3 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:bg-white/10 rounded-xl backdrop-blur-sm">
-              <Heart className="w-6 h-6" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                3
-              </span>
-            </button>
-            
-            <Link 
-              to="/cart" 
-              className="relative p-3 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:bg-white/10 rounded-xl backdrop-blur-sm group"
-            >
-              <ShoppingCart className="w-6 h-6" />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
-                  {itemCount}
-                </span>
-              )}
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <button className="relative p-3 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:bg-white/10 rounded-xl backdrop-blur-sm">
+                  <Heart className="w-6 h-6" />
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                    {user?.wishlist?.length || 0}
+                  </span>
+                </button>
+                
+                <Link 
+                  to="/cart" 
+                  className="relative p-3 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:bg-white/10 rounded-xl backdrop-blur-sm group"
+                >
+                  <ShoppingCart className="w-6 h-6" />
+                  {itemCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
+                      {itemCount}
+                    </span>
+                  )}
+                </Link>
 
-            <Link 
-              to="/dashboard" 
-              className="p-3 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:bg-white/10 rounded-xl backdrop-blur-sm"
-            >
-              <User className="w-6 h-6" />
-            </Link>
+                {/* User Menu */}
+                <div className="relative">
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center space-x-2 p-2 text-gray-300 hover:text-white transition-all duration-200 hover:bg-white/10 rounded-xl backdrop-blur-sm"
+                  >
+                    {user?.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
+                        className="w-8 h-8 rounded-full border-2 border-purple-400"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-white" />
+                      </div>
+                    )}
+                    <span className="hidden sm:block font-medium">{user?.name}</span>
+                  </button>
+
+                  {/* User Dropdown */}
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-slate-800/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl py-2 z-50">
+                      <div className="px-4 py-3 border-b border-white/10">
+                        <p className="text-white font-semibold">{user?.name}</p>
+                        <p className="text-gray-400 text-sm">{user?.email}</p>
+                        <p className="text-purple-400 text-xs font-medium mt-1">{user?.memberStatus} Member</p>
+                      </div>
+                      <Link
+                        to="/dashboard"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                      >
+                        <User className="w-5 h-5" />
+                        <span>Dashboard</span>
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
+                      >
+                        <LogOut className="w-5 h-5" />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Link
+                  to="/login"
+                  className="px-6 py-2 text-gray-300 hover:text-white transition-colors duration-200 font-medium"
+                >
+                  Login
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            )}
 
             {/* Mobile Menu Button */}
             <button
