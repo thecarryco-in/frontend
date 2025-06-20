@@ -57,7 +57,7 @@ const Login: React.FC = () => {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent mb-2">
               Welcome Back
             </h1>
-            <p className="text-gray-400">Sign in to your MobileVault account</p>
+            <p className="text-gray-400">Sign in to your The CarryCo account</p>
           </div>
 
           {/* Error Message */}
