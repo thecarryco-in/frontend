@@ -11,10 +11,12 @@ import About from './pages/About';
 import Cart from './pages/Cart';
 import Wishlist from './pages/Wishlist';
 import Dashboard from './pages/Dashboard';
+import AdminPanel from './pages/AdminPanel';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import VerifyOTP from './components/Auth/VerifyOTP';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
+import AdminRoute from './components/Auth/AdminRoute';
 
 // Component to conditionally render Header and Footer
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -69,6 +71,14 @@ function App() {
                     <ProtectedRoute>
                       <Dashboard />
                     </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <AdminRoute>
+                      <AdminPanel />
+                    </AdminRoute>
                   } 
                 />
               </Routes>

@@ -2,6 +2,7 @@ import express from 'express';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { upload, deleteImage, getPublicIdFromUrl } from '../config/cloudinary.js';
 
 const router = express.Router();
 
@@ -17,6 +18,67 @@ const requireAdmin = async (req, res, next) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+// Upload single image
+router.post('/upload-image', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    res.status(200).json({
+      message: 'Image uploaded successfully',
+      imageUrl: req.file.path,
+      publicId: req.file.filename
+    });
+  } catch (error) {
+    console.error('Image upload error:', error);
+    res.status(500).json({ message: 'Failed to upload image' });
+  }
+});
+
+// Upload multiple images
+router.post('/upload-images', authenticateToken, requireAdmin, upload.array('images', 5), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'No image files provided' });
+    }
+
+    const uploadedImages = req.files.map(file => ({
+      url: file.path,
+      publicId: file.filename
+    }));
+
+    res.status(200).json({
+      message: 'Images uploaded successfully',
+      images: uploadedImages
+    });
+  } catch (error) {
+    console.error('Images upload error:', error);
+    res.status(500).json({ message: 'Failed to upload images' });
+  }
+});
+
+// Delete image from Cloudinary
+router.delete('/delete-image', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    
+    if (!imageUrl) {
+      return res.status(400).json({ message: 'Image URL is required' });
+    }
+
+    const publicId = getPublicIdFromUrl(imageUrl);
+    if (publicId) {
+      await deleteImage(publicId);
+    }
+
+    res.status(200).json({ message: 'Image deleted successfully' });
+  } catch (error) {
+    console.error('Image deletion error:', error);
+    res.status(500).json({ message: 'Failed to delete image' });
+  }
+});
 
 // Get all products (admin)
 router.get('/products', authenticateToken, requireAdmin, async (req, res) => {
@@ -72,6 +134,29 @@ router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
       }
     }
 
+    // Ensure arrays are properly formatted
+    if (typeof productData.features === 'string') {
+      productData.features = productData.features.split(',').map(f => f.trim()).filter(f => f);
+    }
+    if (typeof productData.compatibility === 'string') {
+      productData.compatibility = productData.compatibility.split(',').map(c => c.trim()).filter(c => c);
+    }
+    if (typeof productData.tags === 'string') {
+      productData.tags = productData.tags.split(',').map(t => t.trim()).filter(t => t);
+    }
+    if (typeof productData.images === 'string') {
+      productData.images = productData.images.split(',').map(i => i.trim()).filter(i => i);
+    }
+
+    // Parse coloredTags if it's a string
+    if (typeof productData.coloredTags === 'string') {
+      try {
+        productData.coloredTags = JSON.parse(productData.coloredTags);
+      } catch (e) {
+        productData.coloredTags = [];
+      }
+    }
+
     const product = new Product(productData);
     await product.save();
 
@@ -88,9 +173,34 @@ router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
 // Update product (admin)
 router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
+    const productData = req.body;
+
+    // Ensure arrays are properly formatted
+    if (typeof productData.features === 'string') {
+      productData.features = productData.features.split(',').map(f => f.trim()).filter(f => f);
+    }
+    if (typeof productData.compatibility === 'string') {
+      productData.compatibility = productData.compatibility.split(',').map(c => c.trim()).filter(c => c);
+    }
+    if (typeof productData.tags === 'string') {
+      productData.tags = productData.tags.split(',').map(t => t.trim()).filter(t => t);
+    }
+    if (typeof productData.images === 'string') {
+      productData.images = productData.images.split(',').map(i => i.trim()).filter(i => i);
+    }
+
+    // Parse coloredTags if it's a string
+    if (typeof productData.coloredTags === 'string') {
+      try {
+        productData.coloredTags = JSON.parse(productData.coloredTags);
+      } catch (e) {
+        productData.coloredTags = [];
+      }
+    }
+
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      productData,
       { new: true, runValidators: true }
     );
 
@@ -111,11 +221,39 @@ router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
 // Delete product (admin)
 router.delete('/products/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const product = await Product.findByIdAndDelete(req.params.id);
+    const product = await Product.findById(req.params.id);
 
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
+
+    // Delete main image from Cloudinary
+    if (product.image) {
+      const publicId = getPublicIdFromUrl(product.image);
+      if (publicId) {
+        try {
+          await deleteImage(publicId);
+        } catch (error) {
+          console.error('Error deleting main image:', error);
+        }
+      }
+    }
+
+    // Delete additional images from Cloudinary
+    if (product.images && product.images.length > 0) {
+      for (const imageUrl of product.images) {
+        const publicId = getPublicIdFromUrl(imageUrl);
+        if (publicId) {
+          try {
+            await deleteImage(publicId);
+          } catch (error) {
+            console.error('Error deleting additional image:', error);
+          }
+        }
+      }
+    }
+
+    await Product.findByIdAndDelete(req.params.id);
 
     res.status(200).json({ message: 'Product deleted successfully' });
   } catch (error) {
