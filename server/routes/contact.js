@@ -24,7 +24,7 @@ const requireAdmin = async (req, res, next) => {
 const sendAdminNotification = async (contact) => {
   try {
     await resend.emails.send({
-      from: 'The CarryCo <noreply@thecarryco.com>',
+      from: 'The CarryCo <${process.env.RESEND_SENDER_EMAIL}>',
       to: process.env.ADMIN_EMAIL,
       subject: `New Contact Form Submission - ${contact.queryType.toUpperCase()}`,
       html: `
@@ -63,7 +63,7 @@ const sendAdminNotification = async (contact) => {
 const sendUserConfirmation = async (contact) => {
   try {
     await resend.emails.send({
-      from: 'The CarryCo <noreply@thecarryco.com>',
+      from: 'The CarryCo <${process.env.RESEND_SENDER_EMAIL}>',
       to: contact.email,
       subject: 'Thank you for contacting The CarryCo',
       html: `
