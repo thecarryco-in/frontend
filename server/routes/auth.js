@@ -6,13 +6,12 @@ import { Resend } from 'resend';
 import User from '../models/User.js';
 import OTP from '../models/OTP.js';
 import { authenticateToken } from '../middleware/auth.js';
-
 const router = express.Router();
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Generate JWT token
 const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET || 'your-jwt-secret', {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: '7d'
   });
 };
@@ -26,7 +25,7 @@ const generateOTP = () => {
 const sendOTPEmail = async (email, otp, name) => {
   try {
     await resend.emails.send({
-      from: 'The CarryCo <noreply@thecarryco.com>',
+      from: 'The CarryCo <${process.env.RESEND_SENDER_EMAIL}>',
       to: email,
       subject: 'Verify Your Email - The CarryCo',
       html: `
