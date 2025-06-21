@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, User, Menu, X, Heart, Smartphone, LogOut } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Heart, Smartphone, LogOut } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { itemCount } = useCart();
@@ -86,27 +85,6 @@ const Header: React.FC = () => {
               </Link>
             ))}
           </nav>
-
-          {/* Search Bar */}
-          <div className={`hidden md:flex items-center transition-all duration-500 ${
-            isSearchOpen ? 'w-80' : 'w-12'
-          }`}>
-            <div className="relative flex items-center w-full">
-              <input
-                type="text"
-                placeholder="Search premium accessories..."
-                className={`bg-white/10 backdrop-blur-md text-white rounded-2xl px-6 py-3 pl-12 text-sm border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-500 placeholder-gray-400 ${
-                  isSearchOpen ? 'w-full opacity-100' : 'w-0 opacity-0'
-                }`}
-              />
-              <button 
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="absolute left-4 w-6 h-6 text-gray-400 hover:text-purple-400 transition-colors duration-200"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
 
           {/* Right Side Icons */}
           <div className="flex items-center space-x-4">
@@ -222,16 +200,6 @@ const Header: React.FC = () => {
                 {item.name}
               </Link>
             ))}
-            <div className="px-6 py-4">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  className="w-full bg-white/10 backdrop-blur-md text-white rounded-2xl px-6 py-3 pl-12 text-sm border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
-                />
-                <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-              </div>
-            </div>
           </nav>
         </div>
       </div>
