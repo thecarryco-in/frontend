@@ -15,6 +15,13 @@ export interface Product {
   reviews: number;
   isNew?: boolean;
   isFeatured?: boolean;
+  isOnSale?: boolean;
+  isTopRated?: boolean;
+  tags?: string[];
+  coloredTags?: {
+    label: string;
+    color: 'green' | 'red' | 'yellow' | 'blue' | 'purple' | 'pink';
+  }[];
 }
 
 export interface CartItem {
@@ -28,8 +35,12 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
-  orders: Order[];
-  wishlist: string[];
+  phone?: string;
+  isVerified: boolean;
+  role: 'user' | 'admin';
+  totalSpent: number;
+  memberStatus: 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
+  joinDate: string;
 }
 
 export interface Order {

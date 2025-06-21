@@ -7,6 +7,8 @@ import session from 'express-session';
 import passport from 'passport';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
+import productRoutes from './routes/products.js';
+import adminRoutes from './routes/admin.js';
 import './config/passport.js';
 
 dotenv.config();
@@ -41,6 +43,8 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mobile-st
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import axios from 'axios';
-import Cookies from 'js-cookie';
 
 interface User {
   id: string;
@@ -9,11 +8,10 @@ interface User {
   avatar: string;
   phone: string;
   isVerified: boolean;
-  wishlist: string[];
-  orders: any[];
   totalSpent: number;
   memberStatus: string;
   joinDate: string;
+  role: string;
 }
 
 interface AuthState {
@@ -29,8 +27,6 @@ interface AuthContextType extends AuthState {
   resendOTP: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
-  addToWishlist: (productId: string) => Promise<void>;
-  removeFromWishlist: (productId: string) => Promise<void>;
   checkAuth: () => Promise<void>;
 }
 
@@ -40,8 +36,7 @@ type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_USER'; payload: User | null }
   | { type: 'SET_AUTHENTICATED'; payload: boolean }
-  | { type: 'UPDATE_USER'; payload: Partial<User> }
-  | { type: 'UPDATE_WISHLIST'; payload: string[] };
+  | { type: 'UPDATE_USER'; payload: Partial<User> };
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
@@ -60,11 +55,6 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
       return { 
         ...state, 
         user: state.user ? { ...state.user, ...action.payload } : null 
-      };
-    case 'UPDATE_WISHLIST':
-      return {
-        ...state,
-        user: state.user ? { ...state.user, wishlist: action.payload } : null
       };
     default:
       return state;
@@ -147,24 +137,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const addToWishlist = async (productId: string) => {
-    try {
-      const response = await axios.post(`/user/wishlist/${productId}`);
-      dispatch({ type: 'UPDATE_WISHLIST', payload: response.data.wishlist });
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to add to wishlist');
-    }
-  };
-
-  const removeFromWishlist = async (productId: string) => {
-    try {
-      const response = await axios.delete(`/user/wishlist/${productId}`);
-      dispatch({ type: 'UPDATE_WISHLIST', payload: response.data.wishlist });
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to remove from wishlist');
-    }
-  };
-
   useEffect(() => {
     checkAuth();
   }, []);
@@ -178,8 +150,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       resendOTP,
       logout,
       updateProfile,
-      addToWishlist,
-      removeFromWishlist,
       checkAuth,
     }}>
       {children}

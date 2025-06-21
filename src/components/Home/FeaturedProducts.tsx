@@ -1,10 +1,37 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles, TrendingUp } from 'lucide-react';
+import { ArrowRight, Sparkles, TrendingUp, Loader } from 'lucide-react';
 import ProductCard from '../Product/ProductCard';
-import { featuredProducts } from '../../data/products';
+import { useFeaturedProducts } from '../../hooks/useProducts';
 
 const FeaturedProducts: React.FC = () => {
+  const { products, loading, error } = useFeaturedProducts();
+
+  if (loading) {
+    return (
+      <section className="py-24 bg-gradient-to-b from-slate-900 to-gray-900 relative overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center">
+            <Loader className="w-12 h-12 text-purple-400 animate-spin mx-auto mb-4" />
+            <p className="text-white text-lg">Loading featured products...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="py-24 bg-gradient-to-b from-slate-900 to-gray-900 relative overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center">
+            <p className="text-red-400 text-lg">{error}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-24 bg-gradient-to-b from-slate-900 to-gray-900 relative overflow-hidden">
       {/* Background Elements */}
@@ -35,17 +62,23 @@ const FeaturedProducts: React.FC = () => {
         </div>
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          {featuredProducts.map((product, index) => (
-            <div 
-              key={product.id} 
-              className="transform hover:scale-105 transition-all duration-500"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <ProductCard product={product} />
-            </div>
-          ))}
-        </div>
+        {products.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+            {products.map((product, index) => (
+              <div 
+                key={product.id} 
+                className="transform hover:scale-105 transition-all duration-500"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-400 text-lg">No featured products available at the moment.</p>
+          </div>
+        )}
 
         {/* CTA Section */}
         <div className="text-center">

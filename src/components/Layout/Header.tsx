@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingCart, User, Menu, X, Heart, Smartphone, LogOut } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
 
 const Header: React.FC = () => {
@@ -9,6 +10,7 @@ const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { itemCount } = useCart();
+  const { itemCount: wishlistCount } = useWishlist();
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -90,12 +92,17 @@ const Header: React.FC = () => {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
-                <button className="relative p-3 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:bg-white/10 rounded-xl backdrop-blur-sm">
+                <Link 
+                  to="/wishlist"
+                  className="relative p-3 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:bg-white/10 rounded-xl backdrop-blur-sm"
+                >
                   <Heart className="w-6 h-6" />
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                    {user?.wishlist?.length || 0}
-                  </span>
-                </button>
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </Link>
                 
                 <Link 
                   to="/cart" 
@@ -145,6 +152,16 @@ const Header: React.FC = () => {
                         <User className="w-5 h-5" />
                         <span>Dashboard</span>
                       </Link>
+                      {user?.role === 'admin' && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                        >
+                          <User className="w-5 h-5" />
+                          <span>Admin Panel</span>
+                        </Link>
+                      )}
                       <button
                         onClick={handleLogout}
                         className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"

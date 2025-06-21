@@ -37,16 +37,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     sparse: true
   },
-  wishlist: [{
-    type: String // Product IDs
-  }],
-  orders: [{
-    orderId: String,
-    date: Date,
-    status: String,
-    total: Number,
-    items: Array
-  }],
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  },
   totalSpent: {
     type: Number,
     default: 0
