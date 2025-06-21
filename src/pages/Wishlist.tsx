@@ -88,7 +88,7 @@ const Wishlist: React.FC = () => {
 
                 {/* Badges */}
                 <div className="absolute top-4 left-4 flex flex-col space-y-2">
-                  {product.isNew && (
+                  {product.isNewProduct && (
                     <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm">
                       NEW
                     </span>
