@@ -37,7 +37,7 @@ interface Product {
   inStock: boolean;
   rating: number;
   reviews: number;
-  isNew: boolean;
+  isNewProduct: boolean;
   isFeatured: boolean;
   isOnSale: boolean;
   isTopRated: boolean;
@@ -109,7 +109,7 @@ const AdminPanel: React.FC = () => {
     inStock: true,
     rating: 0,
     reviews: 0,
-    isNew: false,
+    isNewProduct: false,
     isFeatured: false,
     isOnSale: false,
     isTopRated: false,
@@ -323,7 +323,7 @@ const AdminPanel: React.FC = () => {
       inStock: true,
       rating: 0,
       reviews: 0,
-      isNew: false,
+      isNewProduct: false,
       isFeatured: false,
       isOnSale: false,
       isTopRated: false,
@@ -350,7 +350,7 @@ const AdminPanel: React.FC = () => {
       inStock: product.inStock,
       rating: product.rating,
       reviews: product.reviews,
-      isNew: product.isNew,
+      isNewProduct: product.isNewProduct,
       isFeatured: product.isFeatured,
       isOnSale: product.isOnSale,
       isTopRated: product.isTopRated,
@@ -956,8 +956,8 @@ const AdminPanel: React.FC = () => {
                       <label className="flex items-center space-x-3 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={productForm.isNew}
-                          onChange={(e) => setProductForm(prev => ({ ...prev, isNew: e.target.checked }))}
+                          checked={productForm.isNewProduct}
+                          onChange={(e) => setProductForm(prev => ({ ...prev, isNewProduct: e.target.checked }))}
                           className="w-5 h-5 text-purple-500 bg-transparent border-2 border-gray-400 rounded focus:ring-purple-500"
                         />
                         <span className="text-white">New</span>
@@ -1018,7 +1018,7 @@ const AdminPanel: React.FC = () => {
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute top-4 left-4 flex flex-col space-y-2">
-                        {product.isNew && (
+                        {product.isNewProduct && (
                           <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">NEW</span>
                         )}
                         {product.isFeatured && (
