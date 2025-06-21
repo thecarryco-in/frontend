@@ -1,10 +1,12 @@
+import 'dotenv/config'; 
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
 import session from 'express-session';
 import passport from 'passport';
+
+// Route & config files
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/user.js';
 import productRoutes from './routes/products.js';
@@ -12,37 +14,57 @@ import adminRoutes from './routes/admin.js';
 import contactRoutes from './routes/contact.js';
 import './config/passport.js';
 
-dotenv.config();
-
+// ────────────────────────────────────────────────
+// 3.  Express app setup
+// ────────────────────────────────────────────────
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Global middleware
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  process.env.CLIENT_URL2,
+  process.env.CLIENT_URL3
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, or postman)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-session-secret',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000 // 24 h
   }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mobile-store')
+// ────────────────────────────────────────────────
+// 4.  MongoDB connection
+// ────────────────────────────────────────────────
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ Connected to MongoDB'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// Routes
+// ────────────────────────────────────────────────
+// 5.  Routes
+// ────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/products', productRoutes);
@@ -51,17 +73,17 @@ app.use('/api/contact', contactRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ 
+  res.json({
     status: 'Server is running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
 });
 
-// Error handling middleware
+// Error handler
 app.use((err, req, res, next) => {
   console.error('Server Error:', err);
-  res.status(500).json({ 
+  res.status(500).json({
     message: 'Internal server error',
     error: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
@@ -72,6 +94,9 @@ app.use('*', (req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
+// ────────────────────────────────────────────────
+// 6.  Start server
+// ────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
