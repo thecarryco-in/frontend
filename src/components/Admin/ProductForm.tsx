@@ -10,13 +10,10 @@ interface Product {
   category: string;
   brand: string;
   image: string;
-  images: string[];
   description: string;
   features: string[];
   compatibility: string[];
   inStock: boolean;
-  rating: number;
-  reviews: number;
   isNewProduct?: boolean;
   isFeatured?: boolean;
   isOnSale?: boolean;
@@ -42,13 +39,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
     category: 'cases',
     brand: '',
     image: '',
-    images: [],
     description: '',
     features: [],
     compatibility: [],
     inStock: true,
-    rating: 0,
-    reviews: 0,
     isNewProduct: false,
     isFeatured: false,
     isOnSale: false,
@@ -59,7 +53,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
 
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadingImages, setUploadingImages] = useState(false);
   const [error, setError] = useState('');
   const [newFeature, setNewFeature] = useState('');
   const [newCompatibility, setNewCompatibility] = useState('');
@@ -122,50 +115,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
       setError(error.response?.data?.message || 'Failed to upload image');
     } finally {
       setUploadingImage(false);
-    }
-  };
-
-  const handleAdditionalImagesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setUploadingImages(true);
-    setError('');
-
-    try {
-      const formDataUpload = new FormData();
-      Array.from(files).forEach(file => {
-        formDataUpload.append('images', file);
-      });
-
-      const response = await axios.post('/admin/upload-images', formDataUpload, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-
-      const newImageUrls = response.data.images.map((img: any) => img.url);
-      setFormData(prev => ({ 
-        ...prev, 
-        images: [...prev.images, ...newImageUrls] 
-      }));
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to upload images');
-    } finally {
-      setUploadingImages(false);
-    }
-  };
-
-  const removeAdditionalImage = async (imageUrl: string, index: number) => {
-    try {
-      await axios.delete('/admin/delete-image', {
-        data: { imageUrl }
-      });
-      
-      setFormData(prev => ({
-        ...prev,
-        images: prev.images.filter((_, i) => i !== index)
-      }));
-    } catch (error) {
-      console.error('Failed to delete image:', error);
     }
   };
 
@@ -366,34 +315,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
                   placeholder="0.00"
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Rating</label>
-                <input
-                  type="number"
-                  name="rating"
-                  value={formData.rating}
-                  onChange={handleInputChange}
-                  step="0.1"
-                  min="0"
-                  max="5"
-                  className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
-                  placeholder="0.0"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Reviews Count</label>
-                <input
-                  type="number"
-                  name="reviews"
-                  value={formData.reviews}
-                  onChange={handleInputChange}
-                  min="0"
-                  className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
-                  placeholder="0"
-                />
-              </div>
             </div>
 
             <div>
@@ -410,11 +331,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
             </div>
           </div>
 
-          {/* Images */}
+          {/* Main Image */}
           <div className="space-y-6">
-            <h3 className="text-xl font-bold text-white">Images</h3>
+            <h3 className="text-xl font-bold text-white">Product Image</h3>
             
-            {/* Main Image */}
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-300">Main Image *</label>
               <div className="flex items-center space-x-4">
@@ -435,65 +355,16 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
                     ) : (
                       <Upload className="w-5 h-5" />
                     )}
-                    <span>{uploadingImage ? 'Uploading...' : 'Upload Main Image'}</span>
+                    <span>{uploadingImage ? 'Uploading...' : 'Upload Image'}</span>
                   </label>
                 </div>
                 {formData.image && (
                   <div className="relative">
                     <img
                       src={formData.image}
-                      alt="Main product"
+                      alt="Product"
                       className="w-20 h-20 object-cover rounded-xl border border-white/20"
                     />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Additional Images */}
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-300">Additional Images</label>
-              <div className="space-y-4">
-                <div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleAdditionalImagesUpload}
-                    className="hidden"
-                    id="additional-images-upload"
-                  />
-                  <label
-                    htmlFor="additional-images-upload"
-                    className="flex items-center space-x-2 bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-xl cursor-pointer transition-colors"
-                  >
-                    {uploadingImages ? (
-                      <Loader className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <Upload className="w-5 h-5" />
-                    )}
-                    <span>{uploadingImages ? 'Uploading...' : 'Upload Additional Images'}</span>
-                  </label>
-                </div>
-                
-                {formData.images.length > 0 && (
-                  <div className="grid grid-cols-4 gap-4">
-                    {formData.images.map((image, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={image}
-                          alt={`Additional ${index + 1}`}
-                          className="w-full h-20 object-cover rounded-xl border border-white/20"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeAdditionalImage(image, index)}
-                          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
                   </div>
                 )}
               </div>
@@ -674,7 +545,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
           <div className="space-y-6">
             <h3 className="text-xl font-bold text-white">Product Flags</h3>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <label className="flex items-center space-x-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -743,7 +614,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
             </button>
             <button
               type="submit"
-              disabled={isLoading || uploadingImage || uploadingImages}
+              disabled={isLoading || uploadingImage}
               className="bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
             >
               {isLoading ? (

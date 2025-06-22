@@ -113,3 +113,67 @@ export const sendWelcomeEmail = async (email, name) => {
     return false;
   }
 };
+
+// Send admin reply email
+export const sendAdminReplyEmail = async (userEmail, userName, originalSubject, adminReply) => {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: `The CarryCo Support <${process.env.RESEND_SENDER_EMAIL}>`,
+      to: userEmail,
+      subject: `Re: ${originalSubject} - The CarryCo Support`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
+          <div style="background: white; padding: 30px; border-radius: 10px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #333; margin-bottom: 10px;">The CarryCo Support</h1>
+              <p style="color: #666; font-size: 16px;">We've received your message and here's our response</p>
+            </div>
+            
+            <div style="margin-bottom: 30px;">
+              <h2 style="color: #333; margin-bottom: 15px;">Hi ${userName},</h2>
+              <p style="color: #666; font-size: 16px; line-height: 1.6;">
+                Thank you for contacting The CarryCo. We've reviewed your inquiry regarding "<strong>${originalSubject}</strong>" and here's our response:
+              </p>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #667eea;">
+              <h3 style="color: #333; margin-bottom: 15px;">Our Response:</h3>
+              <div style="color: #666; font-size: 16px; line-height: 1.6; white-space: pre-wrap;">${adminReply}</div>
+            </div>
+
+            <div style="background: #e8f4fd; padding: 20px; border-radius: 8px; margin: 25px 0;">
+              <h3 style="color: #333; margin-bottom: 15px;">Need Further Assistance?</h3>
+              <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                If you have any additional questions or need further clarification, please don't hesitate to reach out to us.
+              </p>
+              <div style="text-align: center;">
+                <a href="mailto:${process.env.ADMIN_EMAIL}" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Contact Support</a>
+              </div>
+            </div>
+
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
+              <p style="color: #666; font-size: 14px; margin-bottom: 10px;">
+                This email was sent in response to your inquiry. If you didn't expect this email, please contact us at <a href="mailto:${process.env.ADMIN_EMAIL}" style="color: #667eea;">${process.env.ADMIN_EMAIL}</a>
+              </p>
+              <p style="color: #666; font-size: 12px; margin: 0;">
+                Best regards,<br>
+                The CarryCo Support Team
+              </p>
+            </div>
+          </div>
+        </div>
+      `
+    });
+
+    if (error) {
+      console.error('Admin reply email error:', error);
+      return false;
+    }
+
+    console.log('Admin reply email sent successfully:', data);
+    return true;
+  } catch (error) {
+    console.error('Admin reply email sending error:', error);
+    return false;
+  }
+};

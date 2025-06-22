@@ -2,6 +2,7 @@ import express from 'express';
 import Contact from '../models/Contact.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
+import { sendAdminReplyEmail } from '../services/emailService.js';
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ router.post('/submit', async (req, res) => {
       queryType,
       subject,
       message,
-      priority: queryType === 'order' ? 'high' : 'medium'
+      status: 'new'
     });
 
     await contact.save();
@@ -46,14 +47,12 @@ router.get('/admin/submissions', authenticateToken, requireAdmin, async (req, re
       limit = 20, 
       status, 
       queryType, 
-      priority,
       search 
     } = req.query;
 
     const filter = {};
     if (status) filter.status = status;
     if (queryType) filter.queryType = queryType;
-    if (priority) filter.priority = priority;
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -64,7 +63,6 @@ router.get('/admin/submissions', authenticateToken, requireAdmin, async (req, re
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const contacts = await Contact.find(filter)
-      .populate('respondedBy', 'name email')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
@@ -89,23 +87,19 @@ router.get('/admin/submissions', authenticateToken, requireAdmin, async (req, re
 // Update contact submission (admin)
 router.put('/admin/submissions/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { status, priority, adminNotes } = req.body;
+    const { status } = req.body;
     
-    const updateData = {};
-    if (status) updateData.status = status;
-    if (priority) updateData.priority = priority;
-    if (adminNotes !== undefined) updateData.adminNotes = adminNotes;
-    
-    if (status === 'in-progress' || status === 'resolved') {
-      updateData.respondedBy = req.userId;
-      updateData.respondedAt = new Date();
+    // If status is resolved, delete the contact
+    if (status === 'resolved') {
+      await Contact.findByIdAndDelete(req.params.id);
+      return res.status(200).json({ message: 'Contact resolved and deleted successfully' });
     }
-
+    
     const contact = await Contact.findByIdAndUpdate(
       req.params.id,
-      updateData,
+      { status },
       { new: true, runValidators: true }
-    ).populate('respondedBy', 'name email');
+    );
 
     if (!contact) {
       return res.status(404).json({ message: 'Contact not found' });
@@ -117,6 +111,29 @@ router.put('/admin/submissions/:id', authenticateToken, requireAdmin, async (req
     });
   } catch (error) {
     console.error('Update contact error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Send admin reply (admin)
+router.post('/admin/reply', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { contactId, reply, userEmail, userName, originalSubject } = req.body;
+    
+    if (!reply || !userEmail || !userName) {
+      return res.status(400).json({ message: 'Reply, user email, and name are required' });
+    }
+
+    // Send reply email
+    const emailSent = await sendAdminReplyEmail(userEmail, userName, originalSubject, reply);
+    
+    if (!emailSent) {
+      return res.status(500).json({ message: 'Failed to send reply email' });
+    }
+
+    res.status(200).json({ message: 'Reply sent successfully' });
+  } catch (error) {
+    console.error('Send reply error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -143,8 +160,7 @@ router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => 
     const totalContacts = await Contact.countDocuments();
     const newContacts = await Contact.countDocuments({ status: 'new' });
     const inProgressContacts = await Contact.countDocuments({ status: 'in-progress' });
-    const resolvedContacts = await Contact.countDocuments({ status: 'resolved' });
-    const urgentContacts = await Contact.countDocuments({ priority: 'urgent' });
+    const closedContacts = await Contact.countDocuments({ status: 'closed' });
 
     // Get contacts by query type
     const contactsByType = await Contact.aggregate([
@@ -155,15 +171,14 @@ router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => 
     const recentContacts = await Contact.find()
       .sort({ createdAt: -1 })
       .limit(5)
-      .select('name email queryType status priority createdAt');
+      .select('name email queryType status createdAt');
 
     res.status(200).json({
       stats: {
         totalContacts,
         newContacts,
         inProgressContacts,
-        resolvedContacts,
-        urgentContacts
+        closedContacts
       },
       contactsByType,
       recentContacts

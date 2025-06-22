@@ -209,7 +209,7 @@ router.get('/google', passport.authenticate('google', {
 }));
 
 router.get('/google/callback', 
-  passport.authenticate('google', { failureRedirect: '/login' }),
+  passport.authenticate('google', { failureRedirect: `${process.env.CLIENT_URL}/login?error=auth_failed` }),
   async (req, res) => {
     try {
       // Generate JWT token
@@ -227,7 +227,7 @@ router.get('/google/callback',
       res.redirect(process.env.CLIENT_URL || 'http://localhost:5173');
     } catch (error) {
       console.error('Google callback error:', error);
-      res.redirect('/login?error=auth_failed');
+      res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
     }
   }
 );

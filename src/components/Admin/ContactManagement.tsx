@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, Search, Filter, Eye, Trash2, Clock, User, Mail, Phone } from 'lucide-react';
+import { MessageSquare, Search, Eye, Trash2, Clock, User, Mail, Phone, Send, Loader } from 'lucide-react';
 import axios from 'axios';
 
 interface Contact {
@@ -11,13 +11,6 @@ interface Contact {
   subject: string;
   message: string;
   status: 'new' | 'in-progress' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  adminNotes?: string;
-  respondedBy?: {
-    name: string;
-    email: string;
-  };
-  respondedAt?: string;
   createdAt: string;
 }
 
@@ -27,7 +20,8 @@ const ContactManagement: React.FC = () => {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
+  const [adminReply, setAdminReply] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
 
   useEffect(() => {
     fetchContacts();
@@ -40,7 +34,6 @@ const ContactManagement: React.FC = () => {
         params: {
           search: searchTerm || undefined,
           status: statusFilter || undefined,
-          priority: priorityFilter || undefined,
           limit: 100
         }
       });
@@ -58,19 +51,27 @@ const ContactManagement: React.FC = () => {
     }, 500);
 
     return () => clearTimeout(debounceTimer);
-  }, [searchTerm, statusFilter, priorityFilter]);
+  }, [searchTerm, statusFilter]);
 
-  const updateContactStatus = async (contactId: string, status: string, adminNotes?: string) => {
+  const updateContactStatus = async (contactId: string, status: string) => {
     try {
       const response = await axios.put(`/contact/admin/submissions/${contactId}`, {
-        status,
-        adminNotes
+        status
       });
-      setContacts(contacts.map(c => 
-        c._id === contactId ? response.data.contact : c
-      ));
-      if (selectedContact?._id === contactId) {
-        setSelectedContact(response.data.contact);
+      
+      // If status is resolved, remove from list (delete)
+      if (status === 'resolved') {
+        setContacts(contacts.filter(c => c._id !== contactId));
+        if (selectedContact?._id === contactId) {
+          setSelectedContact(null);
+        }
+      } else {
+        setContacts(contacts.map(c => 
+          c._id === contactId ? response.data.contact : c
+        ));
+        if (selectedContact?._id === contactId) {
+          setSelectedContact(response.data.contact);
+        }
       }
     } catch (error) {
       console.error('Error updating contact:', error);
@@ -93,22 +94,38 @@ const ContactManagement: React.FC = () => {
     }
   };
 
+  const sendReply = async () => {
+    if (!selectedContact || !adminReply.trim()) return;
+
+    setSendingReply(true);
+    try {
+      await axios.post('/contact/admin/reply', {
+        contactId: selectedContact._id,
+        reply: adminReply,
+        userEmail: selectedContact.email,
+        userName: selectedContact.name,
+        originalSubject: selectedContact.subject
+      });
+      
+      alert('Reply sent successfully!');
+      setAdminReply('');
+      
+      // Update status to in-progress
+      await updateContactStatus(selectedContact._id, 'in-progress');
+    } catch (error) {
+      console.error('Error sending reply:', error);
+      alert('Failed to send reply');
+    } finally {
+      setSendingReply(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'new': return 'bg-yellow-500/20 text-yellow-400';
       case 'in-progress': return 'bg-blue-500/20 text-blue-400';
       case 'resolved': return 'bg-green-500/20 text-green-400';
       case 'closed': return 'bg-gray-500/20 text-gray-400';
-      default: return 'bg-gray-500/20 text-gray-400';
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'bg-red-500/20 text-red-400';
-      case 'high': return 'bg-orange-500/20 text-orange-400';
-      case 'medium': return 'bg-yellow-500/20 text-yellow-400';
-      case 'low': return 'bg-green-500/20 text-green-400';
       default: return 'bg-gray-500/20 text-gray-400';
     }
   };
@@ -155,20 +172,7 @@ const ContactManagement: React.FC = () => {
           <option value="">All Status</option>
           <option value="new" className="bg-gray-800">New</option>
           <option value="in-progress" className="bg-gray-800">In Progress</option>
-          <option value="resolved" className="bg-gray-800">Resolved</option>
           <option value="closed" className="bg-gray-800">Closed</option>
-        </select>
-
-        <select
-          value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value)}
-          className="bg-white/10 backdrop-blur-md text-white px-6 py-3 rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500"
-        >
-          <option value="">All Priority</option>
-          <option value="urgent" className="bg-gray-800">Urgent</option>
-          <option value="high" className="bg-gray-800">High</option>
-          <option value="medium" className="bg-gray-800">Medium</option>
-          <option value="low" className="bg-gray-800">Low</option>
         </select>
       </div>
 
@@ -187,8 +191,8 @@ const ContactManagement: React.FC = () => {
                   <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${getStatusColor(contact.status)}`}>
                     {contact.status.replace('-', ' ')}
                   </span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${getPriorityColor(contact.priority)}`}>
-                    {contact.priority}
+                  <span className="px-3 py-1 rounded-full text-xs font-bold capitalize bg-purple-500/20 text-purple-400">
+                    {contact.queryType.replace('-', ' ')}
                   </span>
                 </div>
                 
@@ -276,14 +280,14 @@ const ContactManagement: React.FC = () => {
                   >
                     <option value="new" className="bg-gray-800">New</option>
                     <option value="in-progress" className="bg-gray-800">In Progress</option>
-                    <option value="resolved" className="bg-gray-800">Resolved</option>
+                    <option value="resolved" className="bg-gray-800">Resolved (Will Delete)</option>
                     <option value="closed" className="bg-gray-800">Closed</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">Priority</label>
-                  <span className={`inline-block px-4 py-3 rounded-xl text-sm font-bold capitalize ${getPriorityColor(selectedContact.priority)}`}>
-                    {selectedContact.priority}
+                  <label className="block text-sm font-medium text-gray-400 mb-2">Query Type</label>
+                  <span className="inline-block px-4 py-3 rounded-xl text-sm font-bold capitalize bg-purple-500/20 text-purple-400">
+                    {selectedContact.queryType.replace('-', ' ')}
                   </span>
                 </div>
               </div>
@@ -321,20 +325,31 @@ const ContactManagement: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">Admin Notes</label>
+                <label className="block text-sm font-medium text-gray-400 mb-2">Admin Reply</label>
                 <textarea
-                  value={selectedContact.adminNotes || ''}
-                  onChange={(e) => {
-                    setSelectedContact({
-                      ...selectedContact,
-                      adminNotes: e.target.value
-                    });
-                  }}
-                  onBlur={(e) => updateContactStatus(selectedContact._id, selectedContact.status, e.target.value)}
+                  value={adminReply}
+                  onChange={(e) => setAdminReply(e.target.value)}
                   rows={4}
                   className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400 resize-none"
-                  placeholder="Add internal notes about this contact..."
+                  placeholder="Type your reply to the customer..."
                 />
+                <button
+                  onClick={sendReply}
+                  disabled={!adminReply.trim() || sendingReply}
+                  className="mt-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {sendingReply ? (
+                    <>
+                      <Loader className="w-5 h-5 animate-spin" />
+                      <span>Sending...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      <span>Send Reply</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
