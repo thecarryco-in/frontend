@@ -234,7 +234,12 @@ router.get('/google/callback',
 
 // Logout
 router.post('/logout', (req, res) => {
-  res.clearCookie('token');
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    // path: '/',
+  });
   res.status(200).json({ message: 'Logged out successfully' });
 });
 
