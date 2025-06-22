@@ -69,7 +69,14 @@ export const useFeaturedProducts = () => {
         setLoading(true);
         setError(null);
         const response = await axios.get('/products/featured');
-        setProducts(response.data.products);
+        
+        // Transform the data to match our Product interface
+        const transformedProducts = response.data.products.map((product: any) => ({
+          ...product,
+          id: product._id // Map MongoDB _id to id
+        }));
+        
+        setProducts(transformedProducts);
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to fetch featured products');
       } finally {

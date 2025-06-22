@@ -1,5 +1,6 @@
 export interface Product {
   id: string;
+  _id?: string; // MongoDB ID
   name: string;
   price: number;
   originalPrice?: number;
@@ -41,6 +42,7 @@ export interface User {
   totalSpent: number;
   memberStatus: 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
   joinDate: string;
+  isAdmin?: boolean;
 }
 
 export interface Order {

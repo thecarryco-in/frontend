@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Upload, Search, Filter, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
+import ProductForm from './ProductForm';
 
 interface Product {
   _id: string;
@@ -102,6 +103,16 @@ const ProductManagement: React.FC = () => {
     }
   };
 
+  const handleProductSave = (savedProduct: Product) => {
+    if (editingProduct) {
+      setProducts(products.map(p => p._id === savedProduct._id ? savedProduct : p));
+    } else {
+      setProducts([savedProduct, ...products]);
+    }
+    setEditingProduct(null);
+    setShowAddModal(false);
+  };
+
   if (loading) {
     return (
       <div className="text-center py-20">
@@ -185,16 +196,41 @@ const ProductManagement: React.FC = () => {
                   {product.inStock ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                 </button>
               </div>
+              
+              {/* Badges */}
+              <div className="absolute top-2 left-2 flex flex-col space-y-1">
+                {product.isFeatured && (
+                  <span className="bg-purple-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                    Featured
+                  </span>
+                )}
+                {product.isNewProduct && (
+                  <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                    New
+                  </span>
+                )}
+                {product.isOnSale && (
+                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                    Sale
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="space-y-3">
               <div>
                 <h3 className="text-white font-semibold text-lg truncate">{product.name}</h3>
                 <p className="text-purple-400 text-sm">{product.brand}</p>
+                <p className="text-gray-400 text-xs capitalize">{product.category.replace('-', ' ')}</p>
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-white font-bold text-xl">${product.price}</span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-white font-bold text-xl">${product.price}</span>
+                  {product.originalPrice && (
+                    <span className="text-gray-500 text-sm line-through">${product.originalPrice}</span>
+                  )}
+                </div>
                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                   product.inStock 
                     ? 'bg-green-500/20 text-green-400' 
@@ -202,6 +238,11 @@ const ProductManagement: React.FC = () => {
                 }`}>
                   {product.inStock ? 'In Stock' : 'Out of Stock'}
                 </span>
+              </div>
+
+              <div className="flex items-center justify-between text-sm text-gray-400">
+                <span>Rating: {product.rating}/5</span>
+                <span>{product.reviews} reviews</span>
               </div>
 
               <div className="flex space-x-2">
@@ -241,30 +282,16 @@ const ProductManagement: React.FC = () => {
         </div>
       )}
 
-      {/* Add/Edit Product Modal would go here */}
+      {/* Product Form Modal */}
       {(showAddModal || editingProduct) && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-800 rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold text-white mb-6">
-              {editingProduct ? 'Edit Product' : 'Add New Product'}
-            </h2>
-            {/* Product form would go here */}
-            <div className="flex justify-end space-x-4 mt-8">
-              <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setEditingProduct(null);
-                }}
-                className="px-6 py-3 text-gray-400 hover:text-white transition-colors"
-              >
-                Cancel
-              </button>
-              <button className="bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-8 py-3 rounded-2xl font-semibold hover:shadow-lg transition-all duration-300">
-                {editingProduct ? 'Update Product' : 'Add Product'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ProductForm
+          product={editingProduct}
+          onClose={() => {
+            setShowAddModal(false);
+            setEditingProduct(null);
+          }}
+          onSave={handleProductSave}
+        />
       )}
     </div>
   );
