@@ -11,7 +11,7 @@ interface User {
   totalSpent: number;
   memberStatus: string;
   joinDate: string;
-  role: string;
+  isAdmin: boolean;
 }
 
 interface AuthState {

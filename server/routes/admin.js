@@ -1,23 +1,10 @@
 import express from 'express';
 import Product from '../models/Product.js';
-import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/adminAuth.js';
 import { upload, deleteImage, getPublicIdFromUrl } from '../config/cloudinary.js';
 
 const router = express.Router();
-
-// Admin middleware
-const requireAdmin = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.userId);
-    if (!user || user.role !== 'admin') {
-      return res.status(403).json({ message: 'Admin access required' });
-    }
-    next();
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
 
 // Upload single image
 router.post('/upload-image', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
@@ -269,8 +256,6 @@ router.get('/dashboard', authenticateToken, requireAdmin, async (req, res) => {
     const inStockProducts = await Product.countDocuments({ inStock: true });
     const outOfStockProducts = await Product.countDocuments({ inStock: false });
     const featuredProducts = await Product.countDocuments({ isFeatured: true });
-    const totalUsers = await User.countDocuments({ role: 'user' });
-    const verifiedUsers = await User.countDocuments({ isVerified: true, role: 'user' });
 
     // Get products by category
     const productsByCategory = await Product.aggregate([
@@ -288,9 +273,7 @@ router.get('/dashboard', authenticateToken, requireAdmin, async (req, res) => {
         totalProducts,
         inStockProducts,
         outOfStockProducts,
-        featuredProducts,
-        totalUsers,
-        verifiedUsers
+        featuredProducts
       },
       productsByCategory,
       recentProducts

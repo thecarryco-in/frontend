@@ -26,7 +26,7 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (user?.role !== 'admin') {
+  if (!user?.isAdmin) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-900 to-black text-white flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-8">

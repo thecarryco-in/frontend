@@ -2,12 +2,12 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import passport from 'passport';
-import { Resend } from 'resend';
 import User from '../models/User.js';
 import OTP from '../models/OTP.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { sendOTPEmail, sendWelcomeEmail } from '../services/emailService.js';
+
 const router = express.Router();
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -19,34 +19,6 @@ const generateToken = (userId) => {
 // Generate OTP
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
-};
-
-// Send OTP email
-const sendOTPEmail = async (email, otp, name) => {
-  try {
-    await resend.emails.send({
-      from: 'The CarryCo <${process.env.RESEND_SENDER_EMAIL}>',
-      to: email,
-      subject: 'Verify Your Email - The CarryCo',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
-          <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
-            <h1 style="color: #333; margin-bottom: 20px;">Welcome to The CarryCo!</h1>
-            <p style="color: #666; font-size: 16px; margin-bottom: 30px;">Hi ${name}, please verify your email address to complete your registration.</p>
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h2 style="color: #333; margin: 0; font-size: 32px; letter-spacing: 5px;">${otp}</h2>
-            </div>
-            <p style="color: #666; font-size: 14px;">This OTP will expire in 10 minutes.</p>
-            <p style="color: #666; font-size: 14px;">If you didn't request this, please ignore this email.</p>
-          </div>
-        </div>
-      `
-    });
-    return true;
-  } catch (error) {
-    console.error('Email sending error:', error);
-    return false;
-  }
 };
 
 // Register user (send OTP)
@@ -86,7 +58,7 @@ router.post('/register', async (req, res) => {
     // Send OTP email
     const emailSent = await sendOTPEmail(email, otp, name);
     if (!emailSent) {
-      return res.status(500).json({ message: 'Failed to send verification email' });
+      return res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
     }
 
     res.status(200).json({ 
@@ -120,6 +92,9 @@ router.post('/verify-otp', async (req, res) => {
     // Delete OTP document
     await OTP.deleteOne({ _id: otpDoc._id });
 
+    // Send welcome email
+    await sendWelcomeEmail(email, user.name);
+
     // Generate JWT token
     const token = generateToken(user._id);
 
@@ -132,13 +107,14 @@ router.post('/verify-otp', async (req, res) => {
     });
 
     res.status(201).json({
-      message: 'Registration successful',
+      message: 'Registration successful! Welcome to The CarryCo!',
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         avatar: user.avatar,
-        isVerified: user.isVerified
+        isVerified: user.isVerified,
+        isAdmin: user.email === process.env.ADMIN_EMAIL
       }
     });
   } catch (error) {
@@ -167,7 +143,7 @@ router.post('/resend-otp', async (req, res) => {
     // Send OTP email
     const emailSent = await sendOTPEmail(email, otp, otpDoc.userData.name);
     if (!emailSent) {
-      return res.status(500).json({ message: 'Failed to send verification email' });
+      return res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
     }
 
     res.status(200).json({ message: 'New OTP sent to your email' });
@@ -217,7 +193,8 @@ router.post('/login', async (req, res) => {
         name: user.name,
         email: user.email,
         avatar: user.avatar,
-        isVerified: user.isVerified
+        isVerified: user.isVerified,
+        isAdmin: user.email === process.env.ADMIN_EMAIL
       }
     });
   } catch (error) {
@@ -277,11 +254,10 @@ router.get('/me', authenticateToken, async (req, res) => {
         avatar: user.avatar,
         phone: user.phone,
         isVerified: user.isVerified,
-        wishlist: user.wishlist,
-        orders: user.orders,
         totalSpent: user.totalSpent,
         memberStatus: user.memberStatus,
-        joinDate: user.createdAt
+        joinDate: user.createdAt,
+        isAdmin: user.email === process.env.ADMIN_EMAIL
       }
     });
   } catch (error) {

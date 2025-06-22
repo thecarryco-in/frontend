@@ -144,6 +144,9 @@ const Header: React.FC = () => {
                         <p className="text-white font-semibold">{user?.name}</p>
                         <p className="text-gray-400 text-sm">{user?.email}</p>
                         <p className="text-purple-400 text-xs font-medium mt-1">{user?.memberStatus} Member</p>
+                        {user?.isAdmin && (
+                          <p className="text-cyan-400 text-xs font-medium">Admin Access</p>
+                        )}
                       </div>
                       <Link
                         to="/dashboard"
@@ -153,7 +156,7 @@ const Header: React.FC = () => {
                         <User className="w-5 h-5" />
                         <span>Dashboard</span>
                       </Link>
-                      {user?.role === 'admin' && (
+                      {user?.isAdmin && (
                         <Link
                           to="/admin"
                           onClick={() => setIsUserMenuOpen(false)}

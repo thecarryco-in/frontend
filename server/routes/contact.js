@@ -1,104 +1,11 @@
 import express from 'express';
-import { Resend } from 'resend';
 import Contact from '../models/Contact.js';
-import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/adminAuth.js';
 
 const router = express.Router();
-const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Admin middleware
-const requireAdmin = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.userId);
-    if (!user || user.role !== 'admin') {
-      return res.status(403).json({ message: 'Admin access required' });
-    }
-    next();
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-// Send email notification to admin
-const sendAdminNotification = async (contact) => {
-  try {
-    await resend.emails.send({
-      from: 'The CarryCo <${process.env.RESEND_SENDER_EMAIL}>',
-      to: process.env.ADMIN_EMAIL,
-      subject: `New Contact Form Submission - ${contact.queryType.toUpperCase()}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
-          <div style="background: white; padding: 30px; border-radius: 10px;">
-            <h1 style="color: #333; margin-bottom: 20px;">New Contact Form Submission</h1>
-            
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h2 style="color: #333; margin: 0 0 15px 0;">Contact Details</h2>
-              <p><strong>Name:</strong> ${contact.name}</p>
-              <p><strong>Email:</strong> ${contact.email}</p>
-              <p><strong>Phone:</strong> ${contact.phone || 'Not provided'}</p>
-              <p><strong>Query Type:</strong> ${contact.queryType.charAt(0).toUpperCase() + contact.queryType.slice(1)}</p>
-              <p><strong>Subject:</strong> ${contact.subject}</p>
-              <p><strong>Priority:</strong> ${contact.priority.toUpperCase()}</p>
-            </div>
-            
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="color: #333; margin: 0 0 15px 0;">Message</h3>
-              <p style="white-space: pre-wrap;">${contact.message}</p>
-            </div>
-            
-            <p style="color: #666; font-size: 14px; margin-top: 30px;">
-              Please respond to this inquiry as soon as possible.
-            </p>
-          </div>
-        </div>
-      `
-    });
-  } catch (error) {
-    console.error('Failed to send admin notification:', error);
-  }
-};
-
-// Send confirmation email to user
-const sendUserConfirmation = async (contact) => {
-  try {
-    await resend.emails.send({
-      from: 'The CarryCo <${process.env.RESEND_SENDER_EMAIL}>',
-      to: contact.email,
-      subject: 'Thank you for contacting The CarryCo',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
-          <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
-            <h1 style="color: #333; margin-bottom: 20px;">Thank You for Contacting Us!</h1>
-            <p style="color: #666; font-size: 16px; margin-bottom: 30px;">Hi ${contact.name}, we've received your message and will get back to you soon.</p>
-            
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: left;">
-              <h2 style="color: #333; margin: 0 0 15px 0;">Your Message Summary</h2>
-              <p><strong>Subject:</strong> ${contact.subject}</p>
-              <p><strong>Query Type:</strong> ${contact.queryType.charAt(0).toUpperCase() + contact.queryType.slice(1)}</p>
-              <p><strong>Submitted:</strong> ${new Date().toLocaleDateString()}</p>
-            </div>
-            
-            <p style="color: #666; font-size: 14px;">
-              We typically respond within 24 hours. If your inquiry is urgent, please call us directly.
-            </p>
-            
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-              <p style="color: #666; font-size: 12px; margin: 0;">
-                Best regards,<br>
-                The CarryCo Team
-              </p>
-            </div>
-          </div>
-        </div>
-      `
-    });
-  } catch (error) {
-    console.error('Failed to send user confirmation:', error);
-  }
-};
-
-// Submit contact form (public)
+// Submit contact form (public) - NO EMAIL SENDING
 router.post('/submit', async (req, res) => {
   try {
     const { name, email, phone, queryType, subject, message } = req.body;
@@ -120,12 +27,6 @@ router.post('/submit', async (req, res) => {
     });
 
     await contact.save();
-
-    // Send emails
-    await Promise.all([
-      sendUserConfirmation(contact),
-      sendAdminNotification(contact)
-    ]);
 
     res.status(201).json({ 
       message: 'Thank you for your message! We will get back to you soon.',
