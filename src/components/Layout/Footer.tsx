@@ -64,10 +64,10 @@ const Footer: React.FC = () => {
                 { label: 'Shop',           path: '/shop' },
                 { label: 'About Us',       path: '/about' },
                 { label: 'Contact',        path: '/contact' },
-                { label: 'FAQ',            path: '/faq' },
-                { label: 'Shipping Info',  path: '/shipping-info' },
-                { label: 'Returns',        path: '/returns' },
-                { label: 'Warranty',       path: '/warranty' },
+                { label: 'Privacy Policy',  path: '/privacy' },
+                { label: 'Refund Policy',   path: '/refund' },
+                { label: 'Shipping Info',   path: '/shipping' },
+                { label: 'Terms of Service',path: '/service' },
               ].map((item) => (
                 <li key={item.label}>
                   <Link
