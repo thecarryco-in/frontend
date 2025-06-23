@@ -75,11 +75,7 @@ app.use('/api/orders', orderRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'Server is running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
+  res.status(200).send('OK');
 });
 
 // Error handler
