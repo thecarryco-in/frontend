@@ -29,7 +29,6 @@ const Header: React.FC = () => {
     { name: 'Cases', href: '/shop?category=cases' },
     { name: 'Accessories', href: '/shop?category=accessories' },
     { name: 'About', href: '/about' },
-    { name: 'Contact', href: '/contact' },
   ];
 
   const isActive = (href: string) => {
