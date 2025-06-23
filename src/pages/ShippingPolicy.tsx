@@ -301,7 +301,7 @@ const ShippingPolicy: React.FC = () => {
               <Link to="/contact" onClick={scrollToTop}>
                 <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-teal-600 text-white px-8 py-4 rounded-2xl font-semibold hover:shadow-lg transition-all duration-300 cursor-pointer">
                   <Truck className="w-5 h-5" />
-                  <span>Contact Shipping Support</span>
+                  <span>Contact Customer Support</span>
                 </div>
               </Link>
             </div>
