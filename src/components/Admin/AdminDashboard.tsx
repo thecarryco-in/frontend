@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, MessageSquare, TrendingUp, Users, Eye, Plus } from 'lucide-react';
+import { Package, MessageSquare, TrendingUp, Users, Eye, Plus, ShoppingBag, IndianRupee } from 'lucide-react';
 import axios from 'axios';
 
 interface DashboardStats {
@@ -13,25 +13,37 @@ interface ContactStats {
   totalContacts: number;
   newContacts: number;
   inProgressContacts: number;
-  resolvedContacts: number;
-  urgentContacts: number;
+  closedContacts: number;
+}
+
+interface OrderStats {
+  totalOrders: number;
+  pendingOrders: number;
+  confirmedOrders: number;
+  packedOrders: number;
+  dispatchedOrders: number;
+  deliveredOrders: number;
+  totalRevenue: number;
 }
 
 const AdminDashboard: React.FC = () => {
   const [productStats, setProductStats] = useState<DashboardStats | null>(null);
   const [contactStats, setContactStats] = useState<ContactStats | null>(null);
+  const [orderStats, setOrderStats] = useState<OrderStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [productResponse, contactResponse] = await Promise.all([
+        const [productResponse, contactResponse, orderResponse] = await Promise.all([
           axios.get('/admin/dashboard'),
-          axios.get('/contact/admin/stats')
+          axios.get('/contact/admin/stats'),
+          axios.get('/orders/admin/stats')
         ]);
         
         setProductStats(productResponse.data.stats);
         setContactStats(contactResponse.data.stats);
+        setOrderStats(orderResponse.data.stats);
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
       } finally {
@@ -59,7 +71,56 @@ const AdminDashboard: React.FC = () => {
         </h1>
         <div className="text-right">
           <p className="text-gray-400 text-sm">Welcome back, Admin</p>
-          <p className="text-white font-semibold">{new Date().toLocaleDateString()}</p>
+          <p className="text-white font-semibold">{new Date().toLocaleDateString('en-IN')}</p>
+        </div>
+      </div>
+
+      {/* Order Stats */}
+      <div>
+        <h2 className="text-2xl font-bold text-white mb-6">Order Statistics</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl p-6 border border-green-400/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-green-400 text-sm font-medium">Total Revenue</p>
+                <p className="text-3xl font-bold text-white flex items-center">
+                  <IndianRupee className="w-6 h-6 mr-1" />
+                  {orderStats?.totalRevenue?.toFixed(2) || '0.00'}
+                </p>
+              </div>
+              <TrendingUp className="w-12 h-12 text-green-400" />
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-2xl p-6 border border-blue-400/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-400 text-sm font-medium">Total Orders</p>
+                <p className="text-3xl font-bold text-white">{orderStats?.totalOrders || 0}</p>
+              </div>
+              <ShoppingBag className="w-12 h-12 text-blue-400" />
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 rounded-2xl p-6 border border-yellow-400/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-yellow-400 text-sm font-medium">Pending Orders</p>
+                <p className="text-3xl font-bold text-white">{orderStats?.pendingOrders || 0}</p>
+              </div>
+              <Package className="w-12 h-12 text-yellow-400" />
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-2xl p-6 border border-purple-400/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-purple-400 text-sm font-medium">Delivered</p>
+                <p className="text-3xl font-bold text-white">{orderStats?.deliveredOrders || 0}</p>
+              </div>
+              <Eye className="w-12 h-12 text-purple-400" />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -112,7 +173,7 @@ const AdminDashboard: React.FC = () => {
       {/* Contact Stats */}
       <div>
         <h2 className="text-2xl font-bold text-white mb-6">Contact Messages</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 rounded-2xl p-6 border border-cyan-400/30">
             <div className="flex items-center justify-between">
               <div>
@@ -150,23 +211,11 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl p-6 border border-green-400/30">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-400 text-sm font-medium">Resolved</p>
-                <p className="text-3xl font-bold text-white">{contactStats?.resolvedContacts || 0}</p>
+                <p className="text-green-400 text-sm font-medium">Closed</p>
+                <p className="text-3xl font-bold text-white">{contactStats?.closedContacts || 0}</p>
               </div>
               <div className="w-12 h-12 bg-green-400/20 rounded-full flex items-center justify-center">
                 <span className="text-green-400 font-bold">✓</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-2xl p-6 border border-red-400/30">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-400 text-sm font-medium">Urgent</p>
-                <p className="text-3xl font-bold text-white">{contactStats?.urgentContacts || 0}</p>
-              </div>
-              <div className="w-12 h-12 bg-red-400/20 rounded-full flex items-center justify-center">
-                <span className="text-red-400 font-bold">🚨</span>
               </div>
             </div>
           </div>
@@ -204,11 +253,11 @@ const AdminDashboard: React.FC = () => {
           <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl p-6 border border-green-400/30 hover:border-green-400/50 transition-all duration-300 cursor-pointer group">
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-green-500/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <Package className="w-6 h-6 text-green-400" />
+                <ShoppingBag className="w-6 h-6 text-green-400" />
               </div>
               <div>
-                <h3 className="text-white font-semibold">Manage Inventory</h3>
-                <p className="text-gray-400 text-sm">Update stock levels</p>
+                <h3 className="text-white font-semibold">Manage Orders</h3>
+                <p className="text-gray-400 text-sm">Process customer orders</p>
               </div>
             </div>
           </div>

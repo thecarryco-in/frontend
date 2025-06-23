@@ -32,7 +32,9 @@
     "resend": "^2.1.0",
     "cloudinary": "^1.41.3",
     "multer": "^2.0.1",
-    "multer-storage-cloudinary": "^4.0.0"
+    "multer-storage-cloudinary": "^4.0.0",
+    "razorpay": "^2.9.2",
+    "crypto": "^1.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

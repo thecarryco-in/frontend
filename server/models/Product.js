@@ -29,9 +29,6 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  images: [{
-    type: String
-  }],
   description: {
     type: String,
     required: true
@@ -45,6 +42,11 @@ const productSchema = new mongoose.Schema({
   inStock: {
     type: Boolean,
     default: true
+  },
+  stockQuantity: {
+    type: Number,
+    default: 0,
+    min: 0
   },
   rating: {
     type: Number,

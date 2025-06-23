@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, Menu, X, Heart, Smartphone, LogOut } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Heart, Smartphone, LogOut, Package } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
@@ -154,6 +154,14 @@ const Header: React.FC = () => {
                       >
                         <User className="w-5 h-5" />
                         <span>Dashboard</span>
+                      </Link>
+                      <Link
+                        to="/dashboard?tab=orders"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                      >
+                        <Package className="w-5 h-5" />
+                        <span>My Orders</span>
                       </Link>
                       {user?.isAdmin && (
                         <Link

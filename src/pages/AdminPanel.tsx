@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Package, MessageSquare, Settings, Users, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Package, MessageSquare, Settings, Users, BarChart3, ShoppingBag } from 'lucide-react';
 import AdminDashboard from '../components/Admin/AdminDashboard';
 import ProductManagement from '../components/Admin/ProductManagement';
 import ContactManagement from '../components/Admin/ContactManagement';
+import OrderManagement from '../components/Admin/OrderManagement';
 
 const AdminPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'orders', label: 'Orders', icon: ShoppingBag },
     { id: 'products', label: 'Products', icon: Package },
     { id: 'contacts', label: 'Messages', icon: MessageSquare },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -19,6 +21,8 @@ const AdminPanel: React.FC = () => {
     switch (activeTab) {
       case 'dashboard':
         return <AdminDashboard />;
+      case 'orders':
+        return <OrderManagement />;
       case 'products':
         return <ProductManagement />;
       case 'contacts':

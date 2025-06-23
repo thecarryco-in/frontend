@@ -92,8 +92,13 @@ router.post('/verify-otp', async (req, res) => {
     // Delete OTP document
     await OTP.deleteOne({ _id: otpDoc._id });
 
-    // Send welcome email
-    await sendWelcomeEmail(email, user.name);
+    // Send welcome email - Fixed: Pass user data correctly
+    try {
+      await sendWelcomeEmail(user.email, user.name);
+    } catch (emailError) {
+      console.error('Welcome email error:', emailError);
+      // Don't fail the registration if welcome email fails
+    }
 
     // Generate JWT token
     const token = generateToken(user._id);

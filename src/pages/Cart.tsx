@@ -1,10 +1,138 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Shield, Truck, CreditCard } from 'lucide-react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Shield, Truck, CreditCard, User, MapPin, Phone } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 const Cart: React.FC = () => {
   const { items, total, itemCount, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState({
+    name: user?.name || '',
+    phone: user?.phone || '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: ''
+  });
+
+  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setShippingAddress({
+      ...shippingAddress,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePayment = async () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+
+    // Validate shipping address
+    const requiredFields = ['name', 'phone', 'address', 'city', 'state', 'pincode'];
+    for (const field of requiredFields) {
+      if (!shippingAddress[field as keyof typeof shippingAddress]) {
+        alert(`Please fill in ${field}`);
+        return;
+      }
+    }
+
+    setIsProcessing(true);
+
+    try {
+      // Load Razorpay script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        alert('Failed to load payment gateway. Please try again.');
+        setIsProcessing(false);
+        return;
+      }
+
+      // Create order
+      const orderData = {
+        items: items.map(item => ({
+          productId: item.product.id,
+          quantity: item.quantity
+        })),
+        shippingAddress,
+        totalAmount: total
+      };
+
+      const response = await axios.post('/orders/create-order', orderData);
+      const { orderId, razorpayOrderId, amount, currency, key } = response.data;
+
+      // Razorpay options
+      const options = {
+        key,
+        amount,
+        currency,
+        name: 'The CarryCo',
+        description: 'Premium Mobile Accessories',
+        order_id: razorpayOrderId,
+        handler: async (response: any) => {
+          try {
+            // Verify payment
+            const verifyResponse = await axios.post('/orders/verify-payment', {
+              orderId,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpaySignature: response.razorpay_signature
+            });
+
+            // Clear cart and redirect
+            clearCart();
+            alert('Payment successful! Your order has been placed.');
+            navigate('/dashboard?tab=orders');
+          } catch (error) {
+            console.error('Payment verification failed:', error);
+            alert('Payment verification failed. Please contact support.');
+          }
+        },
+        prefill: {
+          name: shippingAddress.name,
+          email: user?.email,
+          contact: shippingAddress.phone
+        },
+        theme: {
+          color: '#8B5CF6'
+        },
+        modal: {
+          ondismiss: () => {
+            setIsProcessing(false);
+          }
+        }
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      alert(error.response?.data?.message || 'Failed to process payment');
+      setIsProcessing(false);
+    }
+  };
 
   if (items.length === 0) {
     return (
@@ -86,9 +214,9 @@ const Cart: React.FC = () => {
                       </div>
                       
                       <div className="flex items-center space-x-4">
-                        <span className="text-2xl font-bold text-white">${item.product.price}</span>
+                        <span className="text-2xl font-bold text-white">₹{item.product.price}</span>
                         {item.product.originalPrice && (
-                          <span className="text-gray-500 text-lg line-through">${item.product.originalPrice}</span>
+                          <span className="text-gray-500 text-lg line-through">₹{item.product.originalPrice}</span>
                         )}
                       </div>
 
@@ -134,14 +262,14 @@ const Cart: React.FC = () => {
                   {/* Item Total */}
                   <div className="mt-6 pt-6 border-t border-white/10 flex justify-between items-center">
                     <span className="text-gray-400 font-medium">Item Subtotal</span>
-                    <span className="font-bold text-2xl text-white">${(item.product.price * item.quantity).toFixed(2)}</span>
+                    <span className="font-bold text-2xl text-white">₹{(item.product.price * item.quantity).toFixed(2)}</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Order Summary */}
+          {/* Order Summary & Checkout */}
           <div className="xl:w-1/3">
             <div className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-3xl p-8 border border-white/10 sticky top-8">
               <h2 className="text-2xl font-bold mb-8 bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
@@ -151,7 +279,7 @@ const Cart: React.FC = () => {
               <div className="space-y-6 mb-8">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Subtotal ({itemCount} items)</span>
-                  <span className="text-white font-semibold">${total.toFixed(2)}</span>
+                  <span className="text-white font-semibold">₹{total.toFixed(2)}</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
@@ -160,34 +288,153 @@ const Cart: React.FC = () => {
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Tax (estimated)</span>
-                  <span className="text-white font-semibold">${(total * 0.08).toFixed(2)}</span>
+                  <span className="text-gray-400">Tax (GST 18%)</span>
+                  <span className="text-white font-semibold">₹{(total * 0.18).toFixed(2)}</span>
                 </div>
                 
                 <div className="border-t border-white/20 pt-6">
                   <div className="flex justify-between items-center text-xl">
                     <span className="font-bold text-white">Total</span>
-                    <span className="font-bold text-white">${(total * 1.08).toFixed(2)}</span>
+                    <span className="font-bold text-white">₹{(total * 1.18).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4 mb-8">
-                <button className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 text-white py-5 rounded-2xl font-bold text-lg hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 relative overflow-hidden group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-pink-700 to-cyan-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <span className="relative z-10">Proceed to Checkout</span>
-                </button>
-                
-                <Link
-                  to="/shop"
-                  className="w-full border-2 border-white/20 text-white py-5 rounded-2xl font-semibold text-lg hover:border-purple-400/50 hover:bg-white/5 transition-all duration-300 flex items-center justify-center backdrop-blur-sm"
-                >
-                  Continue Shopping
-                </Link>
-              </div>
+              {!showCheckout ? (
+                <div className="space-y-4">
+                  <button 
+                    onClick={() => setShowCheckout(true)}
+                    className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 text-white py-5 rounded-2xl font-bold text-lg hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 relative overflow-hidden group"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-pink-700 to-cyan-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <span className="relative z-10">Proceed to Checkout</span>
+                  </button>
+                  
+                  <Link
+                    to="/shop"
+                    className="w-full border-2 border-white/20 text-white py-5 rounded-2xl font-semibold text-lg hover:border-purple-400/50 hover:bg-white/5 transition-all duration-300 flex items-center justify-center backdrop-blur-sm"
+                  >
+                    Continue Shopping
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <h3 className="text-xl font-bold text-white mb-4">Shipping Address</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">Full Name</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            name="name"
+                            value={shippingAddress.name}
+                            onChange={handleAddressChange}
+                            className="w-full bg-white/10 text-white px-4 py-3 pl-12 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                            placeholder="Enter full name"
+                            required
+                          />
+                          <User className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">Phone Number</label>
+                        <div className="relative">
+                          <input
+                            type="tel"
+                            name="phone"
+                            value={shippingAddress.phone}
+                            onChange={handleAddressChange}
+                            className="w-full bg-white/10 text-white px-4 py-3 pl-12 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                            placeholder="Enter phone number"
+                            required
+                          />
+                          <Phone className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-300">Address</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="address"
+                          value={shippingAddress.address}
+                          onChange={handleAddressChange}
+                          className="w-full bg-white/10 text-white px-4 py-3 pl-12 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                          placeholder="Enter full address"
+                          required
+                        />
+                        <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">City</label>
+                        <input
+                          type="text"
+                          name="city"
+                          value={shippingAddress.city}
+                          onChange={handleAddressChange}
+                          className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                          placeholder="City"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">State</label>
+                        <input
+                          type="text"
+                          name="state"
+                          value={shippingAddress.state}
+                          onChange={handleAddressChange}
+                          className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                          placeholder="State"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">Pincode</label>
+                        <input
+                          type="text"
+                          name="pincode"
+                          value={shippingAddress.pincode}
+                          onChange={handleAddressChange}
+                          className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                          placeholder="Pincode"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <button
+                      onClick={handlePayment}
+                      disabled={isProcessing}
+                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-5 rounded-2xl font-bold text-lg hover:shadow-2xl hover:shadow-green-500/25 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isProcessing ? 'Processing...' : `Pay ₹${(total * 1.18).toFixed(2)}`}
+                    </button>
+                    
+                    <button
+                      onClick={() => setShowCheckout(false)}
+                      className="w-full border-2 border-white/20 text-white py-3 rounded-xl font-semibold hover:border-white/40 hover:bg-white/5 transition-all duration-300"
+                    >
+                      Back to Cart
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Trust Badges */}
-              <div className="space-y-4 pt-6 border-t border-white/10">
+              <div className="space-y-4 pt-6 border-t border-white/10 mt-8">
                 <div className="flex items-center space-x-3 text-gray-400 text-sm">
                   <Shield className="w-5 h-5 text-green-400" />
                   <span>Secure SSL Encryption</span>
@@ -198,7 +445,7 @@ const Cart: React.FC = () => {
                 </div>
                 <div className="flex items-center space-x-3 text-gray-400 text-sm">
                   <CreditCard className="w-5 h-5 text-purple-400" />
-                  <span>Multiple Payment Options</span>
+                  <span>Secure Payment via Razorpay</span>
                 </div>
               </div>
             </div>

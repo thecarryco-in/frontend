@@ -7,11 +7,12 @@ export interface Product {
   category: 'cases' | 'tempered-glass' | 'chargers' | 'accessories';
   brand: string;
   image: string;
-  images: string[];
+  images?: string[];
   description: string;
   features: string[];
   compatibility: string[];
   inStock: boolean;
+  stockQuantity?: number;
   rating: number;
   reviews: number;
   isNewProduct?: boolean;
@@ -47,8 +48,19 @@ export interface User {
 
 export interface Order {
   id: string;
+  orderNumber: string;
   date: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered';
+  status: 'pending' | 'confirmed' | 'packed' | 'dispatched' | 'delivered' | 'cancelled';
+  paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded';
   total: number;
   items: CartItem[];
+  shippingAddress: {
+    name: string;
+    phone: string;
+    address: string;
+    city: string;
+    state: string;
+    pincode: string;
+  };
+  trackingNumber?: string;
 }

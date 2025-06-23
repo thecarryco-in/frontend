@@ -114,6 +114,179 @@ export const sendWelcomeEmail = async (email, name) => {
   }
 };
 
+// Send order confirmation email
+export const sendOrderConfirmationEmail = async (email, name, order) => {
+  try {
+    const itemsHtml = order.items.map(item => `
+      <tr>
+        <td style="padding: 15px; border-bottom: 1px solid #eee;">
+          <div style="display: flex; align-items: center;">
+            <img src="${item.productSnapshot.image}" alt="${item.productSnapshot.name}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 15px;">
+            <div>
+              <h4 style="margin: 0; color: #333;">${item.productSnapshot.name}</h4>
+              <p style="margin: 5px 0; color: #666; font-size: 14px;">${item.productSnapshot.brand}</p>
+              <p style="margin: 0; color: #666; font-size: 14px;">Qty: ${item.quantity}</p>
+            </div>
+          </div>
+        </td>
+        <td style="padding: 15px; border-bottom: 1px solid #eee; text-align: right;">
+          <span style="font-weight: bold; color: #333;">₹${(item.price * item.quantity).toFixed(2)}</span>
+        </td>
+      </tr>
+    `).join('');
+
+    const { data, error } = await resend.emails.send({
+      from: `The CarryCo <${process.env.RESEND_SENDER_EMAIL}>`,
+      to: email,
+      subject: `Order Confirmation - ${order.orderNumber} - The CarryCo`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
+          <div style="background: white; padding: 30px; border-radius: 10px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #333; margin-bottom: 10px;">Order Confirmed!</h1>
+              <p style="color: #666; font-size: 18px;">Thank you for your purchase, ${name}!</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
+              <h3 style="color: #333; margin-bottom: 15px;">Order Details</h3>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: #666;">Order Number:</span>
+                <span style="color: #333; font-weight: bold;">${order.orderNumber}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: #666;">Order Date:</span>
+                <span style="color: #333;">${new Date(order.createdAt).toLocaleDateString('en-IN')}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: #666;">Payment Status:</span>
+                <span style="color: #28a745; font-weight: bold;">Paid</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #666;">Total Amount:</span>
+                <span style="color: #333; font-weight: bold; font-size: 18px;">₹${order.totalAmount.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div style="margin: 25px 0;">
+              <h3 style="color: #333; margin-bottom: 15px;">Items Ordered</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                ${itemsHtml}
+              </table>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
+              <h3 style="color: #333; margin-bottom: 15px;">Shipping Address</h3>
+              <p style="color: #666; margin: 0; line-height: 1.6;">
+                ${order.shippingAddress.name}<br>
+                ${order.shippingAddress.address}<br>
+                ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.pincode}<br>
+                Phone: ${order.shippingAddress.phone}
+              </p>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;">
+              <h3 style="color: white; margin-bottom: 15px;">What's Next?</h3>
+              <p style="color: white; margin-bottom: 20px;">We'll start processing your order right away. You'll receive updates as your order moves through each stage.</p>
+              <a href="${process.env.CLIENT_URL}/dashboard" style="background: rgba(255,255,255,0.2); color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Track Your Order</a>
+            </div>
+
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
+              <p style="color: #666; font-size: 14px; margin-bottom: 10px;">
+                Questions about your order? Contact us at <a href="mailto:${process.env.ADMIN_EMAIL}" style="color: #667eea;">${process.env.ADMIN_EMAIL}</a>
+              </p>
+              <p style="color: #666; font-size: 12px; margin: 0;">
+                Thank you for choosing The CarryCo!<br>
+                The CarryCo Team
+              </p>
+            </div>
+          </div>
+        </div>
+      `
+    });
+
+    if (error) {
+      console.error('Order confirmation email error:', error);
+      return false;
+    }
+
+    console.log('Order confirmation email sent successfully:', data);
+    return true;
+  } catch (error) {
+    console.error('Order confirmation email sending error:', error);
+    return false;
+  }
+};
+
+// Send order delivered email with rating request
+export const sendOrderDeliveredEmail = async (email, name, order) => {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: `The CarryCo <${process.env.RESEND_SENDER_EMAIL}>`,
+      to: email,
+      subject: `Your Order ${order.orderNumber} Has Been Delivered! - The CarryCo`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
+          <div style="background: white; padding: 30px; border-radius: 10px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #333; margin-bottom: 10px;">🎉 Order Delivered!</h1>
+              <p style="color: #666; font-size: 18px;">Your order has been successfully delivered, ${name}!</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0;">
+              <h3 style="color: #333; margin-bottom: 15px;">Delivery Details</h3>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: #666;">Order Number:</span>
+                <span style="color: #333; font-weight: bold;">${order.orderNumber}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="color: #666;">Delivered On:</span>
+                <span style="color: #333;">${new Date(order.deliveredAt).toLocaleDateString('en-IN')}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <span style="color: #666;">Delivery Address:</span>
+                <span style="color: #333;">${order.shippingAddress.city}, ${order.shippingAddress.state}</span>
+              </div>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;">
+              <h3 style="color: white; margin-bottom: 15px;">How was your experience?</h3>
+              <p style="color: white; margin-bottom: 20px;">We'd love to hear about your experience with our products. Your feedback helps us serve you better!</p>
+              <a href="${process.env.CLIENT_URL}/dashboard?tab=orders" style="background: rgba(255,255,255,0.2); color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Rate Your Purchase</a>
+            </div>
+
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;">
+              <h3 style="color: #333; margin-bottom: 15px;">Need Support?</h3>
+              <p style="color: #666; margin-bottom: 15px;">If you have any issues with your order or need assistance, we're here to help!</p>
+              <a href="mailto:${process.env.ADMIN_EMAIL}" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Contact Support</a>
+            </div>
+
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; text-align: center;">
+              <p style="color: #666; font-size: 14px; margin-bottom: 10px;">
+                Thank you for choosing The CarryCo for your mobile accessory needs!
+              </p>
+              <p style="color: #666; font-size: 12px; margin: 0;">
+                Best regards,<br>
+                The CarryCo Team
+              </p>
+            </div>
+          </div>
+        </div>
+      `
+    });
+
+    if (error) {
+      console.error('Order delivered email error:', error);
+      return false;
+    }
+
+    console.log('Order delivered email sent successfully:', data);
+    return true;
+  } catch (error) {
+    console.error('Order delivered email sending error:', error);
+    return false;
+  }
+};
+
 // Send admin reply email
 export const sendAdminReplyEmail = async (userEmail, userName, originalSubject, adminReply) => {
   try {
