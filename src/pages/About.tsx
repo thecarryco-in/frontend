@@ -124,11 +124,6 @@ const About: React.FC = () => {
                   Every product we create is designed to enhance your daily experience while 
                   providing uncompromising protection and style.
                 </p>
-                <p className="text-lg text-gray-400 leading-relaxed">
-                  From our headquarters in Silicon Valley, we work with the world's best 
-                  designers and engineers to bring you accessories that don't just protect 
-                  your device—they elevate it.
-                </p>
               </div>
               
               <div className="relative">
@@ -205,23 +200,17 @@ const About: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto">
             {[
               {
-                name: 'Sarah Chen',
-                role: 'Chief Design Officer',
-                image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=300',
-                bio: 'Former Apple designer with 10+ years creating beautiful, functional products.'
+                name: 'Akul Chauhan',
+                role: 'Founder',
+                image: 'https://res.cloudinary.com/dgcnjh1tr/image/upload/v1750706378/77acb058-cc30-453f-b5b1-bc882c67a4b3_y32cen.jpg',
+                bio: 'Every story has a beginning, and ours started with a passion for mobile technology.'
               },
               {
-                name: 'Marcus Rodriguez',
-                role: 'Head of Engineering',
-                image: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
-                bio: 'MIT graduate specializing in materials science and wireless technology.'
+                name: 'Shaurya Tyagi',
+                role: 'Co Founder',
+                image: 'https://res.cloudinary.com/dgcnjh1tr/image/upload/v1750705626/2befb358-2ae6-4771-9ae9-a9b5633dd6bc_pucxzp.jpg',
+                bio: 'Technology is not just about devices, it’s about enhancing lives through innovation.'
               },
-              {
-                name: 'Emily Watson',
-                role: 'Customer Experience Lead',
-                image: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=300',
-                bio: 'Ensuring every customer interaction exceeds expectations and builds loyalty.'
-              }
             ].map((member, index) => (
               <div 
                 key={index}
@@ -232,16 +221,17 @@ const About: React.FC = () => {
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-48 h-48 rounded-full mx-auto object-cover border-4 border-purple-400/30 group-hover:border-purple-400 transition-all duration-300"
+                    className="w-48 h-48 rounded-full mx-auto object-cover border-4 border-blue-400/30 group-hover:border-blue-400 transition-all duration-300"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-purple-500/20 to-transparent rounded-full"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-blue-500/20 to-transparent rounded-full"></div>
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2">{member.name}</h3>
-                <p className="text-purple-400 font-semibold mb-4">{member.role}</p>
+                <p className="text-blue-400 font-semibold mb-4">{member.role}</p>
                 <p className="text-gray-400 leading-relaxed">{member.bio}</p>
               </div>
             ))}
           </div>
+
         </div>
       </section>
 
