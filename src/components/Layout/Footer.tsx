@@ -2,6 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, Smartphone, Heart } from 'lucide-react';
 
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
 const Footer: React.FC = () => {
   return (
     <footer className="bg-gradient-to-b from-gray-900 to-black text-white relative overflow-hidden">
@@ -55,13 +59,23 @@ const Footer: React.FC = () => {
               Quick Links
             </h3>
             <ul className="space-y-3">
-              {['Home', 'Shop', 'About Us', 'Contact', 'FAQ', 'Shipping Info', 'Returns', 'Warranty'].map((item) => (
-                <li key={item}>
-                  <Link 
-                    to={`/${item.toLowerCase().replace(' ', '-')}`}
+              {[
+                { label: 'Home',           path: '/' },
+                { label: 'Shop',           path: '/shop' },
+                { label: 'About Us',       path: '/about' },
+                { label: 'Contact',        path: '/contact' },
+                { label: 'FAQ',            path: '/faq' },
+                { label: 'Shipping Info',  path: '/shipping-info' },
+                { label: 'Returns',        path: '/returns' },
+                { label: 'Warranty',       path: '/warranty' },
+              ].map((item) => (
+                <li key={item.label}>
+                  <Link
+                    to={item.path}
+                    onClick={scrollToTop}
                     className="text-gray-400 hover:text-white transition-colors duration-200 text-sm hover:translate-x-1 transform inline-block"
                   >
-                    {item}
+                    {item.label}
                   </Link>
                 </li>
               ))}
@@ -87,6 +101,7 @@ const Footer: React.FC = () => {
                 <li key={item}>
                   <Link 
                     to={`/shop?category=${item.toLowerCase().replace(' ', '-')}`}
+                    onClick={scrollToTop}
                     className="text-gray-400 hover:text-white transition-colors duration-200 text-sm hover:translate-x-1 transform inline-block"
                   >
                     {item}
@@ -107,28 +122,29 @@ const Footer: React.FC = () => {
                   <Phone className="w-5 h-5 text-purple-400 group-hover:text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-medium">+1 (555) 123-4567</p>
-                  <p className="text-gray-400 text-xs">Mon-Fri 9AM-6PM EST</p>
+                  <p className="text-white font-medium">+91 82871 63950</p>
+                  <p className="text-gray-400 text-xs">Mon-Fri 9AM-6PM IST</p>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-3 group">
+              <div className="flex items-start space-x-3 group">
                 <div className="w-10 h-10 bg-cyan-500/20 rounded-xl flex items-center justify-center group-hover:bg-cyan-500 transition-colors duration-300">
-                  <Mail className="w-5 h-5 text-cyan-400 group-hover:text-white" />
+                  <Mail className="w-6 h-6 text-cyan-400 group-hover:text-white" />
                 </div>
-                <div>
-                  <p className="text-white font-medium">thecarryco.in@gmail.com</p>
-                  <p className="text-gray-400 text-xs">24/7 Support Available</p>
+                <div className="flex-1">
+                  <p className="text-white font-medium break-all">
+                    thecarryco.in@gmail.com
+                  </p>
                 </div>
               </div>
-              
+   
               <div className="flex items-center space-x-3 group">
                 <div className="w-10 h-10 bg-pink-500/20 rounded-xl flex items-center justify-center group-hover:bg-pink-500 transition-colors duration-300">
                   <MapPin className="w-5 h-5 text-pink-400 group-hover:text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-medium">123 Innovation Drive</p>
-                  <p className="text-gray-400 text-xs">Tech Valley, CA 94025</p>
+                  <p className="text-white font-medium">A-83 Brij Vihar</p>
+                  <p className="text-gray-400 text-xs">Ghaziabad, Uttar Pradesh</p>
                 </div>
               </div>
             </div>
@@ -158,13 +174,13 @@ const Footer: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-8">
-              <Link to="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
+              <Link to="/privacy" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
                 Privacy Policy
               </Link>
-              <Link to="/terms" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
+              <Link to="/terms" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
                 Terms of Service
               </Link>
-              <Link to="/cookies" className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
+              <Link to="/cookies" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
                 Cookie Policy
               </Link>
             </div>
