@@ -85,19 +85,20 @@ const Contact: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-white font-semibold">Phone</p>
-                    <p className="text-gray-400">+1 (555) 123-4567</p>
-                    <p className="text-gray-500 text-sm">Mon-Fri 9AM-6PM EST</p>
+                    <p className="text-gray-400">+91 82871 63950</p>
+                    <p className="text-gray-500 text-sm">Mon-Fri 9AM-6PM IST</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-4 group">
+                <div className="flex items-start space-x-4 group">
                   <div className="w-12 h-12 bg-cyan-500/20 rounded-2xl flex items-center justify-center group-hover:bg-cyan-500 transition-colors duration-300">
                     <Mail className="w-6 h-6 text-cyan-400 group-hover:text-white" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <p className="text-white font-semibold">Email</p>
-                    <p className="text-gray-400">thecarryco.in@gmail.com</p>
-                    <p className="text-gray-500 text-sm">24/7 Support Available</p>
+                    <p className="text-gray-400 break-all">
+                      thecarryco.in@gmail.com
+                    </p>
                   </div>
                 </div>
                 
@@ -107,8 +108,8 @@ const Contact: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-white font-semibold">Address</p>
-                    <p className="text-gray-400">123 Innovation Drive</p>
-                    <p className="text-gray-400">Tech Valley, CA 94025</p>
+                    <p className="text-gray-400">A-83 Brij Vihar</p>
+                    <p className="text-gray-400">Ghaziabad, Uttar Pradesh</p>
                   </div>
                 </div>
               </div>
