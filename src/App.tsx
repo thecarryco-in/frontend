@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -37,6 +37,26 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 function App() {
+  const [serverAwake, setServerAwake] = useState(false);
+
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/health`, {
+    })
+      .then(() => setServerAwake(true))
+      .catch(() => setServerAwake(true));
+  }, []);
+
+  if (!serverAwake) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-white text-lg">Please Wait...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <AuthProvider>
       <WishlistProvider>
