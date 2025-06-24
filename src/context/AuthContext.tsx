@@ -1,11 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useReducer,
-  useEffect,
-  useState,
-  ReactNode,
-} from 'react';
+import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import axios from 'axios';
 
 interface User {
@@ -23,8 +16,8 @@ interface User {
 
 interface AuthState {
   user: User | null;
+  isLoading: boolean;
   isAuthenticated: boolean;
-  isLoading: boolean;      // ← per-action loading
 }
 
 interface AuthContextType extends AuthState {
@@ -40,21 +33,25 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 type AuthAction =
+  | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_USER'; payload: User | null }
-  | { type: 'SET_LOADING'; payload: boolean };
+  | { type: 'UPDATE_USER'; payload: Partial<User> };
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload };
     case 'SET_USER':
       return {
         ...state,
         user: action.payload,
         isAuthenticated: !!action.payload,
+        isLoading: false,
       };
-    case 'SET_LOADING':
+    case 'UPDATE_USER':
       return {
         ...state,
-        isLoading: action.payload,
+        user: state.user ? { ...state.user, ...action.payload } : null,
       };
     default:
       return state;
@@ -63,8 +60,8 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 
 const initialState: AuthState = {
   user: null,
+  isLoading: true,
   isAuthenticated: false,
-  isLoading: false,
 };
 
 // Axios defaults
@@ -73,13 +70,14 @@ axios.defaults.withCredentials = true;
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
-  const [initializing, setInitializing] = useState(true);
 
   const checkAuth = async () => {
+    dispatch({ type: 'SET_LOADING', payload: true });
     try {
       const { data } = await axios.get('/auth/me');
-      dispatch({ type: 'SET_USER', payload: data.user });
-    } catch {
+      dispatch({ type: 'SET_USER', payload: data.user ?? null });
+    } catch (err) {
+      console.error('checkAuth error:', err);
       dispatch({ type: 'SET_USER', payload: null });
     }
   };
@@ -89,8 +87,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const { data } = await axios.post('/auth/login', { email, password });
       dispatch({ type: 'SET_USER', payload: data.user });
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || 'Login failed');
     }
   };
 
@@ -98,8 +96,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       await axios.post('/auth/register', { name, email, password });
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || 'Registration failed');
     }
   };
 
@@ -108,8 +106,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const { data } = await axios.post('/auth/verify-otp', { email, otp });
       dispatch({ type: 'SET_USER', payload: data.user });
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || 'OTP verification failed');
     }
   };
 
@@ -117,8 +115,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       await axios.post('/auth/resend-otp', { email });
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || 'Failed to resend OTP');
     }
   };
 
@@ -127,50 +125,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await axios.post('/auth/logout');
       dispatch({ type: 'SET_USER', payload: null });
+    } catch (err) {
+      console.error(err);
+    } finally {
       localStorage.clear();
       sessionStorage.clear();
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
-    }
-  };
-
-  const updateProfile = async (data: Partial<User>) => {
-    dispatch({ type: 'SET_LOADING', payload: true });
-    try {
-      const { data: res } = await axios.put('/user/profile', data);
-      dispatch({ type: 'SET_USER', payload: res.user });
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
   useEffect(() => {
-    checkAuth().finally(() => setInitializing(false));
+    checkAuth();
   }, []);
-
-  if (initializing) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <div className="flex flex-col items-center">
-          <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-white text-lg">Please Wait...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <AuthContext.Provider
       value={{
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-        isLoading: state.isLoading,
+        ...state,
         login,
         register,
         verifyOTP,
         resendOTP,
         logout,
-        updateProfile,
+        updateProfile: async (data) => {
+          const { data: res } = await axios.put('/user/profile', data);
+          dispatch({ type: 'UPDATE_USER', payload: res.user });
+        },
         checkAuth,
       }}
     >
