@@ -1,6 +1,15 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  useState,
+  ReactNode
+} from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+// --- Types ---
 interface User {
   id: string;
   name: string;
@@ -30,9 +39,10 @@ interface AuthContextType extends AuthState {
   checkAuth: () => Promise<void>;
 }
 
+// --- Reducer & Initial State ---
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-type AuthAction = 
+type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_USER'; payload: User | null }
   | { type: 'SET_AUTHENTICATED'; payload: boolean }
@@ -43,18 +53,18 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload };
     case 'SET_USER':
-      return { 
-        ...state, 
-        user: action.payload, 
+      return {
+        ...state,
+        user: action.payload,
         isAuthenticated: !!action.payload,
-        isLoading: false 
+        isLoading: false
       };
     case 'SET_AUTHENTICATED':
       return { ...state, isAuthenticated: action.payload };
     case 'UPDATE_USER':
-      return { 
-        ...state, 
-        user: state.user ? { ...state.user, ...action.payload } : null 
+      return {
+        ...state,
+        user: state.user ? { ...state.user, ...action.payload } : null
       };
     default:
       return state;
@@ -64,35 +74,30 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 const initialState: AuthState = {
   user: null,
   isLoading: true,
-  isAuthenticated: false,
+  isAuthenticated: false
 };
 
-// Configure axios defaults
+// --- Axios Configuration ---
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 axios.defaults.withCredentials = true;
+// Removed global 401 interceptor to avoid redirect loops
 
-// Add response interceptor to handle token expiration
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid, redirect to login
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
-  }
-);
-
+// --- Provider ---
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+  const [tried, setTried] = useState(false);
+  const navigate = useNavigate();
 
   const checkAuth = async () => {
+    dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
       const response = await axios.get('/auth/me');
       dispatch({ type: 'SET_USER', payload: response.data.user });
     } catch (error) {
       dispatch({ type: 'SET_USER', payload: null });
+      navigate('/login');
+    } finally {
+      setTried(true);
     }
   };
 
@@ -136,11 +141,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Always clear local state regardless of server response
       dispatch({ type: 'SET_USER', payload: null });
-      // Clear any stored tokens or data
       localStorage.clear();
       sessionStorage.clear();
+      navigate('/login');
     }
   };
 
@@ -157,17 +161,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     checkAuth();
   }, []);
 
+  if (state.isLoading && !tried) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <AuthContext.Provider value={{
-      ...state,
-      login,
-      register,
-      verifyOTP,
-      resendOTP,
-      logout,
-      updateProfile,
-      checkAuth,
-    }}>
+    <AuthContext.Provider
+      value={{
+        ...state,
+        login,
+        register,
+        verifyOTP,
+        resendOTP,
+        logout,
+        updateProfile,
+        checkAuth
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
