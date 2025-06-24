@@ -75,8 +75,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       const { data } = await axios.get('/auth/me');
-      dispatch({ type: 'SET_USER', payload: data.user });
-    } catch {
+      dispatch({ type: 'SET_USER', payload: data.user ?? null });
+    } catch (err) {
+      console.error('checkAuth error:', err);
       dispatch({ type: 'SET_USER', payload: null });
     }
   };
@@ -135,17 +136,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     checkAuth();
   }, []);
-
-  if (state.isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <div className="flex flex-col items-center">
-          <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-white text-lg">Please Wait...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <AuthContext.Provider
