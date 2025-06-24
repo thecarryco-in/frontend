@@ -217,7 +217,7 @@ const Cart: React.FC = () => {
                       
                       <div className="flex items-center space-x-4">
                         <span className="text-2xl font-bold text-white">₹{item.product.price}</span>
-                        {item.product.originalPrice && (
+                        {item.product.originalPrice > 0 && (
                           <span className="text-gray-500 text-lg line-through">₹{item.product.originalPrice}</span>
                         )}
                       </div>
