@@ -64,7 +64,7 @@ const initialState: AuthState = {
   isAuthenticated: false,
 };
 
-// Axios config
+// Axios defaults
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 axios.defaults.withCredentials = true;
 
@@ -78,9 +78,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       dispatch({ type: 'SET_USER', payload: data.user });
     } catch {
       dispatch({ type: 'SET_USER', payload: null });
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
+      // no redirect here: allow public pages to render
     }
   };
 
@@ -127,9 +125,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       dispatch({ type: 'SET_USER', payload: null });
       localStorage.clear();
       sessionStorage.clear();
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
+      // no redirect: routing handles it
     }
   };
 
@@ -137,7 +133,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     checkAuth();
   }, []);
 
-  if (state.isLoading) return <div>Loading...</div>;
+  if (state.isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <AuthContext.Provider
