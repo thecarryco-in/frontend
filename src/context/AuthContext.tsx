@@ -71,6 +71,18 @@ const initialState: AuthState = {
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 axios.defaults.withCredentials = true;
 
+// Add response interceptor to handle token expiration
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid, redirect to login
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
@@ -121,10 +133,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const logout = async () => {
     try {
       await axios.post('/auth/logout');
-      dispatch({ type: 'SET_USER', payload: null });
     } catch (error) {
-      // Even if logout fails on server, clear local state
+      console.error('Logout error:', error);
+    } finally {
+      // Always clear local state regardless of server response
       dispatch({ type: 'SET_USER', payload: null });
+      // Clear any stored tokens or data
+      localStorage.clear();
+      sessionStorage.clear();
     }
   };
 

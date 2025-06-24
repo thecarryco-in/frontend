@@ -70,15 +70,17 @@ const Cart: React.FC = () => {
         return;
       }
 
-      // Create order
+      // Create order with proper product data
       const orderData = {
         items: items.map(item => ({
-          productId: item.product.id,
+          productId: item.product.id || item.product._id, // Handle both id formats
           quantity: item.quantity
         })),
         shippingAddress,
         totalAmount: total
       };
+
+      console.log('Order data being sent:', orderData);
 
       const response = await axios.post('/orders/create-order', orderData);
       const { orderId, razorpayOrderId, amount, currency, key } = response.data;
@@ -191,7 +193,7 @@ const Cart: React.FC = () => {
             <div className="space-y-6">
               {items.map((item, index) => (
                 <div 
-                  key={item.product.id} 
+                  key={item.product.id || item.product._id} 
                   className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-3xl p-8 border border-white/10 hover:border-purple-400/30 transition-all duration-300"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
@@ -236,14 +238,14 @@ const Cart: React.FC = () => {
                     <div className="flex lg:flex-col items-center lg:items-end justify-between lg:justify-start space-y-4">
                       <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-2xl p-2 border border-white/20">
                         <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.product.id || item.product._id, item.quantity - 1)}
                           className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 transition-colors duration-200 text-white"
                         >
                           <Minus className="w-5 h-5" />
                         </button>
                         <span className="w-12 text-center font-bold text-lg text-white">{item.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.product.id || item.product._id, item.quantity + 1)}
                           className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 transition-colors duration-200 text-white"
                         >
                           <Plus className="w-5 h-5" />
@@ -251,7 +253,7 @@ const Cart: React.FC = () => {
                       </div>
 
                       <button
-                        onClick={() => removeFromCart(item.product.id)}
+                        onClick={() => removeFromCart(item.product.id || item.product._id)}
                         className="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200 border border-transparent hover:border-red-400/30"
                       >
                         <Trash2 className="w-6 h-6" />

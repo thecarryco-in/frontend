@@ -21,9 +21,14 @@ router.post('/create-order', authenticateToken, async (req, res) => {
   try {
     const { items, shippingAddress, totalAmount } = req.body;
 
+    console.log('Received order data:', { items, shippingAddress, totalAmount });
+
     // Validate items and check stock
     const productIds = items.map(item => item.productId);
+    console.log('Product IDs:', productIds);
+
     const products = await Product.find({ _id: { $in: productIds } });
+    console.log('Found products:', products.length);
 
     const orderItems = [];
     let calculatedTotal = 0;
@@ -32,6 +37,7 @@ router.post('/create-order', authenticateToken, async (req, res) => {
       const product = products.find(p => p._id.toString() === item.productId);
       
       if (!product) {
+        console.log('Product not found:', item.productId);
         return res.status(400).json({ message: `Product not found: ${item.productId}` });
       }
 
@@ -58,12 +64,16 @@ router.post('/create-order', authenticateToken, async (req, res) => {
       });
     }
 
+    console.log('Calculated total:', calculatedTotal);
+
     // Create Razorpay order
     const razorpayOrder = await razorpay.orders.create({
       amount: Math.round(calculatedTotal * 100), // Amount in paise
       currency: 'INR',
       receipt: `receipt_${Date.now()}`,
     });
+
+    console.log('Razorpay order created:', razorpayOrder.id);
 
     // Create order in database
     const order = new Order({
@@ -77,6 +87,7 @@ router.post('/create-order', authenticateToken, async (req, res) => {
     });
 
     await order.save();
+    console.log('Order saved to database:', order._id);
 
     res.status(201).json({
       orderId: order._id,
@@ -124,8 +135,7 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
       await Product.findByIdAndUpdate(
         item.product._id,
         { 
-          $inc: { stockQuantity: -item.quantity },
-          $set: { inStock: true } // Will be updated based on stockQuantity in a pre-save hook
+          $inc: { stockQuantity: -item.quantity }
         }
       );
     }
@@ -139,7 +149,12 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
     await order.save();
 
     // Send confirmation email
-    await sendOrderConfirmationEmail(order.user.email, order.user.name, order);
+    try {
+      await sendOrderConfirmationEmail(order.user.email, order.user.name, order);
+    } catch (emailError) {
+      console.error('Email sending error:', emailError);
+      // Don't fail the order if email fails
+    }
 
     res.status(200).json({
       message: 'Payment verified successfully',
@@ -273,7 +288,12 @@ router.put('/admin/:orderId/status', authenticateToken, requireAdmin, async (req
 
     // Send delivery email if status changed to delivered
     if (oldStatus !== 'delivered' && status === 'delivered') {
-      await sendOrderDeliveredEmail(order.user.email, order.user.name, order);
+      try {
+        await sendOrderDeliveredEmail(order.user.email, order.user.name, order);
+      } catch (emailError) {
+        console.error('Delivery email error:', emailError);
+        // Don't fail the status update if email fails
+      }
     }
 
     res.status(200).json({

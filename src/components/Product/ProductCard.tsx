@@ -3,6 +3,7 @@ import { Star, ShoppingCart, Heart, Zap } from 'lucide-react';
 import { Product } from '../../types';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface ProductCardProps {
   product: Product;
@@ -11,17 +12,26 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { isAuthenticated } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isAuthenticated) {
+      alert('Please login to add items to cart');
+      return;
+    }
     addToCart(product);
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isAuthenticated) {
+      alert('Please login to add items to wishlist');
+      return;
+    }
     if (isInWishlist(product.id)) {
       removeFromWishlist(product.id);
     } else {
@@ -86,29 +96,33 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="absolute top-4 right-4 flex flex-col space-y-2">
+        {/* Action Buttons - Only show when authenticated */}
+        {isAuthenticated && (
+          <div className="absolute top-4 right-4 flex flex-col space-y-2">
+            <button
+              onClick={handleToggleWishlist}
+              className={`w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center transition-all duration-300 border ${
+                isInWishlist(product.id)
+                  ? 'bg-red-500 border-red-400 text-white' 
+                  : 'bg-white/10 border-white/20 text-white hover:bg-red-500 hover:border-red-400'
+              }`}
+            >
+              <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+            </button>
+          </div>
+        )}
+
+        {/* Quick Add Button - Only show when authenticated */}
+        {isAuthenticated && (
           <button
-            onClick={handleToggleWishlist}
-            className={`w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center transition-all duration-300 border ${
-              isInWishlist(product.id)
-                ? 'bg-red-500 border-red-400 text-white' 
-                : 'bg-white/10 border-white/20 text-white hover:bg-red-500 hover:border-red-400'
+            onClick={handleAddToCart}
+            className={`absolute bottom-4 right-4 w-12 h-12 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-500 ${
+              isHovered ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
             }`}
           >
-            <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+            <ShoppingCart className="w-6 h-6" />
           </button>
-        </div>
-
-        {/* Quick Add Button */}
-        <button
-          onClick={handleAddToCart}
-          className={`absolute bottom-4 right-4 w-12 h-12 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-500 ${
-            isHovered ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
-          }`}
-        >
-          <ShoppingCart className="w-6 h-6" />
-        </button>
+        )}
 
         {/* Fast Charging Badge */}
         {product.category === 'chargers' && (
@@ -163,18 +177,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <span className="text-white font-bold text-2xl">
-              ${product.price}
+              ₹{product.price}
             </span>
             {product.originalPrice && (
               <span className="text-gray-500 text-lg line-through">
-                ${product.originalPrice}
+                ₹{product.originalPrice}
               </span>
             )}
           </div>
           
           {product.originalPrice && (
             <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-3 py-1 rounded-full font-bold">
-              Save ${(product.originalPrice - product.price).toFixed(2)}
+              Save ₹{(product.originalPrice - product.price).toFixed(2)}
             </div>
           )}
         </div>
@@ -209,6 +223,27 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 {tag}
               </span>
             ))}
+          </div>
+        )}
+
+        {/* Login prompt for non-authenticated users */}
+        {!isAuthenticated && (
+          <div className="pt-4 border-t border-white/10">
+            <p className="text-center text-gray-400 text-sm mb-3">Login to add to cart or wishlist</p>
+            <div className="flex space-x-2">
+              <a
+                href="/login"
+                className="flex-1 bg-gradient-to-r from-purple-600 to-cyan-600 text-white py-2 rounded-xl font-semibold text-center hover:shadow-lg transition-all duration-300"
+              >
+                Login
+              </a>
+              <a
+                href="/register"
+                className="flex-1 border border-white/20 text-white py-2 rounded-xl font-semibold text-center hover:bg-white/10 transition-all duration-300"
+              >
+                Sign Up
+              </a>
+            </div>
           </div>
         )}
       </div>

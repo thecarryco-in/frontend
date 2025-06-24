@@ -1,5 +1,31 @@
 import mongoose from 'mongoose';
 
+const reviewSchema = new mongoose.Schema({
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  userName: {
+    type: String,
+    required: true
+  },
+  rating: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 5
+  },
+  comment: {
+    type: String,
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -54,7 +80,10 @@ const productSchema = new mongoose.Schema({
     min: 0,
     max: 5
   },
-  reviews: {
+  reviews: [{
+    type: reviewSchema
+  }],
+  reviewCount: {
     type: Number,
     default: 0,
     min: 0
@@ -88,6 +117,28 @@ const productSchema = new mongoose.Schema({
   }]
 }, {
   timestamps: true
+});
+
+// Calculate average rating when reviews are updated
+productSchema.methods.calculateAverageRating = function() {
+  if (this.reviews.length === 0) {
+    this.rating = 0;
+    this.reviewCount = 0;
+  } else {
+    const totalRating = this.reviews.reduce((sum, review) => sum + review.rating, 0);
+    this.rating = totalRating / this.reviews.length;
+    this.reviewCount = this.reviews.length;
+  }
+};
+
+// Update stock status based on quantity
+productSchema.pre('save', function(next) {
+  if (this.stockQuantity <= 0) {
+    this.inStock = false;
+  } else {
+    this.inStock = true;
+  }
+  next();
 });
 
 // Index for better search performance

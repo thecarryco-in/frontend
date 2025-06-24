@@ -1,5 +1,6 @@
 import express from 'express';
 import Product from '../models/Product.js';
+import Order from '../models/Order.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -88,7 +89,7 @@ router.get('/:id', async (req, res) => {
     const product = await Product.findOne({ 
       _id: req.params.id, 
       inStock: true 
-    });
+    }).populate('reviews.user', 'name avatar');
     
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
@@ -97,6 +98,95 @@ router.get('/:id', async (req, res) => {
     res.status(200).json({ product });
   } catch (error) {
     console.error('Get product error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Add product review (authenticated users only)
+router.post('/:id/review', authenticateToken, async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const productId = req.params.id;
+    const userId = req.userId;
+
+    // Validate rating
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    }
+
+    if (!comment || comment.trim().length === 0) {
+      return res.status(400).json({ message: 'Comment is required' });
+    }
+
+    // Check if user has purchased this product
+    const userOrder = await Order.findOne({
+      user: userId,
+      'items.product': productId,
+      status: 'delivered'
+    });
+
+    if (!userOrder) {
+      return res.status(403).json({ message: 'You can only review products you have purchased and received' });
+    }
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    // Check if user has already reviewed this product
+    const existingReview = product.reviews.find(review => review.user.toString() === userId);
+    if (existingReview) {
+      return res.status(400).json({ message: 'You have already reviewed this product' });
+    }
+
+    // Get user info
+    const User = (await import('../models/User.js')).default;
+    const user = await User.findById(userId);
+
+    // Add review
+    const newReview = {
+      user: userId,
+      userName: user.name,
+      rating: parseInt(rating),
+      comment: comment.trim(),
+      createdAt: new Date()
+    };
+
+    product.reviews.push(newReview);
+    product.calculateAverageRating();
+    await product.save();
+
+    res.status(201).json({ 
+      message: 'Review added successfully',
+      review: newReview,
+      averageRating: product.rating,
+      totalReviews: product.reviewCount
+    });
+  } catch (error) {
+    console.error('Add review error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get product reviews (public)
+router.get('/:id/reviews', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate('reviews.user', 'name avatar')
+      .select('reviews rating reviewCount');
+    
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.status(200).json({
+      reviews: product.reviews,
+      averageRating: product.rating,
+      totalReviews: product.reviewCount
+    });
+  } catch (error) {
+    console.error('Get reviews error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

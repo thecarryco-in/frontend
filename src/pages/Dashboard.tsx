@@ -8,6 +8,12 @@ interface Order {
   _id: string;
   orderNumber: string;
   items: Array<{
+    product: {
+      _id: string;
+      name: string;
+      image: string;
+      brand: string;
+    };
     productSnapshot: {
       name: string;
       price: number;
@@ -48,6 +54,11 @@ const Dashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   const { user, updateProfile } = useAuth();
 
@@ -129,6 +140,38 @@ const Dashboard: React.FC = () => {
       setError(error.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRateProduct = (product: any) => {
+    setSelectedProduct(product);
+    setShowRatingModal(true);
+    setRating(0);
+    setComment('');
+  };
+
+  const submitReview = async () => {
+    if (!selectedProduct || rating === 0 || !comment.trim()) {
+      alert('Please provide both rating and comment');
+      return;
+    }
+
+    setSubmittingReview(true);
+    try {
+      await axios.post(`/products/${selectedProduct._id}/review`, {
+        rating,
+        comment: comment.trim()
+      });
+      
+      alert('Review submitted successfully!');
+      setShowRatingModal(false);
+      setSelectedProduct(null);
+      setRating(0);
+      setComment('');
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Failed to submit review');
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -417,7 +460,7 @@ const Dashboard: React.FC = () => {
                         </div>
 
                         {/* Order Items Preview */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                           {order.items.slice(0, 3).map((item, index) => (
                             <div key={index} className="flex items-center space-x-3 bg-white/5 rounded-xl p-4">
                               <img
@@ -427,6 +470,7 @@ const Dashboard: React.FC = () => {
                               />
                               <div className="flex-1">
                                 <h4 className="text-white font-medium text-sm truncate">{item.productSnapshot.name}</h4>
+                                <p className="text-gray-400 text-xs">{item.productSnapshot.brand}</p>
                                 <p className="text-gray-400 text-xs">Qty: {item.quantity}</p>
                               </div>
                             </div>
@@ -437,6 +481,24 @@ const Dashboard: React.FC = () => {
                             </div>
                           )}
                         </div>
+
+                        {/* Rate Products Button - Only show for delivered orders */}
+                        {order.status === 'delivered' && (
+                          <div className="border-t border-white/10 pt-4">
+                            <div className="flex flex-wrap gap-3">
+                              {order.items.map((item, index) => (
+                                <button
+                                  key={index}
+                                  onClick={() => handleRateProduct(item.product)}
+                                  className="flex items-center space-x-2 bg-gradient-to-r from-yellow-600 to-orange-600 text-white px-4 py-2 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+                                >
+                                  <Star className="w-4 h-4" />
+                                  <span>Rate {item.productSnapshot.name}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
                         {/* Expanded Order Details */}
                         {selectedOrder?._id === order._id && (
@@ -568,6 +630,64 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Rating Modal */}
+      {showRatingModal && selectedProduct && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-800 rounded-3xl p-8 max-w-md w-full">
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold text-white mb-2">Rate Product</h3>
+              <p className="text-gray-400">{selectedProduct.name}</p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium mb-3 text-gray-300">Rating</label>
+                <div className="flex justify-center space-x-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setRating(star)}
+                      className={`w-10 h-10 ${
+                        star <= rating ? 'text-yellow-400' : 'text-gray-600'
+                      } hover:text-yellow-400 transition-colors`}
+                    >
+                      <Star className="w-full h-full fill-current" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-3 text-gray-300">Comment</label>
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  rows={4}
+                  className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400 resize-none"
+                  placeholder="Share your experience with this product..."
+                />
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowRatingModal(false)}
+                  className="flex-1 border border-white/20 text-white py-3 rounded-xl font-semibold hover:bg-white/10 transition-all duration-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitReview}
+                  disabled={submittingReview || rating === 0 || !comment.trim()}
+                  className="flex-1 bg-gradient-to-r from-yellow-600 to-orange-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submittingReview ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
