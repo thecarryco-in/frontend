@@ -83,7 +83,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               NEW
             </span>
           )}
-          {product.originalPrice && (
+          {/* only show SALE if originalPrice > 0 */}
+          {product.originalPrice > 0 && (
             <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm">
               SALE
             </span>
@@ -96,14 +97,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
         </div>
 
-        {/* Action Buttons - Only show when authenticated */}
+        {/* Action Buttons */}
         {isAuthenticated && (
           <div className="absolute top-4 right-4 flex flex-col space-y-2">
             <button
               onClick={handleToggleWishlist}
               className={`w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center transition-all duration-300 border ${
                 isInWishlist(product.id)
-                  ? 'bg-red-500 border-red-400 text-white' 
+                  ? 'bg-red-500 border-red-400 text-white'
                   : 'bg-white/10 border-white/20 text-white hover:bg-red-500 hover:border-red-400'
               }`}
             >
@@ -112,7 +113,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         )}
 
-        {/* Quick Add Button - Only show when authenticated */}
+        {/* Quick Add */}
         {isAuthenticated && (
           <button
             onClick={handleAddToCart}
@@ -146,7 +147,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           {product.name}
         </h3>
 
-        {/* Rating */}
+        {/* Rating & Stock */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="flex items-center">
@@ -165,10 +166,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               {product.rating} ({product.reviews})
             </span>
           </div>
-          
-          <div className={`text-sm font-bold ${
-            product.inStock ? 'text-green-400' : 'text-red-400'
-          }`}>
+          <div className={`text-sm font-bold ${product.inStock ? 'text-green-400' : 'text-red-400'}`}>
             {product.inStock ? '✓ In Stock' : '✗ Out of Stock'}
           </div>
         </div>
@@ -179,14 +177,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <span className="text-white font-bold text-2xl">
               ₹{product.price}
             </span>
-            {product.originalPrice && (
+            {/* only show crossed original if > 0 */}
+            {product.originalPrice > 0 && (
               <span className="text-gray-500 text-lg line-through">
                 ₹{product.originalPrice}
               </span>
             )}
           </div>
           
-          {product.originalPrice && (
+          {/* only show “Save” badge if originalPrice > 0 */}
+          {product.originalPrice > 0 && (
             <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-3 py-1 rounded-full font-bold">
               Save ₹{(product.originalPrice - product.price).toFixed(2)}
             </div>
@@ -229,21 +229,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Login prompt for non-authenticated users */}
         {!isAuthenticated && (
           <div className="pt-4 border-t border-white/10">
-            <p className="text-center text-gray-400 text-sm mb-3">Login to add to cart or wishlist</p>
-            <div className="flex space-x-2">
-              <a
-                href="/login"
-                className="flex-1 bg-gradient-to-r from-purple-600 to-cyan-600 text-white py-2 rounded-xl font-semibold text-center hover:shadow-lg transition-all duration-300"
-              >
-                Login
-              </a>
-              <a
-                href="/register"
-                className="flex-1 border border-white/20 text-white py-2 rounded-xl font-semibold text-center hover:bg-white/10 transition-all duration-300"
-              >
-                Sign Up
-              </a>
-            </div>
+            <p className="text-center text-gray-400 text-sm mb-3">
+              Login to add to cart or wishlist
+            </p>
           </div>
         )}
       </div>
