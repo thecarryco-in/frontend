@@ -93,7 +93,7 @@ const Wishlist: React.FC = () => {
                       NEW
                     </span>
                   )}
-                  {product.originalPrice && (
+                  {product.originalPrice > 0 && (
                     <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm">
                       SALE
                     </span>
@@ -120,14 +120,14 @@ const Wishlist: React.FC = () => {
                     <span className="text-white font-bold text-xl">
                       ${product.price}
                     </span>
-                    {product.originalPrice && (
+                    {product.originalPrice > 0 && (
                       <span className="text-gray-500 text-sm line-through">
                         ${product.originalPrice}
                       </span>
                     )}
                   </div>
                   
-                  {product.originalPrice && (
+                  {product.originalPrice > 0 && (
                     <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1 rounded-full font-bold">
                       Save ${(product.originalPrice - product.price).toFixed(2)}
                     </div>
