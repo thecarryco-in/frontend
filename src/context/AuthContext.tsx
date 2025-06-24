@@ -75,15 +75,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       const { data } = await axios.get('/auth/me');
-      dispatch({ type: 'SET_USER', payload: data.user ?? null });
-    } catch (err) {
-      console.error('checkAuth error:', err);
+      dispatch({ type: 'SET_USER', payload: data.user });
+    } catch {
       dispatch({ type: 'SET_USER', payload: null });
+      // no redirect here: allow public pages to render
     }
   };
 
   const login = async (email: string, password: string) => {
-    dispatch({ type: 'SET_LOADING', payload: true });
     try {
       const { data } = await axios.post('/auth/login', { email, password });
       dispatch({ type: 'SET_USER', payload: data.user });
@@ -93,7 +92,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const register = async (name: string, email: string, password: string) => {
-    dispatch({ type: 'SET_LOADING', payload: true });
     try {
       await axios.post('/auth/register', { name, email, password });
     } catch (err: any) {
@@ -102,7 +100,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const verifyOTP = async (email: string, otp: string) => {
-    dispatch({ type: 'SET_LOADING', payload: true });
     try {
       const { data } = await axios.post('/auth/verify-otp', { email, otp });
       dispatch({ type: 'SET_USER', payload: data.user });
@@ -112,7 +109,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const resendOTP = async (email: string) => {
-    dispatch({ type: 'SET_LOADING', payload: true });
     try {
       await axios.post('/auth/resend-otp', { email });
     } catch (err: any) {
@@ -121,21 +117,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
-    dispatch({ type: 'SET_LOADING', payload: true });
     try {
       await axios.post('/auth/logout');
-      dispatch({ type: 'SET_USER', payload: null });
     } catch (err) {
       console.error(err);
     } finally {
+      dispatch({ type: 'SET_USER', payload: null });
       localStorage.clear();
       sessionStorage.clear();
+      // no redirect: routing handles it
     }
   };
 
   useEffect(() => {
     checkAuth();
   }, []);
+
+  if (state.isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <AuthContext.Provider
