@@ -1,15 +1,6 @@
-import React, {
-  createContext,
-  useContext,
-  useReducer,
-  useEffect,
-  useState,
-  ReactNode
-} from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import axios from 'axios';
 
-// --- Types ---
 interface User {
   id: string;
   name: string;
@@ -39,13 +30,11 @@ interface AuthContextType extends AuthState {
   checkAuth: () => Promise<void>;
 }
 
-// --- Reducer & Initial State ---
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_USER'; payload: User | null }
-  | { type: 'SET_AUTHENTICATED'; payload: boolean }
   | { type: 'UPDATE_USER'; payload: Partial<User> };
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
@@ -57,14 +46,12 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         ...state,
         user: action.payload,
         isAuthenticated: !!action.payload,
-        isLoading: false
+        isLoading: false,
       };
-    case 'SET_AUTHENTICATED':
-      return { ...state, isAuthenticated: action.payload };
     case 'UPDATE_USER':
       return {
         ...state,
-        user: state.user ? { ...state.user, ...action.payload } : null
+        user: state.user ? { ...state.user, ...action.payload } : null,
       };
     default:
       return state;
@@ -74,86 +61,75 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 const initialState: AuthState = {
   user: null,
   isLoading: true,
-  isAuthenticated: false
+  isAuthenticated: false,
 };
 
-// --- Axios Configuration ---
+// Axios config
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 axios.defaults.withCredentials = true;
-// Removed global 401 interceptor to avoid redirect loops
 
-// --- Provider ---
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
-  const [tried, setTried] = useState(false);
-  const navigate = useNavigate();
 
   const checkAuth = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const response = await axios.get('/auth/me');
-      dispatch({ type: 'SET_USER', payload: response.data.user });
-    } catch (error) {
+      const { data } = await axios.get('/auth/me');
+      dispatch({ type: 'SET_USER', payload: data.user });
+    } catch {
       dispatch({ type: 'SET_USER', payload: null });
-      navigate('/login');
-    } finally {
-      setTried(true);
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post('/auth/login', { email, password });
-      dispatch({ type: 'SET_USER', payload: response.data.user });
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Login failed');
+      const { data } = await axios.post('/auth/login', { email, password });
+      dispatch({ type: 'SET_USER', payload: data.user });
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || 'Login failed');
     }
   };
 
   const register = async (name: string, email: string, password: string) => {
     try {
       await axios.post('/auth/register', { name, email, password });
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Registration failed');
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || 'Registration failed');
     }
   };
 
   const verifyOTP = async (email: string, otp: string) => {
     try {
-      const response = await axios.post('/auth/verify-otp', { email, otp });
-      dispatch({ type: 'SET_USER', payload: response.data.user });
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'OTP verification failed');
+      const { data } = await axios.post('/auth/verify-otp', { email, otp });
+      dispatch({ type: 'SET_USER', payload: data.user });
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || 'OTP verification failed');
     }
   };
 
   const resendOTP = async (email: string) => {
     try {
       await axios.post('/auth/resend-otp', { email });
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to resend OTP');
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || 'Failed to resend OTP');
     }
   };
 
   const logout = async () => {
     try {
       await axios.post('/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch (err) {
+      console.error(err);
     } finally {
       dispatch({ type: 'SET_USER', payload: null });
       localStorage.clear();
       sessionStorage.clear();
-      navigate('/login');
-    }
-  };
-
-  const updateProfile = async (data: Partial<User>) => {
-    try {
-      const response = await axios.put('/user/profile', data);
-      dispatch({ type: 'UPDATE_USER', payload: response.data.user });
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Profile update failed');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
   };
 
@@ -161,9 +137,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     checkAuth();
   }, []);
 
-  if (state.isLoading && !tried) {
-    return <div>Loading...</div>;
-  }
+  if (state.isLoading) return <div>Loading...</div>;
 
   return (
     <AuthContext.Provider
@@ -174,8 +148,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         verifyOTP,
         resendOTP,
         logout,
-        updateProfile,
-        checkAuth
+        updateProfile: async (data) => {
+          const { data: res } = await axios.put('/user/profile', data);
+          dispatch({ type: 'UPDATE_USER', payload: res.user });
+        },
+        checkAuth,
       }}
     >
       {children}
@@ -183,10 +160,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };
