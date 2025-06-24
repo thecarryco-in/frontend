@@ -35,7 +35,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
   const [formData, setFormData] = useState<Product>({
     name: '',
     price: 0,
-    originalPrice: undefined,
+    originalPrice: 0,
     category: 'cases',
     brand: '',
     image: '',
@@ -294,23 +294,25 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
                   name="price"
                   value={formData.price}
                   onChange={handleInputChange}
-                  step="0.01"
+                  step="1"
                   min="0"
                   className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
                   placeholder="0.00"
                   required
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium mb-2 text-gray-300">Original Price (Optional)</label>
+                <label className="block text-sm font-medium mb-2 text-gray-300">
+                  Original Price
+                </label>
                 <input
                   type="number"
                   name="originalPrice"
-                  value={formData.originalPrice || ''}
+                  value={formData.originalPrice}
                   onChange={handleInputChange}
-                  step="0.01"
+                  step="1"
                   min="0"
+                  required
                   className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
                   placeholder="0.00"
                 />
