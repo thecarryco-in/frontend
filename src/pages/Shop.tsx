@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Filter, Grid, List, SlidersHorizontal, Search, Star, Loader } from 'lucide-react';
 import ProductCard from '../components/Product/ProductCard';
@@ -17,6 +17,14 @@ const Shop: React.FC = () => {
     maxPrice: undefined as number | undefined,
     rating: 0,
   });
+
+  // 👇 Add this useEffect to update filters when query changes
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      category: searchParams.get('category') || '',
+    }));
+  }, [searchParams]);
 
   const { data, loading, error } = useProducts({
     ...filters,
@@ -171,38 +179,40 @@ const Shop: React.FC = () => {
                 <h3 className="text-xl font-bold text-white">Filters</h3>
               </div>
 
-              {/* Category Filter */}
-              <div className="mb-8">
-                <h4 className="font-semibold mb-4 text-white">Category</h4>
-                <div className="space-y-3">
-                  <label className="flex items-center space-x-3 cursor-pointer group">
-                    <input
-                      type="radio"
-                      name="category"
-                      value=""
-                      checked={filters.category === ''}
-                      onChange={(e) => setFilters({...filters, category: e.target.value})}
-                      className="w-4 h-4 text-purple-500 bg-transparent border-2 border-gray-400 focus:ring-purple-500"
-                    />
-                    <span className="text-gray-300 group-hover:text-white transition-colors">All Categories</span>
-                  </label>
-                  {categories.map(category => (
-                    <label key={category.value} className="flex items-center space-x-3 cursor-pointer group">
+              {/* Category Filter - only show if not already filtered by category */}
+              {filters.category === '' && (
+                <div className="mb-8">
+                  <h4 className="font-semibold mb-4 text-white">Category</h4>
+                  <div className="space-y-3">
+                    <label className="flex items-center space-x-3 cursor-pointer group">
                       <input
                         type="radio"
                         name="category"
-                        value={category.value}
-                        checked={filters.category === category.value}
+                        value=""
+                        checked={filters.category === ''}
                         onChange={(e) => setFilters({...filters, category: e.target.value})}
                         className="w-4 h-4 text-purple-500 bg-transparent border-2 border-gray-400 focus:ring-purple-500"
                       />
-                      <span className="text-gray-300 group-hover:text-white transition-colors">
-                        {category.label}
-                      </span>
+                      <span className="text-gray-300 group-hover:text-white transition-colors">All Categories</span>
                     </label>
-                  ))}
+                    {categories.map(category => (
+                      <label key={category.value} className="flex items-center space-x-3 cursor-pointer group">
+                        <input
+                          type="radio"
+                          name="category"
+                          value={category.value}
+                          checked={filters.category === category.value}
+                          onChange={(e) => setFilters({...filters, category: e.target.value})}
+                          className="w-4 h-4 text-purple-500 bg-transparent border-2 border-gray-400 focus:ring-purple-500"
+                        />
+                        <span className="text-gray-300 group-hover:text-white transition-colors">
+                          {category.label}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Brand Filter */}
               <div className="mb-8">
