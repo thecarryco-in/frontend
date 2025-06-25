@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Filter, Grid, List, SlidersHorizontal, Search, Star, Loader } from 'lucide-react';
 import ProductCard from '../components/Product/ProductCard';
 import { useProducts } from '../hooks/useProducts';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
 
 const Shop: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -18,7 +19,7 @@ const Shop: React.FC = () => {
     rating: 0,
   });
 
-  // 👇 Add this useEffect to update filters when query changes
+  // Update filters when query changes
   useEffect(() => {
     setFilters((prev) => ({
       ...prev,
@@ -26,9 +27,16 @@ const Shop: React.FC = () => {
     }));
   }, [searchParams]);
 
+  // Debounce search and price range
+  const debouncedSearch = useDebouncedValue(searchQuery, 1000);
+  const debouncedMinPrice = useDebouncedValue(filters.minPrice, 1000);
+  const debouncedMaxPrice = useDebouncedValue(filters.maxPrice, 1000);
+
   const { data, loading, error } = useProducts({
     ...filters,
-    search: searchQuery || undefined,
+    minPrice: debouncedMinPrice,
+    maxPrice: debouncedMaxPrice,
+    search: debouncedSearch || undefined,
     sortBy,
     sortOrder,
     page: 1,
