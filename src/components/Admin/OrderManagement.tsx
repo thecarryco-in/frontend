@@ -74,7 +74,7 @@ const OrderManagement: React.FC = () => {
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       fetchOrders();
-    }, 500);
+    }, 1000);
 
     return () => clearTimeout(debounceTimer);
   }, [searchTerm, statusFilter]);
