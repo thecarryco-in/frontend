@@ -125,14 +125,6 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
 
     await order.save();
 
-    // Update product stock
-    for (const item of order.items) {
-      await Product.findByIdAndUpdate(
-        item.product._id,
-        { $inc: { stockQuantity: -item.quantity } }
-      );
-    }
-
     // Update user total spent
     await User.findByIdAndUpdate(
       order.user._id,
