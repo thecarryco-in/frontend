@@ -2,7 +2,7 @@ import express from 'express';
 import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 import { authenticateToken } from '../middleware/auth.js';
-import { reviewLimiter } from '../index.js';
+import { reviewLimiter } from '../middleware/rateLimiters.js';
 
 const router = express.Router();
 
