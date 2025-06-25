@@ -83,7 +83,7 @@ const Cart: React.FC = () => {
       console.log('Order data being sent:', orderData);
 
       const response = await axios.post('/orders/create-order', orderData);
-      const { orderId, razorpayOrderId, amount, currency, key } = response.data;
+      const { razorpayOrderId, amount, currency, key, items: orderItems, shippingAddress: orderShipping, totalWithTax } = response.data;
 
       // Razorpay options
       const options = {
@@ -93,17 +93,18 @@ const Cart: React.FC = () => {
         name: 'The CarryCo',
         description: 'Premium Mobile Accessories',
         order_id: razorpayOrderId,
-        handler: async (response: any) => {
+        handler: async (rzpResponse: any) => {
           try {
-            // Verify payment
+            // Verify payment and send all required data
             const verifyResponse = await axios.post('/orders/verify-payment', {
-              orderId,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpayOrderId: response.razorpay_order_id,
-              razorpaySignature: response.razorpay_signature
+              razorpayPaymentId: rzpResponse.razorpay_payment_id,
+              razorpayOrderId: rzpResponse.razorpay_order_id,
+              razorpaySignature: rzpResponse.razorpay_signature,
+              items: orderItems,
+              shippingAddress: orderShipping,
+              totalWithTax
             });
 
-            // Clear cart and redirect
             clearCart();
             alert('Payment successful! Your order has been placed.');
             navigate('/dashboard?tab=orders');
