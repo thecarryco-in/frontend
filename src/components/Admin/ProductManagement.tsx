@@ -68,7 +68,7 @@ const ProductManagement: React.FC = () => {
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       fetchProducts();
-    }, 500);
+    }, 1000);
 
     return () => clearTimeout(debounceTimer);
   }, [searchTerm, categoryFilter, stockFilter]);
