@@ -46,11 +46,6 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  memberStatus: {
-    type: String,
-    enum: ['Bronze', 'Silver', 'Gold', 'Platinum'],
-    default: 'Bronze'
-  }
 }, {
   timestamps: true
 });
@@ -71,19 +66,6 @@ userSchema.pre('save', async function(next) {
 // Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
-};
-
-// Update member status based on total spent
-userSchema.methods.updateMemberStatus = function() {
-  if (this.totalSpent >= 2000) {
-    this.memberStatus = 'Platinum';
-  } else if (this.totalSpent >= 1000) {
-    this.memberStatus = 'Gold';
-  } else if (this.totalSpent >= 500) {
-    this.memberStatus = 'Silver';
-  } else {
-    this.memberStatus = 'Bronze';
-  }
 };
 
 export default mongoose.model('User', userSchema);
