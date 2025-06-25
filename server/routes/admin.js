@@ -114,7 +114,7 @@ router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
     const productData = req.body;
     
     // Validate required fields
-    const requiredFields = ['name', 'price', 'category', 'brand', 'image', 'description'];
+    const requiredFields = ['name', 'price', 'category', 'brand', 'image'];
     for (const field of requiredFields) {
       if (!productData[field]) {
         return res.status(400).json({ message: `${field} is required` });
@@ -124,12 +124,6 @@ router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
     // Ensure arrays are properly formatted
     if (typeof productData.features === 'string') {
       productData.features = productData.features.split(',').map(f => f.trim()).filter(f => f);
-    }
-    if (typeof productData.compatibility === 'string') {
-      productData.compatibility = productData.compatibility.split(',').map(c => c.trim()).filter(c => c);
-    }
-    if (typeof productData.tags === 'string') {
-      productData.tags = productData.tags.split(',').map(t => t.trim()).filter(t => t);
     }
     if (typeof productData.images === 'string') {
       productData.images = productData.images.split(',').map(i => i.trim()).filter(i => i);
@@ -165,12 +159,6 @@ router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) =>
     // Ensure arrays are properly formatted
     if (typeof productData.features === 'string') {
       productData.features = productData.features.split(',').map(f => f.trim()).filter(f => f);
-    }
-    if (typeof productData.compatibility === 'string') {
-      productData.compatibility = productData.compatibility.split(',').map(c => c.trim()).filter(c => c);
-    }
-    if (typeof productData.tags === 'string') {
-      productData.tags = productData.tags.split(',').map(t => t.trim()).filter(t => t);
     }
     if (typeof productData.images === 'string') {
       productData.images = productData.images.split(',').map(i => i.trim()).filter(i => i);
