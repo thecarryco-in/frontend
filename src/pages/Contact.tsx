@@ -50,7 +50,7 @@ const Contact: React.FC = () => {
         message: ''
       });
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to send message. Please try again.');
+      setError(error.response?.data?.message || 'Failed to send message. Please try again later.');
     } finally {
       setIsLoading(false);
     }
