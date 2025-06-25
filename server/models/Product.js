@@ -69,11 +69,6 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
-  stockQuantity: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
   rating: {
     type: Number,
     default: 0,
@@ -130,16 +125,6 @@ productSchema.methods.calculateAverageRating = function() {
     this.reviewCount = this.reviews.length;
   }
 };
-
-// Update stock status based on quantity
-productSchema.pre('save', function(next) {
-  if (this.stockQuantity <= 0) {
-    this.inStock = false;
-  } else {
-    this.inStock = true;
-  }
-  next();
-});
 
 // Index for better search performance
 productSchema.index({ name: 'text', brand: 'text', description: 'text' });
