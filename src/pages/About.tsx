@@ -84,7 +84,7 @@ const About: React.FC = () => {
             
             <p className="text-xl text-gray-300 leading-relaxed mb-12">
               At The CarryCo, we believe your mobile device deserves the finest accessories. 
-              Since 2020, we've been crafting premium cases, chargers, and accessories that 
+              Since 2024, we've been crafting premium cases, chargers, and accessories that 
               combine cutting-edge technology with stunning design.
             </p>
 
@@ -186,54 +186,55 @@ const About: React.FC = () => {
       </section>
 
       {/* Team Section */}
-      <section className="py-24">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-20">
-            <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              Meet Our Team
-            </h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              Passionate innovators dedicated to creating the perfect mobile accessories
-            </p>
-          </div>
+{/* Team Section */}
+<section className="py-24 bg-gradient-to-b from-black to-slate-900">
+  <div className="container mx-auto px-4">
+    <div className="text-center mb-20 max-w-3xl mx-auto">
+      <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+        Meet the Founders
+      </h2>
+      <p className="text-xl text-gray-400">
+        The CarryCo isn’t just a brand — it’s a vision born from two individuals who saw mobile accessories as more than utility. We're building a legacy of style, protection, and innovation.
+      </p>
+    </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-5xl mx-auto">
-            {[
-              {
-                name: 'Akul Chauhan',
-                role: 'Founder',
-                image: 'https://res.cloudinary.com/dgcnjh1tr/image/upload/v1750706378/77acb058-cc30-453f-b5b1-bc882c67a4b3_y32cen.jpg',
-                bio: 'Every story has a beginning, and ours started with a passion for mobile technology.'
-              },
-              {
-                name: 'Shaurya Tyagi',
-                role: 'Co Founder',
-                image: 'https://res.cloudinary.com/dgcnjh1tr/image/upload/v1750705626/2befb358-2ae6-4771-9ae9-a9b5633dd6bc_pucxzp.jpg',
-                bio: 'Technology is not just about devices, it’s about enhancing lives through innovation.'
-              },
-            ].map((member, index) => (
-              <div 
-                key={index}
-                className="text-center group"
-                style={{ animationDelay: `${index * 150}ms` }}
-              >
-                <div className="relative mb-8">
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="w-48 h-48 rounded-full mx-auto object-cover border-4 border-blue-400/30 group-hover:border-blue-400 transition-all duration-300"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-blue-500/20 to-transparent rounded-full"></div>
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2">{member.name}</h3>
-                <p className="text-blue-400 font-semibold mb-4">{member.role}</p>
-                <p className="text-gray-400 leading-relaxed">{member.bio}</p>
-              </div>
-            ))}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+      {[
+        {
+          name: 'Akul Chauhan',
+          role: 'Founder & Vision Architect',
+          image: 'https://res.cloudinary.com/dgcnjh1tr/image/upload/v1750706378/77acb058-cc30-453f-b5b1-bc882c67a4b3_y32cen.jpg',
+          bio: 'I started The CarryCo to redefine how people relate to the devices they carry every day. It’s not just about protection — it’s about identity, presence, and pride in what you own.'
+        },
+        {
+          name: 'Shaurya Tyagi',
+          role: 'Co-Founder & Product Strategist',
+          image: 'https://res.cloudinary.com/dgcnjh1tr/image/upload/v1750705626/2befb358-2ae6-4771-9ae9-a9b5633dd6bc_pucxzp.jpg',
+          bio: 'Every CarryCo product is designed to be an extension of you — stylish, reliable, and forward-thinking. We’re obsessed with pushing boundaries and creating products people love.'
+        },
+      ].map((member, index) => (
+        <div
+          key={index}
+          className="text-center group"
+          style={{ animationDelay: `${index * 150}ms` }}
+        >
+          <div className="relative mb-8">
+            <img
+              src={member.image}
+              alt={member.name}
+              className="w-48 h-48 rounded-full mx-auto object-cover border-4 border-blue-400/20 group-hover:border-blue-400 transition-all duration-300"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-blue-500/20 to-transparent rounded-full"></div>
           </div>
-
+          <h3 className="text-2xl font-bold text-white mb-2">{member.name}</h3>
+          <p className="text-cyan-400 font-semibold mb-4">{member.role}</p>
+          <p className="text-gray-400 leading-relaxed">{member.bio}</p>
         </div>
-      </section>
+      ))}
+    </div>
+  </div>
+</section>
+
 
       {/* CTA Section */}
       <section className="py-24 relative overflow-hidden">
