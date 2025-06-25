@@ -3,11 +3,12 @@ import Contact from '../models/Contact.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
 import { sendAdminReplyEmail } from '../services/emailService.js';
+import { contactLimiter } from '../index.js';
 
 const router = express.Router();
 
 // Submit contact form (public) - NO EMAIL SENDING
-router.post('/submit', async (req, res) => {
+router.post('/submit', contactLimiter, async (req, res) => {
   try {
     const { name, email, phone, queryType, subject, message } = req.body;
 
