@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
     }
 
     if (search) {
-      filter.$text = { $search: search };
+      filter.name = { $regex: search, $options: 'i' }; // Case-insensitive partial match
     }
 
     // Build sort object
