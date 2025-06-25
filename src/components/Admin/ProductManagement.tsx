@@ -226,9 +226,9 @@ const ProductManagement: React.FC = () => {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <span className="text-white font-bold text-xl">${product.price}</span>
+                  <span className="text-white font-bold text-xl">₹{product.price}</span>
                   {product.originalPrice > 0 && (
-                    <span className="text-gray-500 text-sm line-through">${product.originalPrice}</span>
+                    <span className="text-gray-500 text-sm line-through">₹{product.originalPrice}</span>
                   )}
                 </div>
                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${
