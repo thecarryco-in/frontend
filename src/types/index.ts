@@ -8,9 +8,7 @@ export interface Product {
   brand: string;
   image: string;
   images?: string[];
-  description: string;
   features: string[];
-  compatibility: string[];
   inStock: boolean;
   rating: number;
   reviews: number;
@@ -18,7 +16,6 @@ export interface Product {
   isFeatured?: boolean;
   isOnSale?: boolean;
   isTopRated?: boolean;
-  tags?: string[];
   coloredTags?: {
     label: string;
     color: 'green' | 'red' | 'yellow' | 'blue' | 'purple' | 'pink';
