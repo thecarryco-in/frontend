@@ -12,7 +12,6 @@ export interface Product {
   features: string[];
   compatibility: string[];
   inStock: boolean;
-  stockQuantity?: number;
   rating: number;
   reviews: number;
   isNewProduct?: boolean;
