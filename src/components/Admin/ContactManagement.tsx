@@ -48,7 +48,7 @@ const ContactManagement: React.FC = () => {
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       fetchContacts();
-    }, 500);
+    }, 1000);
 
     return () => clearTimeout(debounceTimer);
   }, [searchTerm, statusFilter]);
