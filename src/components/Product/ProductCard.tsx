@@ -212,20 +212,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         )}
 
-        {/* Tags */}
-        {product.tags && product.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {product.tags.slice(0, 3).map((tag, index) => (
-              <span 
-                key={index}
-                className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-lg"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-
         {/* Login prompt for non-authenticated users */}
         {!isAuthenticated && (
           <div className="pt-4 border-t border-white/10">
