@@ -3,6 +3,7 @@ import { User, Package, Heart, Settings, ShoppingBag, Star, Clock, Edit3, Save, 
 import { useAuth } from '../context/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { useWishlist } from '../context/WishlistContext'; // Add this import
 
 interface Order {
   _id: string;
@@ -61,6 +62,7 @@ const Dashboard: React.FC = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
 
   const { user, updateProfile } = useAuth();
+  const { itemCount: wishlistCount } = useWishlist(); // Add this line
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
@@ -342,7 +344,7 @@ const Dashboard: React.FC = () => {
                         <Heart className="w-8 h-8 text-purple-400" />
                       </div>
                       <div>
-                        <p className="text-3xl font-bold text-white">0</p>
+                        <p className="text-3xl font-bold text-white">{wishlistCount}</p>
                         <p className="text-gray-400 font-medium">Wishlist Items</p>
                       </div>
                     </div>
