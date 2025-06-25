@@ -6,7 +6,7 @@ import User from '../models/User.js';
 import OTP from '../models/OTP.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { sendOTPEmail, sendWelcomeEmail } from '../services/emailService.js';
-import { authLimiter } from '../index.js'; // Import the limiter
+import { authLimiter } from '../middleware/rateLimiters.js';
 
 const router = express.Router();
 
