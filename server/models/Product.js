@@ -55,14 +55,7 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  description: {
-    type: String,
-    required: true
-  },
   features: [{
-    type: String
-  }],
-  compatibility: [{
     type: String
   }],
   inStock: {
@@ -99,10 +92,6 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  tags: [{
-    type: String,
-    trim: true
-  }],
   coloredTags: [{
     label: String,
     color: {
@@ -127,7 +116,7 @@ productSchema.methods.calculateAverageRating = function() {
 };
 
 // Index for better search performance
-productSchema.index({ name: 'text', brand: 'text', description: 'text' });
+productSchema.index({ name: 'text', brand: 'text' });
 productSchema.index({ category: 1, inStock: 1 });
 productSchema.index({ isFeatured: 1, inStock: 1 });
 
