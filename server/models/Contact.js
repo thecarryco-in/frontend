@@ -19,7 +19,7 @@ const contactSchema = new mongoose.Schema({
   queryType: {
     type: String,
     required: true,
-    enum: ['general', 'support', 'product', 'order', 'partnership', 'other']
+    enum: ['general', 'support', 'product', 'order', 'refund', 'other']
   },
   subject: {
     type: String,
