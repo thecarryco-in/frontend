@@ -44,7 +44,14 @@ export const useProducts = (options: UseProductsOptions = {}) => {
         });
 
         const response = await axios.get(`/products?${params.toString()}`);
-        setData(response.data);
+        
+        // After fetching products from API
+        const products = response.data.products.map((product: any) => ({
+          ...product,
+          id: product.id || product._id, // Always ensure id exists
+        }));
+        
+        setData({ products, pagination: response.data.pagination });
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to fetch products');
       } finally {
