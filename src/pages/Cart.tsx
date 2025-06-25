@@ -44,6 +44,16 @@ const Cart: React.FC = () => {
     });
   };
 
+  // Calculate total savings
+  const totalSavings = items.reduce((sum, item) => {
+    const original = item.product.originalPrice || 0;
+    const current = item.product.price;
+    if (original > current) {
+      return sum + (original - current) * item.quantity;
+    }
+    return sum;
+  }, 0);
+
   const handlePayment = async () => {
     if (!isAuthenticated) {
       navigate('/login');
@@ -96,7 +106,7 @@ const Cart: React.FC = () => {
         handler: async (rzpResponse: any) => {
           try {
             // Verify payment and send all required data
-            const verifyResponse = await axios.post('/orders/verify-payment', {
+            await axios.post('/orders/verify-payment', {
               razorpayPaymentId: rzpResponse.razorpay_payment_id,
               razorpayOrderId: rzpResponse.razorpay_order_id,
               razorpaySignature: rzpResponse.razorpay_signature,
@@ -284,6 +294,20 @@ const Cart: React.FC = () => {
                   <span className="text-gray-400">Subtotal ({itemCount} items)</span>
                   <span className="text-white font-semibold">₹{total.toFixed(2)}</span>
                 </div>
+
+                {/* Savings Row */}
+                {totalSavings > 0 && (
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold text-green-400 flex items-center">
+                      You Saved
+                      <svg className="w-5 h-5 ml-1 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" />
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
+                      </svg>
+                    </span>
+                    <span className="font-bold text-green-400">₹{totalSavings.toFixed(2)}</span>
+                  </div>
+                )}
                 
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Shipping</span>
