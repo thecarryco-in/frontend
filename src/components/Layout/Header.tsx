@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { ShoppingCart, User, Menu, X, Heart, Smartphone, LogOut, Package } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -14,6 +14,7 @@ const Header: React.FC = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -27,12 +28,31 @@ const Header: React.FC = () => {
     { name: 'Home', href: '/' },
     { name: 'Shop', href: '/shop' },
     { name: 'Cases', href: '/shop?category=cases' },
+    { name: 'Tempered Glass', href: '/shop?category=tempered-glass' }, // <-- Add this line
     { name: 'Accessories', href: '/shop?category=accessories' },
     { name: 'About', href: '/about' },
   ];
 
   const isActive = (href: string) => {
+    // Home
     if (href === '/') return location.pathname === '/';
+
+    // Category links
+    if (href.startsWith('/shop?category=')) {
+      const category = href.split('=')[1];
+      return (
+        location.pathname === '/shop' &&
+        searchParams.get('category') === category
+      );
+    }
+
+    // Shop main
+    if (href === '/shop') {
+      // Active if on /shop and no category filter
+      return location.pathname === '/shop' && !searchParams.get('category');
+    }
+
+    // Other links
     return location.pathname.startsWith(href);
   };
 
