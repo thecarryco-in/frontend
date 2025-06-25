@@ -3,7 +3,7 @@ import Contact from '../models/Contact.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
 import { sendAdminReplyEmail } from '../services/emailService.js';
-import { contactLimiter } from '../index.js';
+import { contactLimiter } from '../middleware/rateLimiters.js';
 
 const router = express.Router();
 
