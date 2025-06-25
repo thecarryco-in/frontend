@@ -10,15 +10,12 @@ interface Product {
   category: string;
   brand: string;
   image: string;
-  description: string;
   features: string[];
-  compatibility: string[];
   inStock: boolean;
   isNewProduct?: boolean;
   isFeatured?: boolean;
   isOnSale?: boolean;
   isTopRated?: boolean;
-  tags?: string[];
   coloredTags?: Array<{
     label: string;
     color: 'green' | 'red' | 'yellow' | 'blue' | 'purple' | 'pink';
@@ -39,15 +36,12 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
     category: 'cases',
     brand: '',
     image: '',
-    description: '',
     features: [],
-    compatibility: [],
     inStock: true,
     isNewProduct: false,
     isFeatured: false,
     isOnSale: false,
     isTopRated: false,
-    tags: [],
     coloredTags: []
   });
 
@@ -55,8 +49,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
   const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState('');
   const [newFeature, setNewFeature] = useState('');
-  const [newCompatibility, setNewCompatibility] = useState('');
-  const [newTag, setNewTag] = useState('');
   const [newColoredTag, setNewColoredTag] = useState({ label: '', color: 'blue' as const });
 
   const categories = [
@@ -135,40 +127,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
     }));
   };
 
-  const addCompatibility = () => {
-    if (newCompatibility.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        compatibility: [...prev.compatibility, newCompatibility.trim()]
-      }));
-      setNewCompatibility('');
-    }
-  };
-
-  const removeCompatibility = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      compatibility: prev.compatibility.filter((_, i) => i !== index)
-    }));
-  };
-
-  const addTag = () => {
-    if (newTag.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...(prev.tags || []), newTag.trim()]
-      }));
-      setNewTag('');
-    }
-  };
-
-  const removeTag = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: (prev.tags || []).filter((_, i) => i !== index)
-    }));
-  };
-
   const addColoredTag = () => {
     if (newColoredTag.label.trim()) {
       setFormData(prev => ({
@@ -193,7 +151,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
 
     try {
       // Validation
-      if (!formData.name || !formData.brand || !formData.image || !formData.description) {
+      if (!formData.name || !formData.brand || !formData.image) {
         throw new Error('Please fill in all required fields');
       }
 
@@ -318,19 +276,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
                 />
               </div>
             </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2 text-gray-300">Description *</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                rows={4}
-                className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400 resize-none"
-                placeholder="Enter product description"
-                required
-              />
-            </div>
           </div>
 
           {/* Main Image */}
@@ -403,86 +348,6 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
                     <button
                       type="button"
                       onClick={() => removeFeature(index)}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Compatibility */}
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-white">Compatibility</h3>
-            
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={newCompatibility}
-                onChange={(e) => setNewCompatibility(e.target.value)}
-                className="flex-1 bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
-                placeholder="Add compatible device"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addCompatibility())}
-              />
-              <button
-                type="button"
-                onClick={addCompatibility}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-              </button>
-            </div>
-            
-            {formData.compatibility.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {formData.compatibility.map((device, index) => (
-                  <div key={index} className="flex items-center space-x-2 bg-white/10 px-3 py-2 rounded-lg">
-                    <span className="text-white text-sm">{device}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeCompatibility(index)}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Tags */}
-          <div className="space-y-6">
-            <h3 className="text-xl font-bold text-white">Tags</h3>
-            
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                className="flex-1 bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
-                placeholder="Add a tag"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-              />
-              <button
-                type="button"
-                onClick={addTag}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-              </button>
-            </div>
-            
-            {formData.tags && formData.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {formData.tags.map((tag, index) => (
-                  <div key={index} className="flex items-center space-x-2 bg-white/10 px-3 py-2 rounded-lg">
-                    <span className="text-white text-sm">{tag}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeTag(index)}
                       className="text-red-400 hover:text-red-300"
                     >
                       <X className="w-4 h-4" />
