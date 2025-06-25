@@ -9,7 +9,6 @@ interface User {
   phone: string;
   isVerified: boolean;
   totalSpent: number;
-  memberStatus: string;
   joinDate: string;
   isAdmin: boolean;
 }
