@@ -20,6 +20,30 @@ router.post('/create-order', authenticateToken, async (req, res) => {
   try {
     const { items, shippingAddress } = req.body;
 
+    // --- Improved validation ---
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Order must have at least one item.' });
+    }
+    if (!shippingAddress || typeof shippingAddress !== 'object') {
+      return res.status(400).json({ message: 'Shipping address is required.' });
+    }
+    const { name, phone, address, city, state, pincode } = shippingAddress;
+    if (
+      !name || !phone || !address || !city || !state || !pincode ||
+      typeof name !== 'string' || typeof phone !== 'string' ||
+      typeof address !== 'string' || typeof city !== 'string' ||
+      typeof state !== 'string' || typeof pincode !== 'string'
+    ) {
+      return res.status(400).json({ message: 'All shipping address fields are required.' });
+    }
+    if (!/^\d{6}$/.test(pincode)) {
+      return res.status(400).json({ message: 'Pincode must be 6 digits.' });
+    }
+    if (!/^\d{10}$/.test(phone)) {
+      return res.status(400).json({ message: 'Phone must be 10 digits.' });
+    }
+    // --- End improved validation ---
+
     // Validate items and check stock
     const productIds = items.map(item => item.productId);
     const products = await Product.find({ _id: { $in: productIds } });
@@ -67,6 +91,36 @@ router.post('/create-order', authenticateToken, async (req, res) => {
 router.post('/verify-payment', authenticateToken, async (req, res) => {
   try {
     const { razorpayPaymentId, razorpayOrderId, razorpaySignature, items, shippingAddress, totalWithTax } = req.body;
+
+    // --- Improved validation ---
+    if (!razorpayPaymentId || !razorpayOrderId || !razorpaySignature) {
+      return res.status(400).json({ message: 'Payment details are required.' });
+    }
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Order must have at least one item.' });
+    }
+    if (!shippingAddress || typeof shippingAddress !== 'object') {
+      return res.status(400).json({ message: 'Shipping address is required.' });
+    }
+    const { name, phone, address, city, state, pincode } = shippingAddress;
+    if (
+      !name || !phone || !address || !city || !state || !pincode ||
+      typeof name !== 'string' || typeof phone !== 'string' ||
+      typeof address !== 'string' || typeof city !== 'string' ||
+      typeof state !== 'string' || typeof pincode !== 'string'
+    ) {
+      return res.status(400).json({ message: 'All shipping address fields are required.' });
+    }
+    if (!/^\d{6}$/.test(pincode)) {
+      return res.status(400).json({ message: 'Pincode must be 6 digits.' });
+    }
+    if (!/^\d{10}$/.test(phone)) {
+      return res.status(400).json({ message: 'Phone must be 10 digits.' });
+    }
+    if (!totalWithTax || typeof totalWithTax !== 'number' || totalWithTax <= 0) {
+      return res.status(400).json({ message: 'Total amount is invalid.' });
+    }
+    // --- End improved validation ---
 
     // Verify signature
     const body = razorpayOrderId + "|" + razorpayPaymentId;
