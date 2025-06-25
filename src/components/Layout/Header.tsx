@@ -46,6 +46,28 @@ const Header: React.FC = () => {
     }
   };
 
+  const getMemberStatus = (totalSpent: number = 0) => {
+    if (totalSpent >= 10000) return 'Platinum';
+    if (totalSpent >= 5000) return 'Gold';
+    if (totalSpent >= 1000) return 'Silver';
+    return 'Bronze';
+  };
+
+  const getMemberStatusColor = (status: string) => {
+    switch (status) {
+      case 'Platinum':
+        return 'text-white';
+      case 'Gold':
+        return 'text-yellow-400';
+      case 'Silver':
+        return 'text-gray-400';
+      case 'Bronze':
+        return 'text-orange-700';
+      default:
+        return 'text-gray-400';
+    }
+  };
+
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
       isScrolled 
@@ -142,7 +164,11 @@ const Header: React.FC = () => {
                       <div className="px-4 py-3 border-b border-white/10">
                         <p className="text-white font-semibold">{user?.name}</p>
                         <p className="text-gray-400 text-sm">{user?.email}</p>
-                        <p className="text-purple-400 text-xs font-medium mt-1">{user?.memberStatus} Member</p>
+                        {user && (
+                          <p className={`text-xs font-medium mt-1 ${getMemberStatusColor(getMemberStatus(user.totalSpent))}`}>
+                            {getMemberStatus(user.totalSpent)} Member
+                          </p>
+                        )}
                         {user?.isAdmin && (
                           <p className="text-cyan-400 text-xs font-medium">Admin Access</p>
                         )}
