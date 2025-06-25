@@ -1,6 +1,6 @@
 export interface Product {
-  id: string;        // Always present on frontend
-  _id?: string;      // Optional, for backend
+  id: string;
+  _id?: string; // MongoDB ID
   name: string;
   price: number;
   originalPrice?: number;
@@ -41,7 +41,6 @@ export interface User {
   isVerified: boolean;
   role: 'user' | 'admin';
   totalSpent: number;
-  memberStatus: 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
   joinDate: string;
   isAdmin?: boolean;
 }
