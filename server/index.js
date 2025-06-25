@@ -1,4 +1,4 @@
-import 'dotenv/config'; 
+import 'dotenv/config';
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
@@ -27,6 +27,12 @@ import './config/passport.js';
 // 3.  Express app setup
 // ────────────────────────────────────────────────
 const app = express();
+
+// ────────────────────────────────────────────────
+// Trust the first proxy (e.g. Render/GCP/Heroku) so X-Forwarded-For is honored
+// ────────────────────────────────────────────────
+app.set('trust proxy', 1);
+
 const PORT = process.env.PORT || 5000;
 
 // Global middleware
@@ -38,9 +44,7 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, curl, or postman)
     if (!origin) return callback(null, true);
-
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -49,6 +53,7 @@ app.use(cors({
   },
   credentials: true
 }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
@@ -65,6 +70,7 @@ app.use(session({
     maxAge: 24 * 60 * 60 * 1000 // 24 h
   }
 }));
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -78,8 +84,9 @@ mongoose.connect(process.env.MONGODB_URI)
 // ────────────────────────────────────────────────
 // 5.  Routes
 // ────────────────────────────────────────────────
-// Apply general API limiter to all API routes
+// **Apply your general rate limiter first**
 app.use('/api', apiLimiter);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/products', productRoutes);
