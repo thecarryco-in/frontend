@@ -5,32 +5,32 @@ const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 const ShippingPolicy: React.FC = () => {
-  const deliveryZones = [
-    {
-      zone: 'Metro Cities',
-      cities: 'Delhi, Mumbai, Bangalore, Chennai, Kolkata, Hyderabad',
-      timeframe: '2-5 business days',
-      icon: '🏙️'
-    },
-    {
-      zone: 'Tier 1 Cities',
-      cities: 'Pune, Ahmedabad, Jaipur, Lucknow, Kanpur, Nagpur',
-      timeframe: '3-7 business days',
-      icon: '🌆'
-    },
-    {
-      zone: 'Tier 2 Cities',
-      cities: 'Indore, Bhopal, Patna, Vadodara, Coimbatore',
-      timeframe: '5-10 business days',
-      icon: '🏘️'
-    },
-    {
-      zone: 'Remote Areas',
-      cities: 'Rural areas, hill stations, remote locations',
-      timeframe: '7-14 business days',
-      icon: '🏔️'
-    }
-  ];
+const deliveryZones = [
+  {
+    zone: 'Delhi NCR',
+    cities: 'Delhi, Gurugram, Noida, Ghaziabad, Faridabad',
+    timeframe: '1–3 business days',
+    icon: '🏙️' // Fastest due to proximity
+  },
+  {
+    zone: 'Nearby Major Cities',
+    cities: 'Jaipur, Chandigarh, Lucknow, Dehradun, Agra',
+    timeframe: '3–6 business days',
+    icon: '🚗' // Short-range cities
+  },
+  {
+    zone: 'Other Metro Cities',
+    cities: 'Mumbai, Pune, Bangalore, Hyderabad, Ahmedabad, Kolkata',
+    timeframe: '5–9 business days',
+    icon: '✈️' // Long-range, faster logistics
+  },
+  {
+    zone: 'Rest of India',
+    cities: 'Indore, Patna, Bhopal, Nagpur, Coimbatore, and others',
+    timeframe: '7–14 business days',
+    icon: '📦' // Longer-distance, standard logistics
+  }
+];
 
   const shippingSteps = [
     {
@@ -77,17 +77,12 @@ const ShippingPolicy: React.FC = () => {
 
   const shippingCharges = [
     {
-      orderValue: 'Below ₹500',
-      charge: '₹50',
+      orderValue: 'Below 399',
+      charge: '₹70',
       description: 'Standard shipping charges apply'
     },
     {
-      orderValue: '₹500 - ₹999',
-      charge: '₹30',
-      description: 'Reduced shipping charges'
-    },
-    {
-      orderValue: '₹1000 & Above',
+      orderValue: '399 & Above',
       charge: 'FREE',
       description: 'Complimentary shipping on all orders'
     }
@@ -151,7 +146,7 @@ const ShippingPolicy: React.FC = () => {
                 <Package className="w-6 h-6 text-orange-400" />
               </div>
               <h3 className="text-lg font-bold text-white mb-2">Tracking</h3>
-              <p className="text-gray-300 text-sm">Real-time shipment tracking</p>
+              <p className="text-gray-300 text-sm">Live order status</p>
             </div>
           </div>
 
@@ -212,13 +207,13 @@ const ShippingPolicy: React.FC = () => {
             <h2 className="text-3xl font-bold text-white mb-8 text-center">Shipping Charges</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {shippingCharges.map((charge, index) => (
-                <div key={index} className={`rounded-2xl p-6 border text-center ${index === 2 ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-500/30' : 'bg-white/5 border-white/10'}`}>
+                <div key={index} className={`rounded-2xl p-6 border text-center ${index === 1 ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-500/30' : 'bg-white/5 border-white/10'}`}>
                   <h3 className="text-lg font-bold text-white mb-2">{charge.orderValue}</h3>
-                  <div className={`text-3xl font-bold mb-3 ${index === 2 ? 'text-green-400' : 'text-blue-400'}`}>
+                  <div className={`text-3xl font-bold mb-3 ${index === 1 ? 'text-green-400' : 'text-blue-400'}`}>
                     {charge.charge}
                   </div>
                   <p className="text-gray-300 text-sm">{charge.description}</p>
-                  {index === 2 && (
+                  {index === 1 && (
                     <div className="mt-3 inline-flex items-center space-x-1 bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold">
                       <CheckCircle className="w-3 h-3" />
                       <span>BEST VALUE</span>
@@ -258,17 +253,16 @@ const ShippingPolicy: React.FC = () => {
                 </div>
                 <div className="pl-4 border-l-2 border-blue-500/30">
                   <h3 className="text-lg font-semibold text-white mb-2">Tracking Information</h3>
-                  <p className="text-gray-300 leading-relaxed">
-                    You will receive tracking information via SMS and email once your order is dispatched. 
-                    Use this to monitor your shipment's progress.
-                  </p>
+                    <p className="text-gray-300 leading-relaxed">
+                      Stay updated with real-time order progress on your dashboard. We’ll notify you by email about delivery.
+                    </p>
                 </div>
               </div>
               <div className="space-y-6">
                 <div className="pl-4 border-l-2 border-blue-500/30">
                   <h3 className="text-lg font-semibold text-white mb-2">Delivery Attempts</h3>
                   <p className="text-gray-300 leading-relaxed">
-                    Our delivery partners will make up to 3 delivery attempts. If unsuccessful, the package will be returned 
+                    Our delivery partners will make up to 2 delivery attempts. If unsuccessful, the package will be returned 
                     to our warehouse and you will be contacted for re-delivery arrangements.
                   </p>
                 </div>
