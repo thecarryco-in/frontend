@@ -122,9 +122,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error(err);
     } finally {
       dispatch({ type: 'SET_USER', payload: null });
-      localStorage.clear();
-      sessionStorage.clear();
-      // no redirect: routing handles it
     }
   };
 
