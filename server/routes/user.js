@@ -30,7 +30,6 @@ router.put('/profile', authenticateToken, async (req, res) => {
         avatar: user.avatar,
         phone: user.phone,
         isVerified: user.isVerified,
-        memberStatus: user.memberStatus
       }
     });
   } catch (error) {
