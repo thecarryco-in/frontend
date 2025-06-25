@@ -14,7 +14,6 @@ const PrivacyPolicy: React.FC = () => {
         'Personal Information: Name, email address, phone number, shipping address, and billing information.',
         'Account Information: Username, password, and account preferences.',
         'Transaction Information: Purchase history, payment details, and order information.',
-        'Technical Information: IP address, browser type, device information, and usage patterns.',
         'Communication Data: Customer service interactions, feedback, and correspondence.'
       ]
     },
@@ -42,7 +41,7 @@ const PrivacyPolicy: React.FC = () => {
         'Shipping Partners: Delivery information is shared with logistics partners for order fulfillment.',
         'Legal Requirements: We may disclose information when required by law or to protect our rights.',
         'Business Transfers: Information may be transferred in case of merger, acquisition, or sale of business assets.',
-        'We do not sell, rent, or trade your personal information to third parties for marketing purposes.'
+        <strong>We do not sell, rent, or trade your personal information to third parties for marketing purposes.</strong>
       ]
     },
     {
@@ -52,7 +51,7 @@ const PrivacyPolicy: React.FC = () => {
       content: [
         'We implement industry-standard security measures to protect your personal information.',
         'All sensitive data is encrypted during transmission using SSL/TLS protocols.',
-        'Payment information is processed through PCI DSS compliant payment processors.',
+        'All payment transactions are securely processed via Razorpay, a PCI DSS Level 1 compliant gateway.',
         'Access to personal information is restricted to authorized personnel only.',
         'Regular security audits and vulnerability assessments are conducted.',
         'We maintain backup systems and disaster recovery procedures.'
@@ -65,7 +64,6 @@ const PrivacyPolicy: React.FC = () => {
       content: [
         'We use cookies to enhance your browsing experience and website functionality.',
         'Essential cookies are necessary for basic website operations and cannot be disabled.',
-        'Analytics cookies help us understand user behavior and improve our services.',
         'Preference cookies remember your settings and personalize your experience.',
         'You can manage cookie preferences through your browser settings.',
         'Disabling certain cookies may affect website functionality.'
@@ -81,7 +79,6 @@ const PrivacyPolicy: React.FC = () => {
         'Deletion: You can request deletion of your personal information, subject to legal requirements.',
         'Portability: You can request a copy of your data in a structured, machine-readable format.',
         'Opt-out: You can unsubscribe from marketing communications at any time.',
-        'Account Deactivation: You can deactivate your account through account settings.'
       ]
     },
     {
@@ -106,8 +103,9 @@ const PrivacyPolicy: React.FC = () => {
         'Some service providers may be located outside India, in which case appropriate safeguards are implemented.',
         'We ensure adequate protection for international data transfers through contractual agreements.',
         'Data transfers comply with applicable Indian data protection laws and regulations.',
-        'We do not transfer personal information to countries without adequate data protection laws.'
+        <strong>We do not transfer personal information to countries without adequate data protection laws.</strong>
       ]
+
     }
   ];
 
