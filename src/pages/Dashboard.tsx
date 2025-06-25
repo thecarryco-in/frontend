@@ -183,6 +183,29 @@ const Dashboard: React.FC = () => {
     });
   };
 
+  // Member status calculation and color
+  const getMemberStatus = (totalSpent: number) => {
+    if (totalSpent >= 10000) return 'Platinum';
+    if (totalSpent >= 5000) return 'Gold';
+    if (totalSpent >= 1000) return 'Silver';
+    return 'Bronze';
+  };
+
+  const getMemberStatusColor = (status: string) => {
+    switch (status) {
+      case 'Platinum':
+        return 'text-white bg-gradient-to-r from-gray-400 via-gray-100 to-gray-400 border border-gray-300';
+      case 'Gold':
+        return 'text-yellow-500 bg-yellow-100 border border-yellow-400';
+      case 'Silver':
+        return 'text-gray-400 bg-gray-100 border border-gray-300';
+      case 'Bronze':
+        return 'text-orange-700 bg-orange-100 border border-orange-400';
+      default:
+        return 'text-gray-400 bg-gray-100 border border-gray-300';
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -193,6 +216,8 @@ const Dashboard: React.FC = () => {
       </div>
     );
   }
+
+  const memberStatus = getMemberStatus(user.totalSpent);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-black text-white pt-24">
@@ -223,9 +248,9 @@ const Dashboard: React.FC = () => {
                   {user.name}
                 </h2>
                 <p className="text-gray-400 mb-2">{user.email}</p>
-                <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2">
+                <div className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full ${getMemberStatusColor(memberStatus)}`}>
                   <Star className="w-4 h-4 text-yellow-400" />
-                  <span className="text-sm font-semibold text-white">{user.memberStatus} Member</span>
+                  <span className="text-sm font-semibold">{memberStatus} Member</span>
                 </div>
               </div>
 
@@ -303,7 +328,9 @@ const Dashboard: React.FC = () => {
                         <span className="text-green-400 font-bold text-2xl">₹</span>
                       </div>
                       <div>
-                        <p className="text-3xl font-bold text-white">₹{user.totalSpent?.toFixed(2) || '0.00'}</p>
+                        <p className="text-3xl font-bold text-white">
+                          ₹{user.totalSpent ? Math.round(user.totalSpent) : 0}
+                        </p>
                         <p className="text-gray-400 font-medium">Total Spent</p>
                       </div>
                     </div>
