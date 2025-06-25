@@ -81,13 +81,13 @@ const AdminDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl p-6 border border-green-400/30">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-400 text-sm font-medium">Total Revenue</p>
-                <p className="text-3xl font-bold text-white flex items-center">
-                  <IndianRupee className="w-6 h-6 mr-1" />
-                  {orderStats?.totalRevenue?.toFixed(2) || '0.00'}
-                </p>
-              </div>
+            <div>
+              <p className="text-green-400 text-sm font-medium">Total Revenue</p>
+              <p className="text-3xl font-bold text-white flex items-center">
+                <IndianRupee className="w-6 h-6 mr-1" />
+                {orderStats?.totalRevenue != null ? Math.round(orderStats.totalRevenue) : 0}
+              </p>
+            </div>
               <TrendingUp className="w-12 h-12 text-green-400" />
             </div>
           </div>
@@ -216,48 +216,6 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="w-12 h-12 bg-green-400/20 rounded-full flex items-center justify-center">
                 <span className="text-green-400 font-bold">✓</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-6">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-2xl p-6 border border-purple-400/30 hover:border-purple-400/50 transition-all duration-300 cursor-pointer group">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-purple-500/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <Plus className="w-6 h-6 text-purple-400" />
-              </div>
-              <div>
-                <h3 className="text-white font-semibold">Add New Product</h3>
-                <p className="text-gray-400 text-sm">Create a new product listing</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 rounded-2xl p-6 border border-cyan-400/30 hover:border-cyan-400/50 transition-all duration-300 cursor-pointer group">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-cyan-500/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <MessageSquare className="w-6 h-6 text-cyan-400" />
-              </div>
-              <div>
-                <h3 className="text-white font-semibold">View Messages</h3>
-                <p className="text-gray-400 text-sm">Check customer inquiries</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl p-6 border border-green-400/30 hover:border-green-400/50 transition-all duration-300 cursor-pointer group">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-green-500/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <ShoppingBag className="w-6 h-6 text-green-400" />
-              </div>
-              <div>
-                <h3 className="text-white font-semibold">Manage Orders</h3>
-                <p className="text-gray-400 text-sm">Process customer orders</p>
               </div>
             </div>
           </div>
