@@ -4,33 +4,15 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
+import MongoStore from 'connect-mongo';
 import passport from 'passport';
 import rateLimit from 'express-rate-limit';
-
-// Rate limiting middleware
-export const authLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 5,
-  message: 'Too many requests from this IP, please try again later.'
-});
-
-export const contactLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3,
-  message: 'Too many contact requests, please try again later.'
-});
-
-export const reviewLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  max: 5,
-  message: 'Too many reviews from this IP, please try again later.'
-});
-
-export const apiLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 100,
-  message: 'Too many requests from this IP, please try again later.'
-});
+import {
+  authLimiter,
+  contactLimiter,
+  reviewLimiter,
+  apiLimiter
+} from './middleware/rateLimiters.js';
 
 // Route & config files
 import authRoutes from './routes/auth.js';
