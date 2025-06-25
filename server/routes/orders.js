@@ -10,47 +10,88 @@ import { sendOrderConfirmationEmail, sendOrderDeliveredEmail } from '../services
 
 const router = express.Router();
 
-// Initialize Razorpay
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// Create Razorpay order
+// Create Razorpay order (DO NOT save order in DB here)
 router.post('/create-order', authenticateToken, async (req, res) => {
   try {
-    const { items, shippingAddress, totalAmount } = req.body;
-
-    console.log('Received order data:', { items, shippingAddress, totalAmount });
+    const { items, shippingAddress } = req.body;
 
     // Validate items and check stock
     const productIds = items.map(item => item.productId);
-    console.log('Product IDs:', productIds);
-
     const products = await Product.find({ _id: { $in: productIds } });
-    console.log('Found products:', products.length);
 
-    const orderItems = [];
     let calculatedTotal = 0;
-
     for (const item of items) {
       const product = products.find(p => p._id.toString() === item.productId);
-      
       if (!product) {
-        console.log('Product not found:', item.productId);
         return res.status(400).json({ message: `Product not found: ${item.productId}` });
       }
-
       if (!product.inStock) {
-        return res.status(400).json({ 
-          message: `Product ${product.name} is out of stock.` 
-        });
+        return res.status(400).json({ message: `Product ${product.name} is out of stock.` });
       }
+      calculatedTotal += product.price * item.quantity;
+    }
 
-      const itemTotal = product.price * item.quantity;
-      calculatedTotal += itemTotal;
+    // Calculate GST (18%)
+    const taxAmount = calculatedTotal * 0.18;
+    const totalWithTax = calculatedTotal + taxAmount;
 
-      // Add item to orderItems array
+    // Create Razorpay order with total including tax
+    const razorpayOrder = await razorpay.orders.create({
+      amount: Math.round(totalWithTax * 100), // Amount in paise
+      currency: 'INR',
+      receipt: `receipt_${Date.now()}`,
+    });
+
+    // Return Razorpay order info and order details (but do NOT save order in DB)
+    res.status(201).json({
+      razorpayOrderId: razorpayOrder.id,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency,
+      key: process.env.RAZORPAY_KEY_ID,
+      items,
+      shippingAddress,
+      totalWithTax
+    });
+  } catch (error) {
+    console.error('Create order error:', error);
+    res.status(500).json({ message: 'Failed to create order' });
+  }
+});
+
+// Verify payment and create order in DB
+router.post('/verify-payment', authenticateToken, async (req, res) => {
+  try {
+    const { razorpayPaymentId, razorpayOrderId, razorpaySignature, items, shippingAddress, totalWithTax } = req.body;
+
+    // Verify signature
+    const body = razorpayOrderId + "|" + razorpayPaymentId;
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest('hex');
+
+    if (expectedSignature !== razorpaySignature) {
+      return res.status(400).json({ message: 'Invalid payment signature' });
+    }
+
+    // Validate items and check stock again
+    const productIds = items.map(item => item.productId);
+    const products = await Product.find({ _id: { $in: productIds } });
+
+    const orderItems = [];
+    for (const item of items) {
+      const product = products.find(p => p._id.toString() === item.productId);
+      if (!product) {
+        return res.status(400).json({ message: `Product not found: ${item.productId}` });
+      }
+      if (!product.inStock) {
+        return res.status(400).json({ message: `Product ${product.name} is out of stock.` });
+      }
       orderItems.push({
         product: product._id,
         productSnapshot: {
@@ -65,85 +106,30 @@ router.post('/create-order', authenticateToken, async (req, res) => {
       });
     }
 
-    // Calculate GST (18%)
-    const taxAmount = calculatedTotal * 0.18;
-    const totalWithTax = calculatedTotal + taxAmount;
-
-    console.log('Calculated total:', calculatedTotal, 'Tax:', taxAmount, 'Total with tax:', totalWithTax);
-
-    // Create Razorpay order with total including tax
-    const razorpayOrder = await razorpay.orders.create({
-      amount: Math.round(totalWithTax * 100), // Amount in paise
-      currency: 'INR',
-      receipt: `receipt_${Date.now()}`,
-    });
-
     // Generate order number
     const orderNumber = 'ORD-' + Date.now();
 
-    // Create order in database
+    // Create order in database (only after payment is verified)
     const order = new Order({
       user: req.userId,
       items: orderItems,
       totalAmount: totalWithTax,
       shippingAddress,
-      razorpayOrderId: razorpayOrder.id,
-      status: 'pending',
-      paymentStatus: 'pending',
-      orderNumber // <-- add this line
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+      status: 'confirmed',
+      paymentStatus: 'completed',
+      orderNumber
     });
 
     await order.save();
-    console.log('Order saved to database:', order._id);
-
-    res.status(201).json({
-      orderId: order._id,
-      razorpayOrderId: razorpayOrder.id,
-      amount: razorpayOrder.amount,
-      currency: razorpayOrder.currency,
-      key: process.env.RAZORPAY_KEY_ID
-    });
-  } catch (error) {
-    console.error('Create order error:', error);
-    res.status(500).json({ message: 'Failed to create order' });
-  }
-});
-
-// Verify payment and confirm order
-router.post('/verify-payment', authenticateToken, async (req, res) => {
-  try {
-    const { orderId, razorpayPaymentId, razorpayOrderId, razorpaySignature } = req.body;
-
-    // Verify signature
-    const body = razorpayOrderId + "|" + razorpayPaymentId;
-    const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-      .update(body.toString())
-      .digest('hex');
-
-    if (expectedSignature !== razorpaySignature) {
-      return res.status(400).json({ message: 'Invalid payment signature' });
-    }
-
-    // Update order
-    const order = await Order.findById(orderId).populate('user').populate('items.product');
-    
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
-    }
-
-    order.razorpayPaymentId = razorpayPaymentId;
-    order.razorpaySignature = razorpaySignature;
-    order.paymentStatus = 'completed';
-    order.status = 'confirmed';
 
     // Update product stock
     for (const item of order.items) {
       await Product.findByIdAndUpdate(
         item.product._id,
-        { 
-          $inc: { stockQuantity: -item.quantity }
-        }
+        { $inc: { stockQuantity: -item.quantity } }
       );
     }
 
@@ -153,18 +139,20 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
       { $inc: { totalSpent: order.totalAmount } }
     );
 
-    await order.save();
-
     // Send confirmation email
     try {
-      await sendOrderConfirmationEmail(order.user.email, order.user.name, order);
+      const populatedOrder = await Order.findById(order._id).populate('user', 'name email');
+      await sendOrderConfirmationEmail(
+        populatedOrder.user.email,
+        populatedOrder.user.name,
+        populatedOrder
+      );
     } catch (emailError) {
       console.error('Email sending error:', emailError);
-      // Don't fail the order if email fails
     }
 
     res.status(200).json({
-      message: 'Payment verified successfully',
+      message: 'Payment verified and order created successfully',
       order: {
         orderNumber: order.orderNumber,
         status: order.status,
