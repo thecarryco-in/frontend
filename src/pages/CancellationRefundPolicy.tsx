@@ -8,14 +8,14 @@ const CancellationRefundPolicy: React.FC = () => {
   const timelineSteps = [
     {
       time: 'Same Day',
-      title: 'Cancellation Window',
+      title: 'Cancellation',
       description: 'Orders can only be cancelled on the same day of purchase',
       icon: Clock,
       color: 'from-green-500 to-emerald-500'
     },
     {
       time: '24 Hours',
-      title: 'Processing Review',
+      title: 'Processing Order Review',
       description: 'Cancellation requests are reviewed within 24 hours',
       icon: CheckCircle,
       color: 'from-blue-500 to-cyan-500'
@@ -179,17 +179,17 @@ const CancellationRefundPolicy: React.FC = () => {
             </div>
             <div className="space-y-4">
               <div className="pl-4 border-l-2 border-yellow-500/30">
-                <h3 className="text-lg font-semibold text-white mb-2">Cancellation Window</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">Cancellation Process</h3>
                 <p className="text-gray-300 leading-relaxed">
-                  Orders can only be cancelled on the same day of purchase. The cancellation window closes at 11:59 PM IST on the purchase date. 
-                  After this time, orders cannot be cancelled and will proceed to fulfillment.
+                  If you need to request a cancellation, you may contact us through our website <strong>Contact page</strong> or by email.
+                  All requests must include a valid <strong>Order ID</strong> to be considered.
                 </p>
               </div>
+
               <div className="pl-4 border-l-2 border-yellow-500/30">
-                <h3 className="text-lg font-semibold text-white mb-2">Contact Requirement</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">Contact Guidelines</h3>
                 <p className="text-gray-300 leading-relaxed">
-                  All cancellation requests must be submitted through our official contact page. Phone calls, emails to personal addresses, 
-                  or social media messages will not be considered valid cancellation requests.
+                  Cancellation requests are only accepted via our official Contact page or support email. Requests made through phone, personal emails, or social media will not be accepted.
                 </p>
               </div>
               <div className="pl-4 border-l-2 border-yellow-500/30">
@@ -203,7 +203,7 @@ const CancellationRefundPolicy: React.FC = () => {
                 <h3 className="text-lg font-semibold text-white mb-2">Shipped Orders</h3>
                 <p className="text-gray-300 leading-relaxed">
                   Once an order has been dispatched from our warehouse, it cannot be cancelled. Please check your order status before requesting cancellation. 
-                  Shipped orders may be eligible for return as per our return policy.
+                  Confirmed orders may be eligible for return as per our return policy.
                 </p>
               </div>
               <div className="pl-4 border-l-2 border-yellow-500/30">
@@ -227,7 +227,7 @@ const CancellationRefundPolicy: React.FC = () => {
               <Link to="/contact" onClick={scrollToTop}>
                 <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-orange-600 to-red-600 text-white px-8 py-4 rounded-2xl font-semibold hover:shadow-lg transition-all duration-300 cursor-pointer">
                   <Phone className="w-5 h-5" />
-                  <span>Submit Cancellation Request</span>
+                  <span>Submit Refund Request</span>
                 </div>
               </Link>
             </div>
