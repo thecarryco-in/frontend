@@ -22,7 +22,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       alert('Please login to add items to cart');
       return;
     }
-    addToCart(product);
+    addToCart({ ...product, id: product.id || product._id });
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
@@ -84,7 +84,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </span>
           )}
           {/* only show SALE if originalPrice > 0 */}
-          {product.originalPrice > 0 && (
+          {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
             <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm">
               SALE
             </span>
@@ -178,7 +178,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               ₹{product.price}
             </span>
             {/* only show crossed original if > 0 */}
-            {product.originalPrice > 0 && (
+            {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
               <span className="text-gray-500 text-lg line-through">
                 ₹{product.originalPrice}
               </span>
@@ -186,7 +186,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
           
           {/* only show “Save” badge if originalPrice > 0 */}
-          {product.originalPrice > 0 && (
+          {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
             <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-3 py-1 rounded-full font-bold">
               Save ₹{(product.originalPrice - product.price).toFixed(2)}
             </div>
