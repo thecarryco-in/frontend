@@ -61,12 +61,29 @@ const Cart: React.FC = () => {
     }
 
     // Validate shipping address
-    const requiredFields = ['name', 'phone', 'address', 'city', 'state', 'pincode'];
-    for (const field of requiredFields) {
-      if (!shippingAddress[field as keyof typeof shippingAddress]) {
-        alert(`Please fill in ${field}`);
-        return;
-      }
+    const { name, phone, address, city, state, pincode } = shippingAddress;
+    if (
+      !name.trim() ||
+      !phone.trim() ||
+      !address.trim() ||
+      !city.trim() ||
+      !state.trim() ||
+      !pincode.trim()
+    ) {
+      alert('Please fill in all shipping address fields.');
+      return;
+    }
+    if (!/^\d{10}$/.test(phone)) {
+      alert('Phone number must be exactly 10 digits.');
+      return;
+    }
+    if (!/^\d{6}$/.test(pincode)) {
+      alert('Pincode must be exactly 6 digits.');
+      return;
+    }
+    if (!items || items.length === 0) {
+      alert('Your cart is empty.');
+      return;
     }
 
     setIsProcessing(true);
