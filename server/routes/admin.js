@@ -80,7 +80,7 @@ router.get('/products', authenticateToken, requireAdmin, async (req, res) => {
 
     const filter = {};
     if (search) {
-      filter.$text = { $search: search };
+      filter.name = { $regex: search, $options: 'i' }; // Case-insensitive partial match
     }
     if (category) filter.category = category;
     if (inStock !== undefined) filter.inStock = inStock === 'true';
