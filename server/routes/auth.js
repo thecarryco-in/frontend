@@ -107,7 +107,7 @@ router.post('/verify-otp', async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
@@ -187,7 +187,7 @@ router.post('/login', async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     });
 
@@ -224,7 +224,7 @@ router.get('/google/callback',
       res.cookie('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none',
+        sameSite: 'strict',
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
@@ -242,7 +242,7 @@ router.post('/logout', (req, res) => {
   res.clearCookie('token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
+    sameSite: 'strict',
     // path: '/',
   });
   res.status(200).json({ message: 'Logged out successfully' });
@@ -265,7 +265,6 @@ router.get('/me', authenticateToken, async (req, res) => {
         phone: user.phone,
         isVerified: user.isVerified,
         totalSpent: user.totalSpent,
-        memberStatus: user.memberStatus,
         joinDate: user.createdAt,
         isAdmin: user.email === process.env.ADMIN_EMAIL
       }
