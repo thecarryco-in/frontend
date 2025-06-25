@@ -2,6 +2,7 @@ import express from 'express';
 import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { reviewLimiter } from '../index.js';
 
 const router = express.Router();
 
@@ -103,7 +104,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Add product review (authenticated users only)
-router.post('/:id/review', authenticateToken, async (req, res) => {
+router.post('/:id/review', reviewLimiter, authenticateToken, async (req, res) => {
   try {
     const { rating, comment } = req.body;
     const productId = req.params.id;
