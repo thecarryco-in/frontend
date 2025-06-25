@@ -41,15 +41,16 @@ router.post('/create-order', authenticateToken, async (req, res) => {
         return res.status(400).json({ message: `Product not found: ${item.productId}` });
       }
 
-      if (!product.inStock || product.stockQuantity < item.quantity) {
+      if (!product.inStock) {
         return res.status(400).json({ 
-          message: `Insufficient stock for ${product.name}. Available: ${product.stockQuantity}` 
+          message: `Product ${product.name} is out of stock.` 
         });
       }
 
       const itemTotal = product.price * item.quantity;
       calculatedTotal += itemTotal;
 
+      // Add item to orderItems array
       orderItems.push({
         product: product._id,
         productSnapshot: {
@@ -64,26 +65,32 @@ router.post('/create-order', authenticateToken, async (req, res) => {
       });
     }
 
-    console.log('Calculated total:', calculatedTotal);
+    // Calculate GST (18%)
+    const taxAmount = calculatedTotal * 0.18;
+    const totalWithTax = calculatedTotal + taxAmount;
 
-    // Create Razorpay order
+    console.log('Calculated total:', calculatedTotal, 'Tax:', taxAmount, 'Total with tax:', totalWithTax);
+
+    // Create Razorpay order with total including tax
     const razorpayOrder = await razorpay.orders.create({
-      amount: Math.round(calculatedTotal * 100), // Amount in paise
+      amount: Math.round(totalWithTax * 100), // Amount in paise
       currency: 'INR',
       receipt: `receipt_${Date.now()}`,
     });
 
-    console.log('Razorpay order created:', razorpayOrder.id);
+    // Generate order number
+    const orderNumber = 'ORD-' + Date.now();
 
     // Create order in database
     const order = new Order({
       user: req.userId,
       items: orderItems,
-      totalAmount: calculatedTotal,
+      totalAmount: totalWithTax,
       shippingAddress,
       razorpayOrderId: razorpayOrder.id,
       status: 'pending',
-      paymentStatus: 'pending'
+      paymentStatus: 'pending',
+      orderNumber // <-- add this line
     });
 
     await order.save();
