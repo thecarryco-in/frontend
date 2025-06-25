@@ -6,6 +6,7 @@ import User from '../models/User.js';
 import OTP from '../models/OTP.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { sendOTPEmail, sendWelcomeEmail } from '../services/emailService.js';
+import { authLimiter } from '../index.js'; // Import the limiter
 
 const router = express.Router();
 
@@ -22,7 +23,7 @@ const generateOTP = () => {
 };
 
 // Register user (send OTP)
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -72,7 +73,7 @@ router.post('/register', async (req, res) => {
 });
 
 // Verify OTP and create user
-router.post('/verify-otp', async (req, res) => {
+router.post('/verify-otp', authLimiter, async (req, res) => {
   try {
     const { email, otp } = req.body;
 
@@ -129,7 +130,7 @@ router.post('/verify-otp', async (req, res) => {
 });
 
 // Resend OTP
-router.post('/resend-otp', async (req, res) => {
+router.post('/resend-otp', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -159,7 +160,7 @@ router.post('/resend-otp', async (req, res) => {
 });
 
 // Login
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
