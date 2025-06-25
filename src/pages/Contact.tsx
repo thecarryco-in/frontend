@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Send, MessageCircle, User, Clock, CheckCircle } from 'lucide-react';
+import { Mail, Undo2, Phone, MapPin, Send, MessageCircle, User, Clock, CheckCircle } from 'lucide-react';
 import axios from 'axios';
 
 const Contact: React.FC = () => {
@@ -20,7 +20,7 @@ const Contact: React.FC = () => {
     { value: 'support', label: 'Customer Support', icon: User },
     { value: 'product', label: 'Product Question', icon: Phone },
     { value: 'order', label: 'Order Issue', icon: CheckCircle },
-    { value: 'partnership', label: 'Partnership', icon: Mail },
+    { value: 'refund', label: 'Refund', icon: Undo2 },
     { value: 'other', label: 'Other', icon: MessageCircle }
   ];
 
@@ -108,7 +108,7 @@ const Contact: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-white font-semibold">Address</p>
-                    <p className="text-gray-400">A-83 Brij Vihar</p>
+                    <p className="text-gray-400">Anand Vihar</p>
                     <p className="text-gray-400">Ghaziabad, Uttar Pradesh</p>
                   </div>
                 </div>
