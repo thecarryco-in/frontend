@@ -16,6 +16,7 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // scroll header background on window scroll
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -24,35 +25,29 @@ const Header: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
+
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'Shop', href: '/shop' },
     { name: 'Cases', href: '/shop?category=cases' },
-    { name: 'Tempered Glass', href: '/shop?category=tempered-glass' }, // <-- Add this line
+    { name: 'Tempered Glass', href: '/shop?category=tempered-glass' },
     { name: 'Accessories', href: '/shop?category=accessories' },
     { name: 'About', href: '/about' },
   ];
 
   const isActive = (href: string) => {
-    // Home
     if (href === '/') return location.pathname === '/';
-
-    // Category links
     if (href.startsWith('/shop?category=')) {
       const category = href.split('=')[1];
-      return (
-        location.pathname === '/shop' &&
-        searchParams.get('category') === category
-      );
+      return location.pathname === '/shop' && searchParams.get('category') === category;
     }
-
-    // Shop main
     if (href === '/shop') {
-      // Active if on /shop and no category filter
       return location.pathname === '/shop' && !searchParams.get('category');
     }
-
-    // Other links
     return location.pathname.startsWith(href);
   };
 
