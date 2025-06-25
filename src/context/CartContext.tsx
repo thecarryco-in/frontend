@@ -23,32 +23,39 @@ type CartAction =
   | { type: 'CLEAR_CART' }
   | { type: 'LOAD_CART'; payload: CartItem[] };
 
+const getProductId = (product: Product) => product.id;
+
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case 'ADD_TO_CART': {
-      const existingItem = state.items.find(item => item.product.id === action.payload.product.id);
-      
+      const newProductId = getProductId(action.payload.product);
+      const existingItem = state.items.find(
+        item => getProductId(item.product) === newProductId
+      );
+
       if (existingItem) {
         const updatedItems = state.items.map(item =>
-          item.product.id === action.payload.product.id
+          getProductId(item.product) === newProductId
             ? { ...item, quantity: item.quantity + action.payload.quantity }
             : item
         );
         return calculateTotals({ ...state, items: updatedItems });
       }
-      
+
       const newItems = [...state.items, { product: action.payload.product, quantity: action.payload.quantity }];
       return calculateTotals({ ...state, items: newItems });
     }
     
     case 'REMOVE_FROM_CART': {
-      const newItems = state.items.filter(item => item.product.id !== action.payload);
+      const newItems = state.items.filter(
+        item => getProductId(item.product) !== action.payload
+      );
       return calculateTotals({ ...state, items: newItems });
     }
     
     case 'UPDATE_QUANTITY': {
       const updatedItems = state.items.map(item =>
-        item.product.id === action.payload.productId
+        getProductId(item.product) === action.payload.productId
           ? { ...item, quantity: action.payload.quantity }
           : item
       );
