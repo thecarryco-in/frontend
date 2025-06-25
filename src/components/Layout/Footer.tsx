@@ -92,11 +92,7 @@ const Footer: React.FC = () => {
                 'Premium Cases', 
                 'Tempered Glass', 
                 'Wireless Chargers', 
-                'Cables & Adapters', 
                 'Phone Stands', 
-                'Car Accessories',
-                'Audio Accessories',
-                'Screen Protectors'
               ].map((item) => (
                 <li key={item}>
                   <Link 
@@ -143,24 +139,9 @@ const Footer: React.FC = () => {
                   <MapPin className="w-5 h-5 text-pink-400 group-hover:text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-medium">A-83 Brij Vihar</p>
+                  <p className="text-white font-medium">Anand Vihar</p>
                   <p className="text-gray-400 text-xs">Ghaziabad, Uttar Pradesh</p>
                 </div>
-              </div>
-            </div>
-
-            {/* Newsletter */}
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
-              <h4 className="text-white font-semibold mb-3">Stay Updated</h4>
-              <div className="flex space-x-2">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 bg-white/10 text-white px-3 py-2 rounded-lg text-sm border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
-                />
-                <button className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300">
-                  Subscribe
-                </button>
               </div>
             </div>
           </div>
@@ -170,7 +151,7 @@ const Footer: React.FC = () => {
         <div className="mt-16 pt-8 border-t border-white/10">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex items-center space-x-2 text-gray-400 text-sm">
-              <span>© 2025 The CarryCo.</span>
+              <span>© 2025 The CarryCo. All Rights Reserved</span>
             </div>
             
             <div className="flex items-center space-x-8">
