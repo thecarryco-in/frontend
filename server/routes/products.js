@@ -115,10 +115,6 @@ router.post('/:id/review', reviewLimiter, authenticateToken, async (req, res) =>
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
 
-    if (!comment || comment.trim().length === 0) {
-      return res.status(400).json({ message: 'Comment is required' });
-    }
-
     // Check if user has purchased this product
     const userOrder = await Order.findOne({
       user: userId,
