@@ -215,9 +215,11 @@ const Contact: React.FC = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
+                      minLength={2}
+                      maxLength={50}
+                      required
                       className="w-full bg-white/10 backdrop-blur-md text-white rounded-2xl px-6 py-4 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
                       placeholder="Enter your full name"
-                      required
                     />
                   </div>
 
@@ -228,9 +230,10 @@ const Contact: React.FC = () => {
                       name="email"
                       value={formData.email}
                       onChange={handleChange}
+                      maxLength={50}
+                      required
                       className="w-full bg-white/10 backdrop-blur-md text-white rounded-2xl px-6 py-4 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
                       placeholder="Enter your email address"
-                      required
                     />
                   </div>
                 </div>
@@ -243,6 +246,8 @@ const Contact: React.FC = () => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
+                      minLength={10}
+                      maxLength={10}
                       className="w-full bg-white/10 backdrop-blur-md text-white rounded-2xl px-6 py-4 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
                       placeholder="+1 (555) 123-4567"
                     />
@@ -255,9 +260,10 @@ const Contact: React.FC = () => {
                       name="subject"
                       value={formData.subject}
                       onChange={handleChange}
+                      maxLength={50}
+                      required
                       className="w-full bg-white/10 backdrop-blur-md text-white rounded-2xl px-6 py-4 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
                       placeholder="Brief description of your inquiry"
-                      required
                     />
                   </div>
                 </div>
@@ -269,10 +275,12 @@ const Contact: React.FC = () => {
                     name="message"
                     value={formData.message}
                     onChange={handleChange}
+                    minLength={10}
+                    maxLength={1000}
+                    required
                     rows={6}
                     className="w-full bg-white/10 backdrop-blur-md text-white rounded-2xl px-6 py-4 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400 resize-none"
                     placeholder="Please provide details about your inquiry..."
-                    required
                   />
                 </div>
 
