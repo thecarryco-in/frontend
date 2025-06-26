@@ -3,7 +3,6 @@ import { User, Package, Heart, Settings, ShoppingBag, Star, Clock, Edit3, Save, 
 import { useAuth } from '../context/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
-import { useWishlist } from '../context/WishlistContext'; // Add this import
 
 interface Order {
   _id: string;
@@ -62,7 +61,6 @@ const Dashboard: React.FC = () => {
   const [submittingReview, setSubmittingReview] = useState(false);
 
   const { user, updateProfile } = useAuth();
-  const { itemCount: wishlistCount } = useWishlist(); // Add this line
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
@@ -344,7 +342,7 @@ const Dashboard: React.FC = () => {
                         <Heart className="w-8 h-8 text-purple-400" />
                       </div>
                       <div>
-                        <p className="text-3xl font-bold text-white">{wishlistCount}</p>
+                        <p className="text-3xl font-bold text-white">0</p>
                         <p className="text-gray-400 font-medium">Wishlist Items</p>
                       </div>
                     </div>
@@ -384,6 +382,7 @@ const Dashboard: React.FC = () => {
                           type="text"
                           value={editData.name}
                           onChange={(e) => setEditData({...editData, name: e.target.value})}
+                          maxLength={18} // <-- Add this line to limit name to 18 characters
                           className="w-full bg-white/10 backdrop-blur-md text-white px-6 py-4 rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
                       ) : (
@@ -693,6 +692,7 @@ const Dashboard: React.FC = () => {
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                   rows={4}
+                  maxLength={200}
                   className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400 resize-none"
                   placeholder="Share your experience with this product..."
                 />
