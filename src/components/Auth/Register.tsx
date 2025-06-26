@@ -107,9 +107,11 @@ const Register: React.FC = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
+                  minLength={2}
+                  maxLength={20}
+                  required
                   className="w-full bg-white/10 backdrop-blur-md text-white rounded-2xl px-6 py-4 pl-12 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
                   placeholder="Enter your full name"
-                  required
                 />
                 <User className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
               </div>
@@ -124,9 +126,10 @@ const Register: React.FC = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
+                  maxLength={50}
+                  required
                   className="w-full bg-white/10 backdrop-blur-md text-white rounded-2xl px-6 py-4 pl-12 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
                   placeholder="Enter your email"
-                  required
                 />
                 <Mail className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
               </div>
@@ -141,9 +144,11 @@ const Register: React.FC = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
+                  minLength={8}
+                  maxLength={100}
+                  required
                   className="w-full bg-white/10 backdrop-blur-md text-white rounded-2xl px-6 py-4 pl-12 pr-12 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
                   placeholder="Create a password (min 8 characters)"
-                  required
                 />
                 <Lock className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
                 <button
