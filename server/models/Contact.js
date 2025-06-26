@@ -4,17 +4,22 @@ const contactSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    minlength: 2,
+    maxlength: 50
   },
   email: {
     type: String,
     required: true,
     lowercase: true,
-    trim: true
+    trim: true,
+    maxlength: 50
   },
   phone: {
     type: String,
-    trim: true
+    trim: true,
+    minlength: 10,
+    maxlength: 10
   },
   queryType: {
     type: String,
@@ -24,11 +29,14 @@ const contactSchema = new mongoose.Schema({
   subject: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
+    maxlength: 50
   },
   message: {
     type: String,
-    required: true
+    required: true,
+    minlength: 10,
+    maxlength: 1000
   },
   status: {
     type: String,
