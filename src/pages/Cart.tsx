@@ -375,9 +375,11 @@ const Cart: React.FC = () => {
                             name="name"
                             value={shippingAddress.name}
                             onChange={handleAddressChange}
+                            minLength={2}
+                            maxLength={50}
+                            required
                             className="w-full bg-white/10 text-white px-4 py-3 pl-12 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
                             placeholder="Enter full name"
-                            required
                           />
                           <User className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
                         </div>
@@ -391,9 +393,11 @@ const Cart: React.FC = () => {
                             name="phone"
                             value={shippingAddress.phone}
                             onChange={handleAddressChange}
+                            minLength={10}
+                            maxLength={10}
+                            required
                             className="w-full bg-white/10 text-white px-4 py-3 pl-12 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
                             placeholder="Enter phone number"
-                            required
                           />
                           <Phone className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
                         </div>
@@ -408,9 +412,11 @@ const Cart: React.FC = () => {
                           name="address"
                           value={shippingAddress.address}
                           onChange={handleAddressChange}
+                          minLength={5}
+                          maxLength={100}
+                          required
                           className="w-full bg-white/10 text-white px-4 py-3 pl-12 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
                           placeholder="Enter full address"
-                          required
                         />
                         <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
                       </div>
@@ -424,9 +430,11 @@ const Cart: React.FC = () => {
                           name="city"
                           value={shippingAddress.city}
                           onChange={handleAddressChange}
+                          minLength={2}
+                          maxLength={50}
+                          required
                           className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
                           placeholder="City"
-                          required
                         />
                       </div>
                       
@@ -437,9 +445,11 @@ const Cart: React.FC = () => {
                           name="state"
                           value={shippingAddress.state}
                           onChange={handleAddressChange}
+                          minLength={2}
+                          maxLength={50}
+                          required
                           className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
                           placeholder="State"
-                          required
                         />
                       </div>
                       
@@ -450,9 +460,11 @@ const Cart: React.FC = () => {
                           name="pincode"
                           value={shippingAddress.pincode}
                           onChange={handleAddressChange}
+                          minLength={6}
+                          maxLength={6}
+                          required
                           className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
                           placeholder="Pincode"
-                          required
                         />
                       </div>
                     </div>
