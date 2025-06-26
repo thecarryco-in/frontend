@@ -209,6 +209,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
                   name="name"
                   value={formData.name}
                   onChange={handleInputChange}
+                  minLength={2}
+                  maxLength={50}
                   className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
                   placeholder="Enter product name"
                   required
@@ -222,6 +224,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
                   name="brand"
                   value={formData.brand}
                   onChange={handleInputChange}
+                  minLength={2}
+                  maxLength={50}
                   className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
                   placeholder="Enter brand name"
                   required
@@ -369,6 +373,8 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
                 onChange={(e) => setNewColoredTag(prev => ({ ...prev, label: e.target.value }))}
                 className="flex-1 bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
                 placeholder="Tag label"
+                minLength={2}
+                maxLength={50}
               />
               <select
                 value={newColoredTag.color}
