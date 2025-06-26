@@ -8,7 +8,8 @@ const otpSchema = new mongoose.Schema({
   },
   otp: {
     type: String,
-    required: true
+    required: true,
+    maxlength: 6 // <-- Add this line to enforce max length for OTP
   },
   userData: {
     name: String,
