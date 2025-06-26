@@ -382,6 +382,7 @@ const Dashboard: React.FC = () => {
                           type="text"
                           value={editData.name}
                           onChange={(e) => setEditData({...editData, name: e.target.value})}
+                          minLength={2}
                           maxLength={18} // <-- Add this line to limit name to 18 characters
                           className="w-full bg-white/10 backdrop-blur-md text-white px-6 py-4 rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500"
                         />
