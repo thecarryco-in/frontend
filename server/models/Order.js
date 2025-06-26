@@ -63,13 +63,12 @@ const orderSchema = new mongoose.Schema({
     type: String
   },
   shippingAddress: {
-    name: String,
-    phone: String,
-    address: String,
-    city: String,
-    state: String,
-    pincode: String,
-    country: { type: String, default: 'India' }
+    name: { type: String, required: true, minlength: 2, maxlength: 50 },
+    phone: { type: String, required: true, minlength: 10, maxlength: 10 },
+    address: { type: String, required: true, minlength: 5, maxlength: 100 },
+    city: { type: String, required: true, minlength: 2, maxlength: 50 },
+    state: { type: String, required: true, minlength: 2, maxlength: 50 },
+    pincode: { type: String, required: true, minlength: 6, maxlength: 6 }
   },
   trackingNumber: {
     type: String
