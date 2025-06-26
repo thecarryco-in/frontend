@@ -151,8 +151,8 @@ const Dashboard: React.FC = () => {
   };
 
   const submitReview = async () => {
-    if (!selectedProduct || rating === 0 || !comment.trim()) {
-      alert('Please provide both rating and comment');
+    if (!selectedProduct || rating === 0) {
+      alert('Please provide a rating');
       return;
     }
 
@@ -708,7 +708,7 @@ const Dashboard: React.FC = () => {
                 </button>
                 <button
                   onClick={submitReview}
-                  disabled={submittingReview || rating === 0 || !comment.trim()}
+                  disabled={submittingReview || rating === 0}
                   className="flex-1 bg-gradient-to-r from-yellow-600 to-orange-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submittingReview ? 'Submitting...' : 'Submit Review'}
