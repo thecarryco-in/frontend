@@ -24,10 +24,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id);
+    const productId = product.id || product._id;
+    if (isInWishlist(productId)) {
+      removeFromWishlist(productId);
     } else {
-      addToWishlist(product);
+      addToWishlist({ ...product, id: productId });
     }
   };
 
@@ -42,6 +43,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     };
     return colors[color as keyof typeof colors] || 'from-gray-500 to-gray-600';
   };
+
+  const productId = product.id || product._id;
 
   return (
     <div 
@@ -94,12 +97,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <button
               onClick={handleToggleWishlist}
               className={`w-8 h-8 backdrop-blur-md rounded-full flex items-center justify-center transition-all duration-300 border ${
-                isInWishlist(product.id)
+                isInWishlist(productId)
                   ? 'bg-red-500 border-red-400 text-white'
                   : 'bg-white/10 border-white/20 text-white hover:bg-red-500 hover:border-red-400'
               }`}
             >
-              <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+              <Heart className={`w-4 h-4 ${isInWishlist(productId) ? 'fill-current' : ''}`} />
             </button>
           </div>
         )}
@@ -142,7 +145,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               ))}
             </div>
             <span className="text-gray-400 text-xs">
-              {product.rating} ({product.reviews})
+              {product.rating.toFixed(1)} ({product.reviews})
             </span>
           </div>
           <div className={`text-xs font-bold ${product.inStock ? 'text-green-400' : 'text-red-400'}`}>

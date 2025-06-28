@@ -50,6 +50,7 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewedProducts, setReviewedProducts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchOrders();
@@ -110,12 +111,16 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
         comment: comment.trim()
       });
       
+      // Add to reviewed products set
+      setReviewedProducts(prev => new Set([...prev, selectedProduct._id]));
+      
       alert('Review submitted successfully!');
       setShowRatingModal(false);
       setSelectedProduct(null);
       setRating(0);
       setComment('');
     } catch (error: any) {
+      console.error('Review submission error:', error);
       alert(error.response?.data?.message || 'Failed to submit review');
     } finally {
       setSubmittingReview(false);
@@ -231,10 +236,17 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
                     <button
                       key={index}
                       onClick={() => handleRateProduct(item.product)}
-                      className="flex items-center space-x-2 bg-gradient-to-r from-yellow-600 to-orange-600 text-white px-3 py-2 md:px-4 md:py-2 rounded-lg md:rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+                      disabled={reviewedProducts.has(item.product._id)}
+                      className={`flex items-center space-x-2 px-3 py-2 md:px-4 md:py-2 rounded-lg md:rounded-xl font-semibold transition-all duration-300 ${
+                        reviewedProducts.has(item.product._id)
+                          ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white hover:shadow-lg'
+                      }`}
                     >
                       <Star className="w-3 h-3 md:w-4 md:h-4" />
-                      <span className="text-sm">Rate {item.productSnapshot.name}</span>
+                      <span className="text-sm">
+                        {reviewedProducts.has(item.product._id) ? 'Reviewed' : `Rate ${item.productSnapshot.name}`}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -333,7 +345,7 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-3 text-gray-300">Comment</label>
+                <label className="block text-sm font-medium mb-3 text-gray-300">Comment (Optional)</label>
                 <textarea
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
