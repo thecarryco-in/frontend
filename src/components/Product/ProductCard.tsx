@@ -53,7 +53,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   return (
     <div 
-      className="relative bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-3xl overflow-hidden border border-white/10 hover:border-purple-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20 hover:-translate-y-2 cursor-pointer"
+      className="relative bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-purple-400/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20 hover:-translate-y-1 cursor-pointer group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -62,36 +62,35 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <img
           src={product.image}
           alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         
         {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         
         {/* Colored Tags */}
-        <div className="absolute top-4 left-4 flex flex-col space-y-2">
-          {product.coloredTags?.map((tag, index) => (
+        <div className="absolute top-2 left-2 flex flex-col space-y-1">
+          {product.coloredTags?.slice(0, 2).map((tag, index) => (
             <span 
               key={index}
-              className={`bg-gradient-to-r ${getTagColor(tag.color)} text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm`}
+              className={`bg-gradient-to-r ${getTagColor(tag.color)} text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg backdrop-blur-sm`}
             >
               {tag.label}
             </span>
           ))}
           {product.isNewProduct && (
-            <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm">
+            <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg backdrop-blur-sm">
               NEW
             </span>
           )}
-          {/* only show SALE if originalPrice > 0 */}
           {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
-            <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm">
+            <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg backdrop-blur-sm">
               SALE
             </span>
           )}
           {product.rating >= 4.5 && (
-            <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm flex items-center space-x-1">
-              <Star className="w-3 h-3 fill-current" />
+            <span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg backdrop-blur-sm flex items-center space-x-1">
+              <Star className="w-2 h-2 fill-current" />
               <span>TOP</span>
             </span>
           )}
@@ -99,62 +98,50 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
         {/* Action Buttons */}
         {isAuthenticated && (
-          <div className="absolute top-4 right-4 flex flex-col space-y-2">
+          <div className="absolute top-2 right-2">
             <button
               onClick={handleToggleWishlist}
-              className={`w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center transition-all duration-300 border ${
+              className={`w-8 h-8 backdrop-blur-md rounded-full flex items-center justify-center transition-all duration-300 border ${
                 isInWishlist(product.id)
                   ? 'bg-red-500 border-red-400 text-white'
                   : 'bg-white/10 border-white/20 text-white hover:bg-red-500 hover:border-red-400'
               }`}
             >
-              <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+              <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
             </button>
           </div>
         )}
 
-        {/* Quick Add */}
-        {isAuthenticated && (
-          <button
-            onClick={handleAddToCart}
-            className={`absolute bottom-4 right-4 w-12 h-12 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 rounded-full flex items-center justify-center text-white shadow-lg transition-all duration-500 ${
-              isHovered ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
-            }`}
-          >
-            <ShoppingCart className="w-6 h-6" />
-          </button>
-        )}
-
         {/* Fast Charging Badge */}
         {product.category === 'chargers' && (
-          <div className="absolute bottom-4 left-4 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm flex items-center space-x-1">
-            <Zap className="w-3 h-3" />
+          <div className="absolute bottom-2 left-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg backdrop-blur-sm flex items-center space-x-1">
+            <Zap className="w-2 h-2" />
             <span>FAST</span>
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div className="p-6 space-y-4">
+      <div className="p-4 space-y-3">
         {/* Brand & Category */}
         <div className="flex items-center justify-between">
-          <p className="text-purple-400 text-sm font-semibold uppercase tracking-wide">{product.brand}</p>
+          <p className="text-purple-400 text-xs font-semibold uppercase tracking-wide">{product.brand}</p>
           <span className="text-gray-500 text-xs capitalize">{product.category.replace('-', ' ')}</span>
         </div>
         
         {/* Name */}
-        <h3 className="text-white font-bold text-lg leading-tight hover:text-purple-400 transition-colors duration-300">
+        <h3 className="text-white font-bold text-sm leading-tight hover:text-purple-400 transition-colors duration-300 line-clamp-2">
           {product.name}
         </h3>
 
         {/* Rating & Stock */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`w-4 h-4 ${
+                  className={`w-3 h-3 ${
                     i < Math.floor(product.rating)
                       ? 'text-yellow-400 fill-current'
                       : 'text-gray-600'
@@ -162,40 +149,38 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 />
               ))}
             </div>
-            <span className="text-gray-400 text-sm font-medium">
+            <span className="text-gray-400 text-xs">
               {product.rating} ({product.reviews})
             </span>
           </div>
-          <div className={`text-sm font-bold ${product.inStock ? 'text-green-400' : 'text-red-400'}`}>
-            {product.inStock ? '✓ In Stock' : '✗ Out of Stock'}
+          <div className={`text-xs font-bold ${product.inStock ? 'text-green-400' : 'text-red-400'}`}>
+            {product.inStock ? '✓ Stock' : '✗ Out'}
           </div>
         </div>
 
         {/* Price */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <span className="text-white font-bold text-2xl">
+          <div className="flex items-center space-x-2">
+            <span className="text-white font-bold text-lg">
               ₹{product.price}
             </span>
-            {/* only show crossed original if > 0 */}
             {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
-              <span className="text-gray-500 text-lg line-through">
+              <span className="text-gray-500 text-sm line-through">
                 ₹{product.originalPrice}
               </span>
             )}
           </div>
           
-          {/* only show “Save” badge if originalPrice > 0 */}
           {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
-            <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-3 py-1 rounded-full font-bold">
-              Save ₹{(product.originalPrice - product.price).toFixed(2)}
+            <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+              Save ₹{(product.originalPrice - product.price).toFixed(0)}
             </div>
           )}
         </div>
 
         {/* Features Preview */}
         {product.features && product.features.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1">
             {product.features.slice(0, 2).map((feature, index) => (
               <span 
                 key={index}
@@ -206,24 +191,33 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             ))}
             {product.features.length > 2 && (
               <span className="text-xs text-purple-400 font-medium">
-                +{product.features.length - 2} more
+                +{product.features.length - 2}
               </span>
             )}
           </div>
         )}
 
-        {/* Login prompt for non-authenticated users */}
-        {!isAuthenticated && (
-          <div className="pt-4 border-t border-white/10">
-            <p className="text-center text-gray-400 text-sm mb-3">
-              Login to add to cart or wishlist
-            </p>
+        {/* Action Buttons */}
+        {isAuthenticated ? (
+          <button
+            onClick={handleAddToCart}
+            className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+          >
+            <ShoppingCart className="w-4 h-4" />
+            <span>Add to Cart</span>
+          </button>
+        ) : (
+          <div className="text-center">
+            <p className="text-gray-400 text-xs mb-2">Login to add to cart</p>
+            <button className="w-full border border-white/20 text-white py-2 rounded-xl font-semibold text-sm hover:bg-white/10 transition-all duration-300">
+              Login Required
+            </button>
           </div>
         )}
       </div>
 
       {/* Hover Glow Effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-3xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none rounded-2xl"></div>
     </div>
   );
 };

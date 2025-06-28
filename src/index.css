@@ -54,6 +54,13 @@
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 /* Custom scrollbar */
@@ -109,4 +116,45 @@
 
 .animate-delay-500 {
   animation-delay: 500ms;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .container {
+    @apply px-3;
+  }
+  
+  /* Reduce spacing on mobile */
+  .space-y-8 > * + * {
+    @apply mt-4;
+  }
+  
+  .space-y-6 > * + * {
+    @apply mt-3;
+  }
+  
+  /* Smaller text on mobile */
+  .text-5xl {
+    @apply text-3xl;
+  }
+  
+  .text-6xl {
+    @apply text-4xl;
+  }
+  
+  .text-7xl {
+    @apply text-5xl;
+  }
+  
+  .text-8xl {
+    @apply text-6xl;
+  }
+}
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }

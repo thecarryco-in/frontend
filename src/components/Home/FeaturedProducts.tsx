@@ -9,7 +9,7 @@ const FeaturedProducts: React.FC = () => {
 
   if (loading) {
     return (
-      <section className="py-24 bg-gradient-to-b from-slate-900 to-gray-900 relative overflow-hidden">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-slate-900 to-gray-900 relative overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center">
             <Loader className="w-12 h-12 text-purple-400 animate-spin mx-auto mb-4" />
@@ -22,7 +22,7 @@ const FeaturedProducts: React.FC = () => {
 
   if (error) {
     return (
-      <section className="py-24 bg-gradient-to-b from-slate-900 to-gray-900 relative overflow-hidden">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-slate-900 to-gray-900 relative overflow-hidden">
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center">
             <p className="text-red-400 text-lg">{error}</p>
@@ -33,29 +33,29 @@ const FeaturedProducts: React.FC = () => {
   }
 
   return (
-    <section className="py-24 bg-gradient-to-b from-slate-900 to-gray-900 relative overflow-hidden">
+    <section className="py-16 md:py-24 bg-gradient-to-b from-slate-900 to-gray-900 relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 md:w-96 md:h-96 bg-purple-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-48 h-48 md:w-80 md:h-80 bg-cyan-500/10 rounded-full blur-3xl"></div>
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Section Header */}
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 backdrop-blur-sm border border-white/10 rounded-full px-6 py-3 mb-6">
-            <TrendingUp className="w-5 h-5 text-purple-400" />
-            <span className="text-white font-medium">Trending Now</span>
+        <div className="text-center mb-12 md:mb-20">
+          <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-500/20 to-cyan-500/20 backdrop-blur-sm border border-white/10 rounded-full px-4 py-2 md:px-6 md:py-3 mb-4 md:mb-6">
+            <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-purple-400" />
+            <span className="text-white font-medium text-sm md:text-base">Trending Now</span>
           </div>
           
-          <h2 className="text-5xl md:text-7xl font-bold text-white mb-6">
+          <h2 className="text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 md:mb-6">
             Featured
             <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent block">
               Collection
             </span>
           </h2>
           
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Handpicked premium accessories that combine cutting-edge technology with stunning design. 
             Each product is carefully selected for quality, innovation, and style.
           </p>
@@ -63,7 +63,7 @@ const FeaturedProducts: React.FC = () => {
 
         {/* Products Grid */}
         {products.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12 md:mb-16">
             {products.map((product, index) => (
               <div 
                 key={product.id} 
@@ -82,23 +82,23 @@ const FeaturedProducts: React.FC = () => {
 
         {/* CTA Section */}
         <div className="text-center">
-          <div className="bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-md rounded-3xl p-12 border border-white/10 max-w-2xl mx-auto">
-            <div className="flex items-center justify-center mb-6">
-              <Sparkles className="w-8 h-8 text-yellow-400 mr-3" />
-              <h3 className="text-2xl font-bold text-white">Discover More Amazing Products</h3>
+          <div className="bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-md rounded-2xl md:rounded-3xl p-8 md:p-12 border border-white/10 max-w-2xl mx-auto">
+            <div className="flex items-center justify-center mb-4 md:mb-6">
+              <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-yellow-400 mr-3" />
+              <h3 className="text-xl md:text-2xl font-bold text-white">Discover More Amazing Products</h3>
             </div>
             
-            <p className="text-gray-300 mb-8 text-lg">
+            <p className="text-gray-300 mb-6 md:mb-8 text-base md:text-lg">
               Explore our complete collection of premium mobile accessories
             </p>
             
             <Link
               to="/shop"
-              className="group inline-flex items-center space-x-3 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 text-white px-10 py-5 rounded-2xl font-semibold text-lg hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 relative overflow-hidden"
+              className="group inline-flex items-center space-x-3 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 text-white px-8 py-4 md:px-10 md:py-5 rounded-xl md:rounded-2xl font-semibold text-base md:text-lg hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-pink-700 to-cyan-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <span className="relative z-10">View All Products</span>
-              <ArrowRight className="w-6 h-6 relative z-10 group-hover:translate-x-1 transition-transform duration-300" />
+              <ArrowRight className="w-5 h-5 md:w-6 md:h-6 relative z-10 group-hover:translate-x-1 transition-transform duration-300" />
             </Link>
           </div>
         </div>

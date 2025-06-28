@@ -90,17 +90,17 @@ const Header: React.FC = () => {
         : 'bg-transparent'
     }`}>
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 group">
+          <Link to="/" className="flex items-center space-x-2 md:space-x-3 group">
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
-                <Smartphone className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-xl md:rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                <Smartphone className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-2xl blur opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-xl md:rounded-2xl blur opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
             </div>
             <div className="hidden sm:block">
-              <span className="text-white font-bold text-2xl bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+              <span className="text-white font-bold text-lg md:text-2xl bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
                 The CarryCo
               </span>
               <div className="text-xs text-gray-400 font-medium">Premium Accessories</div>
@@ -108,7 +108,7 @@ const Header: React.FC = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8">
+          <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -126,16 +126,16 @@ const Header: React.FC = () => {
           </nav>
 
           {/* Right Side Icons */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 md:space-x-4">
             {isAuthenticated ? (
               <>
                 <Link 
                   to="/wishlist"
-                  className="relative p-3 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:bg-white/10 rounded-xl backdrop-blur-sm"
+                  className="relative p-2 md:p-3 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:bg-white/10 rounded-lg md:rounded-xl backdrop-blur-sm"
                 >
-                  <Heart className="w-6 h-6" />
+                  <Heart className="w-5 h-5 md:w-6 md:h-6" />
                   {wishlistCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                    <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
                       {wishlistCount}
                     </span>
                   )}
@@ -143,11 +143,12 @@ const Header: React.FC = () => {
                 
                 <Link 
                   to="/cart" 
-                  className="relative p-3 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:bg-white/10 rounded-xl backdrop-blur-sm group"
+                  className="relative p-2 md:p-3 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:bg-white/10 rounded-lg md:rounded-xl backdrop-blur-sm group flex items-center space-x-1 md:space-x-2"
                 >
-                  <ShoppingCart className="w-6 h-6" />
+                  <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
+                  <span className="hidden sm:block text-sm font-medium">Cart</span>
                   {itemCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
+                    <span className="w-5 h-5 md:w-6 md:h-6 bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
                       {itemCount}
                     </span>
                   )}
@@ -157,28 +158,28 @@ const Header: React.FC = () => {
                 <div className="relative">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center space-x-2 p-2 text-gray-300 hover:text-white transition-all duration-200 hover:bg-white/10 rounded-xl backdrop-blur-sm"
+                    className="flex items-center space-x-1 md:space-x-2 p-1.5 md:p-2 text-gray-300 hover:text-white transition-all duration-200 hover:bg-white/10 rounded-lg md:rounded-xl backdrop-blur-sm"
                   >
                     {user?.avatar ? (
                       <img
                         src={user.avatar}
                         alt={user.name}
-                        className="w-8 h-8 rounded-full border-2 border-purple-400"
+                        className="w-6 h-6 md:w-8 md:h-8 rounded-full border-2 border-purple-400"
                       />
                     ) : (
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-white" />
+                      <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
+                        <User className="w-3 h-3 md:w-5 md:h-5 text-white" />
                       </div>
                     )}
-                    <span className="hidden sm:block font-medium">{user?.name}</span>
+                    <span className="hidden md:block font-medium text-sm">{user?.name}</span>
                   </button>
 
                   {/* User Dropdown */}
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-64 bg-slate-800/95 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl py-2 z-50">
-                      <div className="px-4 py-3 border-b border-white/10">
-                        <p className="text-white font-semibold">{user?.name}</p>
-                        <p className="text-gray-400 text-sm">{user?.email}</p>
+                    <div className="absolute right-0 top-full mt-2 w-56 md:w-64 bg-slate-800/95 backdrop-blur-xl rounded-xl md:rounded-2xl border border-white/10 shadow-2xl py-2 z-50">
+                      <div className="px-3 md:px-4 py-2 md:py-3 border-b border-white/10">
+                        <p className="text-white font-semibold text-sm md:text-base">{user?.name}</p>
+                        <p className="text-gray-400 text-xs md:text-sm">{user?.email}</p>
                         {user && (
                           <p className={`text-xs font-medium mt-1 ${getMemberStatusColor(getMemberStatus(user.totalSpent))}`}>
                             {getMemberStatus(user.totalSpent)} Member
@@ -191,34 +192,34 @@ const Header: React.FC = () => {
                       <Link
                         to="/dashboard"
                         onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                        className="flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 text-sm md:text-base"
                       >
-                        <User className="w-5 h-5" />
+                        <User className="w-4 h-4 md:w-5 md:h-5" />
                         <span>Dashboard</span>
                       </Link>
                       <Link
                         to="/dashboard?tab=orders"
                         onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                        className="flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 text-sm md:text-base"
                       >
-                        <Package className="w-5 h-5" />
+                        <Package className="w-4 h-4 md:w-5 md:h-5" />
                         <span>My Orders</span>
                       </Link>
                       {user?.isAdmin && (
                         <Link
                           to="/admin"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                          className="flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 text-sm md:text-base"
                         >
-                          <User className="w-5 h-5" />
+                          <User className="w-4 h-4 md:w-5 md:h-5" />
                           <span>Admin Panel</span>
                         </Link>
                       )}
                       <button
                         onClick={handleLogout}
-                        className="w-full flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
+                        className="w-full flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 text-gray-300 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 text-sm md:text-base"
                       >
-                        <LogOut className="w-5 h-5" />
+                        <LogOut className="w-4 h-4 md:w-5 md:h-5" />
                         <span>Logout</span>
                       </button>
                     </div>
@@ -229,13 +230,13 @@ const Header: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <Link
                   to="/login"
-                  className="px-6 py-2 text-gray-300 hover:text-white transition-colors duration-200 font-medium"
+                  className="px-3 py-1.5 md:px-6 md:py-2 text-gray-300 hover:text-white transition-colors duration-200 font-medium text-sm md:text-base"
                 >
                   Login
                 </Link>
                 <Link
                   to="/register"
-                  className="px-6 py-2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-300"
+                  className="px-3 py-1.5 md:px-6 md:py-2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white rounded-lg md:rounded-xl font-medium hover:shadow-lg transition-all duration-300 text-sm md:text-base"
                 >
                   Sign Up
                 </Link>
@@ -244,24 +245,24 @@ const Header: React.FC = () => {
 
             {/* Mobile Menu Button */}
             <button
-              className="lg:hidden p-3 text-gray-300 hover:text-white transition-colors duration-200 hover:bg-white/10 rounded-xl backdrop-blur-sm"
+              className="lg:hidden p-2 md:p-3 text-gray-300 hover:text-white transition-colors duration-200 hover:bg-white/10 rounded-lg md:rounded-xl backdrop-blur-sm"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isMenuOpen ? <X className="w-5 h-5 md:w-6 md:h-6" /> : <Menu className="w-5 h-5 md:w-6 md:h-6" />}
             </button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
         <div className={`lg:hidden transition-all duration-500 overflow-hidden ${
-          isMenuOpen ? 'max-h-96 opacity-100 pb-6' : 'max-h-0 opacity-0'
+          isMenuOpen ? 'max-h-96 opacity-100 pb-4 md:pb-6' : 'max-h-0 opacity-0'
         }`}>
-          <nav className="space-y-2 pt-4">
+          <nav className="space-y-1 md:space-y-2 pt-3 md:pt-4">
             {navigation.map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`block px-6 py-4 text-sm font-medium transition-all duration-200 hover:text-purple-400 hover:bg-white/10 rounded-2xl backdrop-blur-sm ${
+                className={`block px-4 py-3 md:px-6 md:py-4 text-sm font-medium transition-all duration-200 hover:text-purple-400 hover:bg-white/10 rounded-xl md:rounded-2xl backdrop-blur-sm ${
                   isActive(item.href) ? 'text-purple-400 bg-white/10' : 'text-gray-300'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
