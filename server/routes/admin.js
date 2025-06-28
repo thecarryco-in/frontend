@@ -108,6 +108,36 @@ router.get('/products', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
+// Get product reviews (admin)
+router.get('/product-reviews', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { 
+      search, 
+      category, 
+      rating 
+    } = req.query;
+
+    const filter = { 'reviews.0': { $exists: true } }; // Only products with reviews
+    
+    if (search) {
+      filter.name = { $regex: search, $options: 'i' };
+    }
+    if (category) filter.category = category;
+    if (rating) filter.rating = { $gte: parseFloat(rating) };
+
+    const products = await Product.find(filter)
+      .select('name brand category image rating reviewCount reviews')
+      .sort({ rating: -1, reviewCount: -1 });
+
+    res.status(200).json({
+      products
+    });
+  } catch (error) {
+    console.error('Admin get product reviews error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Create product (admin)
 router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
   try {
