@@ -27,6 +27,7 @@ interface AuthContextType extends AuthState {
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   checkAuth: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,7 +35,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_USER'; payload: User | null }
-  | { type: 'UPDATE_USER'; payload: Partial<User> };
+  | { type: 'UPDATE_USER'; payload: Partial<User> }
+  | { type: 'CLEAR_USER' };
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
@@ -51,6 +53,13 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
       return {
         ...state,
         user: state.user ? { ...state.user, ...action.payload } : null,
+      };
+    case 'CLEAR_USER':
+      return {
+        ...state,
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
       };
     default:
       return state;
@@ -71,13 +80,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   const checkAuth = async () => {
-    dispatch({ type: 'SET_LOADING', payload: true });
     try {
+      dispatch({ type: 'SET_LOADING', payload: true });
       const { data } = await axios.get('/auth/me');
       dispatch({ type: 'SET_USER', payload: data.user });
     } catch {
-      dispatch({ type: 'SET_USER', payload: null });
-      // no redirect here: allow public pages to render
+      dispatch({ type: 'CLEAR_USER' });
+    }
+  };
+
+  const refreshUser = async () => {
+    try {
+      const { data } = await axios.get('/auth/me');
+      dispatch({ type: 'SET_USER', payload: data.user });
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
     }
   };
 
@@ -85,6 +102,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const { data } = await axios.post('/auth/login', { email, password });
       dispatch({ type: 'SET_USER', payload: data.user });
+      
+      // Force a small delay to ensure state is updated
+      await new Promise(resolve => setTimeout(resolve, 100));
     } catch (err: any) {
       throw new Error(err.response?.data?.message || 'Login failed');
     }
@@ -102,6 +122,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const { data } = await axios.post('/auth/verify-otp', { email, otp });
       dispatch({ type: 'SET_USER', payload: data.user });
+      
+      // Force a small delay to ensure state is updated
+      await new Promise(resolve => setTimeout(resolve, 100));
     } catch (err: any) {
       throw new Error(err.response?.data?.message || 'OTP verification failed');
     }
@@ -119,26 +142,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await axios.post('/auth/logout');
     } catch (err) {
-      console.error(err);
+      console.error('Logout error:', err);
     } finally {
-      dispatch({ type: 'SET_USER', payload: null });
+      dispatch({ type: 'CLEAR_USER' });
     }
   };
 
+  const updateProfile = async (data: Partial<User>) => {
+    try {
+      const { data: res } = await axios.put('/user/profile', data);
+      dispatch({ type: 'UPDATE_USER', payload: res.user });
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || 'Failed to update profile');
+    }
+  };
+
+  // Check auth on mount
   useEffect(() => {
     checkAuth();
   }, []);
 
-  if (state.isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
-        <div className="flex flex-col items-center">
-          <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-white text-lg">Please Wait...</p>
-        </div>
-      </div>
-    );
-  }
+  // Handle Google OAuth callback
+  useEffect(() => {
+    const handleGoogleCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('auth') === 'success') {
+        // Google OAuth successful, refresh user data
+        await refreshUser();
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    };
+
+    handleGoogleCallback();
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -149,11 +186,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         verifyOTP,
         resendOTP,
         logout,
-        updateProfile: async (data) => {
-          const { data: res } = await axios.put('/user/profile', data);
-          dispatch({ type: 'UPDATE_USER', payload: res.user });
-        },
+        updateProfile,
         checkAuth,
+        refreshUser,
       }}
     >
       {children}

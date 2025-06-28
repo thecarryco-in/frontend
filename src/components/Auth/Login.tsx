@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, Loader, Chrome } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -14,6 +14,10 @@ const Login: React.FC = () => {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get the intended destination from location state
+  const from = location.state?.from?.pathname || '/';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -30,7 +34,11 @@ const Login: React.FC = () => {
 
     try {
       await login(formData.email, formData.password);
-      navigate('/');
+      
+      // Small delay to ensure state is fully updated
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 200);
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -39,6 +47,8 @@ const Login: React.FC = () => {
   };
 
   const handleGoogleLogin = () => {
+    // Store the intended destination in sessionStorage for Google OAuth
+    sessionStorage.setItem('authRedirect', from);
     window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
   };
 

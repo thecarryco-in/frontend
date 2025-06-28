@@ -44,8 +44,7 @@ function App() {
   const [serverAwake, setServerAwake] = useState(false);
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/health`, {
-    })
+    fetch(`${import.meta.env.VITE_API_URL}/health`)
       .then(() => setServerAwake(true))
       .catch(() => setServerAwake(true));
   }, []);

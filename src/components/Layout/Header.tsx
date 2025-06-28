@@ -11,7 +11,7 @@ const Header: React.FC = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { itemCount } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -29,6 +29,11 @@ const Header: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location]);
+
+  // Close user menu when user changes (login/logout)
+  useEffect(() => {
+    setIsUserMenuOpen(false);
+  }, [user, isAuthenticated]);
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -127,7 +132,7 @@ const Header: React.FC = () => {
 
           {/* Right Side Icons */}
           <div className="flex items-center space-x-2 md:space-x-4">
-            {isAuthenticated ? (
+            {!isLoading && isAuthenticated && user ? (
               <>
                 <Link 
                   to="/wishlist"
@@ -160,7 +165,7 @@ const Header: React.FC = () => {
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     className="flex items-center space-x-1 md:space-x-2 p-1.5 md:p-2 text-gray-300 hover:text-white transition-all duration-200 hover:bg-white/10 rounded-lg md:rounded-xl backdrop-blur-sm"
                   >
-                    {user?.avatar ? (
+                    {user.avatar ? (
                       <img
                         src={user.avatar}
                         alt={user.name}
@@ -171,21 +176,19 @@ const Header: React.FC = () => {
                         <User className="w-3 h-3 md:w-5 md:h-5 text-white" />
                       </div>
                     )}
-                    <span className="hidden md:block font-medium text-sm">{user?.name}</span>
+                    <span className="hidden md:block font-medium text-sm">{user.name}</span>
                   </button>
 
                   {/* User Dropdown */}
                   {isUserMenuOpen && (
                     <div className="absolute right-0 top-full mt-2 w-56 md:w-64 bg-slate-800/95 backdrop-blur-xl rounded-xl md:rounded-2xl border border-white/10 shadow-2xl py-2 z-50">
                       <div className="px-3 md:px-4 py-2 md:py-3 border-b border-white/10">
-                        <p className="text-white font-semibold text-sm md:text-base">{user?.name}</p>
-                        <p className="text-gray-400 text-xs md:text-sm">{user?.email}</p>
-                        {user && (
-                          <p className={`text-xs font-medium mt-1 ${getMemberStatusColor(getMemberStatus(user.totalSpent))}`}>
-                            {getMemberStatus(user.totalSpent)} Member
-                          </p>
-                        )}
-                        {user?.isAdmin && (
+                        <p className="text-white font-semibold text-sm md:text-base">{user.name}</p>
+                        <p className="text-gray-400 text-xs md:text-sm">{user.email}</p>
+                        <p className={`text-xs font-medium mt-1 ${getMemberStatusColor(getMemberStatus(user.totalSpent))}`}>
+                          {getMemberStatus(user.totalSpent)} Member
+                        </p>
+                        {user.isAdmin && (
                           <p className="text-cyan-400 text-xs font-medium">Admin Access</p>
                         )}
                       </div>
@@ -205,7 +208,7 @@ const Header: React.FC = () => {
                         <Package className="w-4 h-4 md:w-5 md:h-5" />
                         <span>My Orders</span>
                       </Link>
-                      {user?.isAdmin && (
+                      {user.isAdmin && (
                         <Link
                           to="/admin"
                           onClick={() => setIsUserMenuOpen(false)}
@@ -226,7 +229,7 @@ const Header: React.FC = () => {
                   )}
                 </div>
               </>
-            ) : (
+            ) : !isLoading && !isAuthenticated ? (
               <div className="flex items-center space-x-2">
                 <Link
                   to="/login"
@@ -241,6 +244,8 @@ const Header: React.FC = () => {
                   Sign Up
                 </Link>
               </div>
+            ) : (
+              <div className="w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
             )}
 
             {/* Mobile Menu Button */}

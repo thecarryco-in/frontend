@@ -93,7 +93,7 @@ router.post('/verify-otp', authLimiter, async (req, res) => {
     // Delete OTP document
     await OTP.deleteOne({ _id: otpDoc._id });
 
-    // Send welcome email - Fixed: Pass user data correctly
+    // Send welcome email
     try {
       await sendWelcomeEmail(user.email, user.name);
     } catch (emailError) {
@@ -119,7 +119,10 @@ router.post('/verify-otp', authLimiter, async (req, res) => {
         name: user.name,
         email: user.email,
         avatar: user.avatar,
+        phone: user.phone,
         isVerified: user.isVerified,
+        totalSpent: user.totalSpent,
+        joinDate: user.createdAt,
         isAdmin: user.email === process.env.ADMIN_EMAIL
       }
     });
@@ -199,7 +202,10 @@ router.post('/login', authLimiter, async (req, res) => {
         name: user.name,
         email: user.email,
         avatar: user.avatar,
+        phone: user.phone,
         isVerified: user.isVerified,
+        totalSpent: user.totalSpent,
+        joinDate: user.createdAt,
         isAdmin: user.email === process.env.ADMIN_EMAIL
       }
     });
@@ -229,8 +235,11 @@ router.get('/google/callback',
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
 
-      // Redirect to frontend
-      res.redirect(process.env.CLIENT_URL || 'http://localhost:5173');
+      // Get redirect URL from session storage or default to home
+      const redirectUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+      
+      // Redirect with success parameter to trigger frontend auth refresh
+      res.redirect(`${redirectUrl}?auth=success`);
     } catch (error) {
       console.error('Google callback error:', error);
       res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
@@ -244,7 +253,6 @@ router.post('/logout', (req, res) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'none',
-    // path: '/',
   });
   res.status(200).json({ message: 'Logged out successfully' });
 });
