@@ -18,20 +18,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isAuthenticated) {
-      alert('Please login to add items to cart');
-      return;
-    }
     addToCart({ ...product, id: product.id || product._id });
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isAuthenticated) {
-      alert('Please login to add items to wishlist');
-      return;
-    }
     if (isInWishlist(product.id)) {
       removeFromWishlist(product.id);
     } else {
@@ -96,7 +88,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons - Only show if authenticated */}
         {isAuthenticated && (
           <div className="absolute top-2 right-2">
             <button
@@ -197,23 +189,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         )}
 
-        {/* Action Buttons */}
-        {isAuthenticated ? (
-          <button
-            onClick={handleAddToCart}
-            className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            <span>Add to Cart</span>
-          </button>
-        ) : (
-          <div className="text-center">
-            <p className="text-gray-400 text-xs mb-2">Login to add to cart</p>
-            <button className="w-full border border-white/20 text-white py-2 rounded-xl font-semibold text-sm hover:bg-white/10 transition-all duration-300">
-              Login Required
-            </button>
-          </div>
-        )}
+        {/* Action Button - Always show, but different behavior */}
+        <button
+          onClick={handleAddToCart}
+          className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+        >
+          <ShoppingCart className="w-4 h-4" />
+          <span>Add to Cart</span>
+        </button>
       </div>
 
       {/* Hover Glow Effect */}

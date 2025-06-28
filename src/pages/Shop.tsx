@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Filter, Grid, List, SlidersHorizontal, Search, Star, Loader } from 'lucide-react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { Filter, Grid, List, SlidersHorizontal, Search, Star, Loader, LogIn, UserPlus } from 'lucide-react';
 import ProductCard from '../components/Product/ProductCard';
 import { useProducts } from '../hooks/useProducts';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
+import { useAuth } from '../context/AuthContext';
 
 const Shop: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -19,6 +20,8 @@ const Shop: React.FC = () => {
     maxPrice: undefined as number | undefined,
     rating: 0,
   });
+
+  const { isAuthenticated } = useAuth();
 
   // Update filters when query changes
   useEffect(() => {
@@ -120,6 +123,42 @@ const Shop: React.FC = () => {
             Discover our curated selection of premium mobile accessories
           </p>
         </div>
+
+        {/* Login Prompt - Only show if not authenticated */}
+        {!isAuthenticated && (
+          <div className="mb-8 md:mb-12">
+            <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-purple-400/30 text-center max-w-4xl mx-auto">
+              <div className="flex items-center justify-center mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full flex items-center justify-center">
+                  <LogIn className="w-8 h-8 text-purple-400" />
+                </div>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                Login to Add Items to Cart & Wishlist
+              </h2>
+              <p className="text-gray-300 mb-6 text-lg">
+                Create an account or sign in to save your favorite products and add them to your cart for a seamless shopping experience.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  to="/login"
+                  className="group inline-flex items-center space-x-2 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-pink-700 to-cyan-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <LogIn className="w-5 h-5 relative z-10" />
+                  <span className="relative z-10">Login</span>
+                </Link>
+                <Link
+                  to="/register"
+                  className="group border-2 border-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:border-purple-400/50 hover:bg-white/10 transition-all duration-300 flex items-center justify-center space-x-2"
+                >
+                  <UserPlus className="w-5 h-5" />
+                  <span>Sign Up</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Search and Controls */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 md:mb-8 space-y-4 lg:space-y-0 gap-4 md:gap-6">
