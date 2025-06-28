@@ -161,7 +161,7 @@ const PrivacyPolicy: React.FC = () => {
                 <div className="flex items-center space-x-4 mb-6">
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center">
                     <Icon className="w-8 h-8 text-blue-400" />
-                  </div>
+                  </iv>
                   <div>
                     <span className="text-blue-400 font-semibold text-sm">Section {index + 1}</span>
                     <h2 className="text-2xl font-bold text-white">{section.title}</h2>
