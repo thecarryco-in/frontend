@@ -1,6 +1,7 @@
 import React from 'react';
 import { ShoppingBag, Heart, IndianRupee } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useWishlist } from '../../context/WishlistContext';
 
 interface UserStatsProps {
   ordersCount: number;
@@ -8,6 +9,7 @@ interface UserStatsProps {
 
 const UserStats: React.FC<UserStatsProps> = ({ ordersCount }) => {
   const { user } = useAuth();
+  const { itemCount: wishlistCount } = useWishlist();
 
   if (!user) return null;
 
@@ -45,7 +47,7 @@ const UserStats: React.FC<UserStatsProps> = ({ ordersCount }) => {
             <Heart className="w-6 h-6 md:w-8 md:h-8 text-purple-400" />
           </div>
           <div>
-            <p className="text-2xl md:text-3xl font-bold text-white">0</p>
+            <p className="text-2xl md:text-3xl font-bold text-white">{wishlistCount}</p>
             <p className="text-gray-400 font-medium">Wishlist Items</p>
           </div>
         </div>
