@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Shield, Truck, CreditCard, User, MapPin, Phone } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Shield, Truck, CreditCard, User, MapPin, Phone, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -18,6 +18,7 @@ const Cart: React.FC = () => {
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showTaxBreakdown, setShowTaxBreakdown] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -26,6 +27,10 @@ const Cart: React.FC = () => {
     state: '',
     pincode: ''
   });
+
+  // Calculate tax-inclusive totals
+  const totalIncludingTax = total * 1.18;
+  const taxAmount = total * 0.18;
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setShippingAddress({
@@ -44,7 +49,7 @@ const Cart: React.FC = () => {
     });
   };
 
-  // Calculate total savings
+  // Calculate total savings based on original prices
   const totalSavings = items.reduce((sum, item) => {
     const original = item.product.originalPrice || 0;
     const current = item.product.price;
@@ -100,7 +105,7 @@ const Cart: React.FC = () => {
       // Create order with proper product data
       const orderData = {
         items: items.map(item => ({
-          productId: item.product.id || item.product._id, // Handle both id formats
+          productId: item.product.id || item.product._id,
           quantity: item.quantity
         })),
         shippingAddress,
@@ -219,83 +224,91 @@ const Cart: React.FC = () => {
             </div>
 
             <div className="space-y-6">
-              {items.map((item, index) => (
-                <div 
-                  key={item.product.id || item.product._id} 
-                  className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-3xl p-8 border border-white/10 hover:border-purple-400/30 transition-all duration-300"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Product Image */}
-                    <div className="lg:w-32 lg:h-32 w-full h-48 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl overflow-hidden">
-                      <img
-                        src={item.product.image}
-                        alt={item.product.name}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-
-                    {/* Product Details */}
-                    <div className="flex-1 space-y-4">
-                      <div>
-                        <h3 className="text-xl font-bold text-white mb-2">{item.product.name}</h3>
-                        <p className="text-purple-400 font-semibold text-sm uppercase tracking-wide">{item.product.brand}</p>
-                        <p className="text-gray-400 text-sm mt-1">{item.product.category.replace('-', ' ')}</p>
+              {items.map((item, index) => {
+                const itemPriceIncludingTax = item.product.price * 1.18;
+                const itemOriginalPriceIncludingTax = item.product.originalPrice ? item.product.originalPrice * 1.18 : 0;
+                
+                return (
+                  <div 
+                    key={item.product.id || item.product._id} 
+                    className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-3xl p-8 border border-white/10 hover:border-purple-400/30 transition-all duration-300"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className="flex flex-col lg:flex-row gap-6">
+                      {/* Product Image */}
+                      <div className="lg:w-32 lg:h-32 w-full h-48 bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl overflow-hidden">
+                        <img
+                          src={item.product.image}
+                          alt={item.product.name}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        />
                       </div>
-                      
-                      <div className="flex items-center space-x-4">
-                        <span className="text-2xl font-bold text-white">₹{item.product.price}</span>
-                        {item.product.originalPrice > 0 && (
-                          <span className="text-gray-500 text-lg line-through">₹{item.product.originalPrice}</span>
+
+                      {/* Product Details */}
+                      <div className="flex-1 space-y-4">
+                        <div>
+                          <h3 className="text-xl font-bold text-white mb-2">{item.product.name}</h3>
+                          <p className="text-purple-400 font-semibold text-sm uppercase tracking-wide">{item.product.brand}</p>
+                          <p className="text-gray-400 text-sm mt-1">{item.product.category.replace('-', ' ')}</p>
+                        </div>
+                        
+                        <div className="flex items-center space-x-4">
+                          <span className="text-2xl font-bold text-white">₹{Math.round(itemPriceIncludingTax)}</span>
+                          {itemOriginalPriceIncludingTax > 0 && (
+                            <span className="text-gray-500 text-lg line-through">₹{Math.round(itemOriginalPriceIncludingTax)}</span>
+                          )}
+                          <span className="text-xs text-gray-400 bg-white/10 px-2 py-1 rounded-full">
+                            Incl. taxes
+                          </span>
+                        </div>
+
+                        {/* Features */}
+                        {item.product.features && (
+                          <div className="flex flex-wrap gap-2">
+                            {item.product.features.slice(0, 3).map((feature, idx) => (
+                              <span key={idx} className="text-xs bg-white/10 text-gray-300 px-3 py-1 rounded-full">
+                                {feature}
+                              </span>
+                            ))}
+                          </div>
                         )}
                       </div>
 
-                      {/* Features */}
-                      {item.product.features && (
-                        <div className="flex flex-wrap gap-2">
-                          {item.product.features.slice(0, 3).map((feature, idx) => (
-                            <span key={idx} className="text-xs bg-white/10 text-gray-300 px-3 py-1 rounded-full">
-                              {feature}
-                            </span>
-                          ))}
+                      {/* Quantity Controls */}
+                      <div className="flex lg:flex-col items-center lg:items-end justify-between lg:justify-start space-y-4">
+                        <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-2xl p-2 border border-white/20">
+                          <button
+                            onClick={() => updateQuantity(item.product.id || item.product._id, item.quantity - 1)}
+                            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 transition-colors duration-200 text-white"
+                          >
+                            <Minus className="w-5 h-5" />
+                          </button>
+                          <span className="w-12 text-center font-bold text-lg text-white">{item.quantity}</span>
+                          <button
+                            onClick={() => updateQuantity(item.product.id || item.product._id, item.quantity + 1)}
+                            className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 transition-colors duration-200 text-white"
+                          >
+                            <Plus className="w-5 h-5" />
+                          </button>
                         </div>
-                      )}
-                    </div>
 
-                    {/* Quantity Controls */}
-                    <div className="flex lg:flex-col items-center lg:items-end justify-between lg:justify-start space-y-4">
-                      <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-2xl p-2 border border-white/20">
                         <button
-                          onClick={() => updateQuantity(item.product.id || item.product._id, item.quantity - 1)}
-                          className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 transition-colors duration-200 text-white"
+                          onClick={() => removeFromCart(item.product.id || item.product._id)}
+                          className="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200 border border-transparent hover:border-red-400/30"
                         >
-                          <Minus className="w-5 h-5" />
-                        </button>
-                        <span className="w-12 text-center font-bold text-lg text-white">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item.product.id || item.product._id, item.quantity + 1)}
-                          className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 transition-colors duration-200 text-white"
-                        >
-                          <Plus className="w-5 h-5" />
+                          <Trash2 className="w-6 h-6" />
                         </button>
                       </div>
+                    </div>
 
-                      <button
-                        onClick={() => removeFromCart(item.product.id || item.product._id)}
-                        className="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200 border border-transparent hover:border-red-400/30"
-                      >
-                        <Trash2 className="w-6 h-6" />
-                      </button>
+                    {/* Item Total */}
+                    <div className="mt-6 pt-6 border-t border-white/10 flex justify-between items-center">
+                      <span className="text-gray-400 font-medium">Item Subtotal (incl. taxes)</span>
+                      <span className="font-bold text-2xl text-white">₹{Math.round(itemPriceIncludingTax * item.quantity)}</span>
                     </div>
                   </div>
-
-                  {/* Item Total */}
-                  <div className="mt-6 pt-6 border-t border-white/10 flex justify-between items-center">
-                    <span className="text-gray-400 font-medium">Item Subtotal</span>
-                    <span className="font-bold text-2xl text-white">₹{(item.product.price * item.quantity).toFixed(2)}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -309,7 +322,7 @@ const Cart: React.FC = () => {
               <div className="space-y-6 mb-8">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Subtotal ({itemCount} items)</span>
-                  <span className="text-white font-semibold">₹{total.toFixed(2)}</span>
+                  <span className="text-white font-semibold">₹{Math.round(totalIncludingTax)}</span>
                 </div>
 
                 {/* Savings Row */}
@@ -322,7 +335,7 @@ const Cart: React.FC = () => {
                         <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
                       </svg>
                     </span>
-                    <span className="font-bold text-green-400">₹{totalSavings.toFixed(2)}</span>
+                    <span className="font-bold text-green-400">₹{Math.round(totalSavings * 1.18)}</span>
                   </div>
                 )}
                 
@@ -331,15 +344,56 @@ const Cart: React.FC = () => {
                   <span className="text-green-400 font-semibold">Free</span>
                 </div>
                 
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400">Tax (GST 18%)</span>
-                  <span className="text-white font-semibold">₹{(total * 0.18).toFixed(2)}</span>
+                {/* Expandable Tax Breakdown */}
+                <div className="border border-white/10 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => setShowTaxBreakdown(!showTaxBreakdown)}
+                    className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors duration-200"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Info className="w-4 h-4 text-blue-400" />
+                      <span className="text-gray-400">Tax Details</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-white font-semibold">₹{Math.round(taxAmount)}</span>
+                      {showTaxBreakdown ? (
+                        <ChevronUp className="w-4 h-4 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                      )}
+                    </div>
+                  </button>
+                  
+                  {showTaxBreakdown && (
+                    <div className="px-4 pb-4 space-y-3 bg-white/5">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-400">Base Amount</span>
+                        <span className="text-white">₹{Math.round(total)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-400">GST (18%)</span>
+                        <span className="text-white">₹{Math.round(taxAmount)}</span>
+                      </div>
+                      <div className="border-t border-white/10 pt-2">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-400 font-medium">Total with Tax</span>
+                          <span className="text-white font-semibold">₹{Math.round(totalIncludingTax)}</span>
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-2">
+                        * All product prices shown include GST
+                      </div>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="border-t border-white/20 pt-6">
                   <div className="flex justify-between items-center text-xl">
                     <span className="font-bold text-white">Total</span>
-                    <span className="font-bold text-white">₹{(total * 1.18).toFixed(2)}</span>
+                    <span className="font-bold text-white">₹{Math.round(totalIncludingTax)}</span>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1 text-right">
+                    Inclusive of all taxes
                   </div>
                 </div>
               </div>
@@ -476,7 +530,7 @@ const Cart: React.FC = () => {
                       disabled={isProcessing}
                       className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-5 rounded-2xl font-bold text-lg hover:shadow-2xl hover:shadow-green-500/25 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isProcessing ? 'Processing...' : `Pay ₹${(total * 1.18).toFixed(2)}`}
+                      {isProcessing ? 'Processing...' : `Pay ₹${Math.round(totalIncludingTax)}`}
                     </button>
                     
                     <button

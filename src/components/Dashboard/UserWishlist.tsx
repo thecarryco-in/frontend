@@ -58,105 +58,118 @@ const UserWishlist: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {items.map((product, index) => (
-          <div 
-            key={product.id}
-            className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-xl md:rounded-2xl overflow-hidden border border-white/10 hover:border-purple-400/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20"
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            {/* Image */}
-            <div className="relative aspect-square overflow-hidden">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-              />
-              
-              {/* Remove Button */}
-              <button
-                onClick={() => handleRemoveFromWishlist(product.id)}
-                className="absolute top-3 right-3 w-8 h-8 md:w-10 md:h-10 bg-red-500/80 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-red-500 transition-all duration-300 border border-red-400/30"
-              >
-                <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
-              </button>
+        {items.map((product, index) => {
+          // Calculate tax-inclusive prices
+          const priceIncludingTax = product.price * 1.18;
+          const originalPriceIncludingTax = product.originalPrice ? product.originalPrice * 1.18 : 0;
+          
+          return (
+            <div 
+              key={product.id}
+              className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-xl md:rounded-2xl overflow-hidden border border-white/10 hover:border-purple-400/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              {/* Image */}
+              <div className="relative aspect-square overflow-hidden">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                />
+                
+                {/* Remove Button */}
+                <button
+                  onClick={() => handleRemoveFromWishlist(product.id)}
+                  className="absolute top-3 right-3 w-8 h-8 md:w-10 md:h-10 bg-red-500/80 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-red-500 transition-all duration-300 border border-red-400/30"
+                >
+                  <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
+                </button>
 
-              {/* Badges */}
-              <div className="absolute top-3 left-3 flex flex-col space-y-1">
-                {product.isNewProduct && (
-                  <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg backdrop-blur-sm">
-                    NEW
-                  </span>
-                )}
-                {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
-                  <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg backdrop-blur-sm">
-                    SALE
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-4 md:p-6 space-y-3 md:space-y-4">
-              {/* Brand & Category */}
-              <div className="flex items-center justify-between">
-                <p className="text-purple-400 text-xs font-semibold uppercase tracking-wide">{product.brand}</p>
-                <span className="text-gray-500 text-xs capitalize">{product.category?.replace('-', ' ')}</span>
-              </div>
-              
-              {/* Name */}
-              <h3 className="text-white font-bold text-sm md:text-lg leading-tight line-clamp-2">
-                {product.name}
-              </h3>
-
-              {/* Price */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 md:space-x-3">
-                  <span className="text-white font-bold text-lg md:text-xl">
-                    ₹{product.price}
-                  </span>
-                  {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
-                    <span className="text-gray-500 text-sm line-through">
-                      ₹{product.originalPrice}
+                {/* Badges */}
+                <div className="absolute top-3 left-3 flex flex-col space-y-1">
+                  {product.isNewProduct && (
+                    <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg backdrop-blur-sm">
+                      NEW
                     </span>
                   )}
+                  {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
+                    <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full font-bold shadow-lg backdrop-blur-sm">
+                      SALE
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-4 md:p-6 space-y-3 md:space-y-4">
+                {/* Brand & Category */}
+                <div className="flex items-center justify-between">
+                  <p className="text-purple-400 text-xs font-semibold uppercase tracking-wide">{product.brand}</p>
+                  <span className="text-gray-500 text-xs capitalize">{product.category?.replace('-', ' ')}</span>
                 </div>
                 
-                {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
-                  <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-                    Save ₹{(product.originalPrice - product.price).toFixed(0)}
-                  </div>
-                )}
-              </div>
+                {/* Name */}
+                <h3 className="text-white font-bold text-sm md:text-lg leading-tight line-clamp-2">
+                  {product.name}
+                </h3>
 
-              {/* Features Preview */}
-              {product.features && product.features.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {product.features.slice(0, 2).map((feature, idx) => (
-                    <span key={idx} className="text-xs bg-white/10 text-gray-300 px-2 py-1 rounded-lg">
-                      {feature}
+                {/* Price - Now showing tax-inclusive prices */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2 md:space-x-3">
+                    <span className="text-white font-bold text-lg md:text-xl">
+                      ₹{Math.round(priceIncludingTax)}
                     </span>
-                  ))}
-                  {product.features.length > 2 && (
-                    <span className="text-xs text-purple-400 font-medium">
-                      +{product.features.length - 2}
-                    </span>
+                    {originalPriceIncludingTax > 0 && (
+                      <span className="text-gray-500 text-sm line-through">
+                        ₹{Math.round(originalPriceIncludingTax)}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {originalPriceIncludingTax > 0 && (
+                    <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                      Save ₹{Math.round(originalPriceIncludingTax - priceIncludingTax)}
+                    </div>
                   )}
                 </div>
-              )}
 
-              {/* Actions */}
-              <div className="flex space-x-2 md:space-x-3">
-                <button
-                  onClick={() => handleAddToCart(product)}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-cyan-600 text-white py-2 md:py-3 rounded-lg md:rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
-                >
-                  <ShoppingBag className="w-4 h-4 md:w-5 md:h-5" />
-                  <span className="text-sm md:text-base">Add to Cart</span>
-                </button>
+                {/* Tax Inclusive Notice */}
+                <div className="text-center">
+                  <span className="text-xs text-gray-400 bg-white/5 px-2 py-1 rounded-full">
+                    Inclusive of all taxes
+                  </span>
+                </div>
+
+                {/* Features Preview */}
+                {product.features && product.features.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {product.features.slice(0, 2).map((feature, idx) => (
+                      <span key={idx} className="text-xs bg-white/10 text-gray-300 px-2 py-1 rounded-lg">
+                        {feature}
+                      </span>
+                    ))}
+                    {product.features.length > 2 && (
+                      <span className="text-xs text-purple-400 font-medium">
+                        +{product.features.length - 2}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex space-x-2 md:space-x-3">
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-cyan-600 text-white py-2 md:py-3 rounded-lg md:rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
+                  >
+                    <ShoppingBag className="w-4 h-4 md:w-5 md:h-5" />
+                    <span className="text-sm md:text-base">Add to Cart</span>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Continue Shopping */}

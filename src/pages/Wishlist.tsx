@@ -64,89 +64,102 @@ const Wishlist: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {items.map((product, index) => (
-            <div 
-              key={product.id}
-              className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-3xl overflow-hidden border border-white/10 hover:border-purple-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20 hover:-translate-y-2"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {/* Image */}
-              <div className="relative aspect-square overflow-hidden">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
-                />
-                
-                {/* Remove Button */}
-                <button
-                  onClick={() => removeFromWishlist(product.id)}
-                  className="absolute top-4 right-4 w-10 h-10 bg-red-500/80 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-red-500 transition-all duration-300 border border-red-400/30"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+          {items.map((product, index) => {
+            // Calculate tax-inclusive prices for wishlist display
+            const priceIncludingTax = product.price * 1.18;
+            const originalPriceIncludingTax = product.originalPrice ? product.originalPrice * 1.18 : 0;
+            
+            return (
+              <div 
+                key={product.id}
+                className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-3xl overflow-hidden border border-white/10 hover:border-purple-400/50 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/20 hover:-translate-y-2"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                {/* Image */}
+                <div className="relative aspect-square overflow-hidden">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
+                  />
+                  
+                  {/* Remove Button */}
+                  <button
+                    onClick={() => removeFromWishlist(product.id)}
+                    className="absolute top-4 right-4 w-10 h-10 bg-red-500/80 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-red-500 transition-all duration-300 border border-red-400/30"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
 
-                {/* Badges */}
-                <div className="absolute top-4 left-4 flex flex-col space-y-2">
-                  {product.isNewProduct && (
-                    <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm">
-                      NEW
-                    </span>
-                  )}
-                  {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
-                    <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm">
-                      SALE
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-6 space-y-4">
-                {/* Brand & Category */}
-                <div className="flex items-center justify-between">
-                  <p className="text-purple-400 text-sm font-semibold uppercase tracking-wide">{product.brand}</p>
-                  <span className="text-gray-500 text-xs capitalize">{product.category?.replace('-', ' ')}</span>
-                </div>
-                
-                {/* Name */}
-                <h3 className="text-white font-bold text-lg leading-tight">
-                  {product.name}
-                </h3>
-
-                {/* Price */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-white font-bold text-xl">
-                      ₹{product.price}
-                    </span>
+                  {/* Badges */}
+                  <div className="absolute top-4 left-4 flex flex-col space-y-2">
+                    {product.isNewProduct && (
+                      <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm">
+                        NEW
+                      </span>
+                    )}
                     {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
-                      <span className="text-gray-500 text-sm line-through">
-                        ₹{product.originalPrice}
+                      <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow-lg backdrop-blur-sm">
+                        SALE
                       </span>
                     )}
                   </div>
-                  
-                  {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
-                    <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-                      Save ₹{(product.originalPrice - product.price).toFixed(2)}
-                    </div>
-                  )}
                 </div>
 
-                {/* Actions */}
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => handleAddToCart(product)}
-                    className="flex-1 bg-gradient-to-r from-purple-600 to-cyan-600 text-white py-3 rounded-2xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
-                  >
-                    <ShoppingBag className="w-5 h-5" />
-                    <span>Add to Cart</span>
-                  </button>
+                {/* Content */}
+                <div className="p-6 space-y-4">
+                  {/* Brand & Category */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-purple-400 text-sm font-semibold uppercase tracking-wide">{product.brand}</p>
+                    <span className="text-gray-500 text-xs capitalize">{product.category?.replace('-', ' ')}</span>
+                  </div>
+                  
+                  {/* Name */}
+                  <h3 className="text-white font-bold text-lg leading-tight">
+                    {product.name}
+                  </h3>
+
+                  {/* Price - Now showing tax-inclusive prices */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-white font-bold text-xl">
+                        ₹{Math.round(priceIncludingTax)}
+                      </span>
+                      {originalPriceIncludingTax > 0 && (
+                        <span className="text-gray-500 text-sm line-through">
+                          ₹{Math.round(originalPriceIncludingTax)}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {originalPriceIncludingTax > 0 && (
+                      <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1 rounded-full font-bold">
+                        Save ₹{Math.round(originalPriceIncludingTax - priceIncludingTax)}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Tax Inclusive Notice */}
+                  <div className="text-center">
+                    <span className="text-xs text-gray-400 bg-white/5 px-2 py-1 rounded-full">
+                      Inclusive of all taxes
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => handleAddToCart(product)}
+                      className="flex-1 bg-gradient-to-r from-purple-600 to-cyan-600 text-white py-3 rounded-2xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center space-x-2"
+                    >
+                      <ShoppingBag className="w-5 h-5" />
+                      <span>Add to Cart</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Continue Shopping */}

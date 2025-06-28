@@ -15,6 +15,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { isAuthenticated } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
 
+  // Calculate tax-inclusive prices
+  const priceIncludingTax = product.price * 1.18;
+  const originalPriceIncludingTax = product.originalPrice ? product.originalPrice * 1.18 : 0;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -153,24 +157,31 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         </div>
 
-        {/* Price */}
+        {/* Price - Now showing tax-inclusive prices */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <span className="text-white font-bold text-lg">
-              ₹{product.price}
+              ₹{Math.round(priceIncludingTax)}
             </span>
-            {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
+            {originalPriceIncludingTax > 0 && (
               <span className="text-gray-500 text-sm line-through">
-                ₹{product.originalPrice}
+                ₹{Math.round(originalPriceIncludingTax)}
               </span>
             )}
           </div>
           
-          {typeof product.originalPrice === 'number' && product.originalPrice > 0 && (
+          {originalPriceIncludingTax > 0 && (
             <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-1 rounded-full font-bold">
-              Save ₹{(product.originalPrice - product.price).toFixed(0)}
+              Save ₹{Math.round(originalPriceIncludingTax - priceIncludingTax)}
             </div>
           )}
+        </div>
+
+        {/* Tax Inclusive Notice */}
+        <div className="text-center">
+          <span className="text-xs text-gray-400 bg-white/5 px-2 py-1 rounded-full">
+            Inclusive of all taxes
+          </span>
         </div>
 
         {/* Features Preview */}
