@@ -36,8 +36,11 @@ router.post('/register', authLimiter, async (req, res) => {
       return res.status(400).json({ message: 'Password must be at least 8 characters long' });
     }
 
+    // Convert email to lowercase for case insensitive handling
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists with this email' });
     }
@@ -46,25 +49,25 @@ router.post('/register', authLimiter, async (req, res) => {
     const otp = generateOTP();
 
     // Delete any existing OTP for this email
-    await OTP.deleteMany({ email });
+    await OTP.deleteMany({ email: normalizedEmail });
 
     // Save OTP and user data temporarily
     const otpDoc = new OTP({
-      email,
+      email: normalizedEmail,
       otp,
-      userData: { name, email, password }
+      userData: { name, email: normalizedEmail, password }
     });
     await otpDoc.save();
 
     // Send OTP email
-    const emailSent = await sendOTPEmail(email, otp, name);
+    const emailSent = await sendOTPEmail(normalizedEmail, otp, name);
     if (!emailSent) {
       return res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
     }
 
     res.status(200).json({ 
       message: 'OTP sent to your email. Please verify to complete registration.',
-      email 
+      email: normalizedEmail
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -77,8 +80,11 @@ router.post('/verify-otp', authLimiter, async (req, res) => {
   try {
     const { email, otp } = req.body;
 
+    // Normalize email
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Find OTP document
-    const otpDoc = await OTP.findOne({ email, otp });
+    const otpDoc = await OTP.findOne({ email: normalizedEmail, otp });
     if (!otpDoc) {
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
@@ -86,6 +92,7 @@ router.post('/verify-otp', authLimiter, async (req, res) => {
     // Create user
     const user = new User({
       ...otpDoc.userData,
+      email: normalizedEmail,
       isVerified: true
     });
     await user.save();
@@ -137,8 +144,11 @@ router.post('/resend-otp', authLimiter, async (req, res) => {
   try {
     const { email } = req.body;
 
+    // Normalize email
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Find existing OTP document
-    const otpDoc = await OTP.findOne({ email });
+    const otpDoc = await OTP.findOne({ email: normalizedEmail });
     if (!otpDoc) {
       return res.status(400).json({ message: 'No pending registration found for this email' });
     }
@@ -150,7 +160,7 @@ router.post('/resend-otp', authLimiter, async (req, res) => {
     await otpDoc.save();
 
     // Send OTP email
-    const emailSent = await sendOTPEmail(email, otp, otpDoc.userData.name);
+    const emailSent = await sendOTPEmail(normalizedEmail, otp, otpDoc.userData.name);
     if (!emailSent) {
       return res.status(500).json({ message: 'Failed to send verification email. Please try again.' });
     }
@@ -167,8 +177,11 @@ router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Convert email to lowercase for case insensitive login
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Find user
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -211,6 +224,101 @@ router.post('/login', authLimiter, async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Forgot Password - Send OTP
+router.post('/forgot-password', authLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    // Convert email to lowercase
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if user exists
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res.status(400).json({ message: 'No account found with this email address' });
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+
+    // Delete any existing OTP for this email
+    await OTP.deleteMany({ email: normalizedEmail });
+
+    // Save OTP for password reset
+    const otpDoc = new OTP({
+      email: normalizedEmail,
+      otp,
+      userData: { resetPassword: true } // Flag to indicate this is for password reset
+    });
+    await otpDoc.save();
+
+    // Send OTP email
+    const emailSent = await sendOTPEmail(normalizedEmail, otp, user.name, 'Password Reset');
+    if (!emailSent) {
+      return res.status(500).json({ message: 'Failed to send reset email. Please try again.' });
+    }
+
+    res.status(200).json({ 
+      message: 'Password reset OTP sent to your email. Please check your inbox.',
+      email: normalizedEmail
+    });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Reset Password
+router.post('/reset-password', authLimiter, async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+    }
+
+    // Convert email to lowercase
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Find and verify OTP
+    const otpDoc = await OTP.findOne({ 
+      email: normalizedEmail, 
+      otp,
+      'userData.resetPassword': true 
+    });
+    
+    if (!otpDoc) {
+      return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    // Find user
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res.status(400).json({ message: 'User not found' });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    // Delete OTP document
+    await OTP.deleteOne({ _id: otpDoc._id });
+
+    res.status(200).json({ message: 'Password reset successful! You can now login with your new password.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

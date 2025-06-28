@@ -33,7 +33,8 @@ const Login: React.FC = () => {
     setError('');
 
     try {
-      await login(formData.email, formData.password);
+      // Convert email to lowercase for case insensitive login
+      await login(formData.email.toLowerCase().trim(), formData.password);
       
       // Small delay to ensure state is fully updated
       setTimeout(() => {
@@ -118,6 +119,16 @@ const Login: React.FC = () => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+            </div>
+
+            {/* Forgot Password Link */}
+            <div className="text-right">
+              <Link
+                to="/forgot-password"
+                className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors"
+              >
+                Forgot Password?
+              </Link>
             </div>
 
             {/* Login Button */}

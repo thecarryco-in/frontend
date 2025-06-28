@@ -20,13 +20,15 @@ import AdminPanel from './pages/AdminPanel';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import VerifyOTP from './components/Auth/VerifyOTP';
+import ForgotPassword from './components/Auth/ForgotPassword';
+import ResetPassword from './components/Auth/ResetPassword';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminRoute from './components/Auth/AdminRoute';
 
 // Component to conditionally render Header and Footer
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
-  const authPages = ['/login', '/register', '/verify-otp'];
+  const authPages = ['/login', '/register', '/verify-otp', '/forgot-password', '/reset-password'];
   const hideHeaderFooter = authPages.includes(location.pathname);
 
   return (
@@ -78,6 +80,8 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/verify-otp" element={<VerifyOTP />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route 
                   path="/wishlist" 
                   element={

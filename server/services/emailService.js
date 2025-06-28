@@ -2,18 +2,25 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Send OTP email for registration
-export const sendOTPEmail = async (email, otp, name) => {
+// Send OTP email for registration or password reset
+export const sendOTPEmail = async (email, otp, name, purpose = 'Email Verification') => {
   try {
+    const isPasswordReset = purpose === 'Password Reset';
+    const subject = isPasswordReset ? 'Reset Your Password - The CarryCo' : 'Verify Your Email - The CarryCo';
+    const title = isPasswordReset ? 'Reset Your Password' : 'Welcome to The CarryCo!';
+    const description = isPasswordReset 
+      ? 'Use this OTP to reset your password and regain access to your account.'
+      : 'Please verify your email address to complete your registration.';
+
     const { data, error } = await resend.emails.send({
       from: `The CarryCo <${process.env.RESEND_SENDER_EMAIL}>`,
       to: email,
-      subject: 'Verify Your Email - The CarryCo',
+      subject,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px;">
           <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
-            <h1 style="color: #333; margin-bottom: 20px;">Welcome to The CarryCo!</h1>
-            <p style="color: #666; font-size: 16px; margin-bottom: 30px;">Hi ${name}, please verify your email address to complete your registration.</p>
+            <h1 style="color: #333; margin-bottom: 20px;">${title}</h1>
+            <p style="color: #666; font-size: 16px; margin-bottom: 30px;">Hi ${name}, ${description}</p>
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <h2 style="color: #333; margin: 0; font-size: 32px; letter-spacing: 5px;">${otp}</h2>
             </div>
