@@ -88,7 +88,6 @@ const AdminDashboard: React.FC = () => {
                   {orderStats?.totalRevenue != null ? Math.round(orderStats.totalRevenue) : 0}
                 </p>
               </div>
-              <TrendingUp className="w-8 h-8 md:w-12 md:h-12 text-green-400" />
             </div>
           </div>
 
