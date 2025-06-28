@@ -11,6 +11,7 @@ const Shop: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     category: searchParams.get('category') || '',
     brand: '',
@@ -178,162 +179,103 @@ const Shop: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
-          {/* Filters Sidebar */}
-          <div className="lg:w-1/4 space-y-4 md:space-y-6">
-            <div className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md p-4 md:p-8 rounded-2xl md:rounded-3xl border border-white/10">
-              <div className="flex items-center space-x-3 mb-4 md:mb-6">
-                <SlidersHorizontal className="w-5 h-5 md:w-6 md:h-6 text-purple-400" />
-                <h3 className="text-lg md:text-xl font-bold text-white">Filters</h3>
-              </div>
+        {/* Filters Section - Now at the top */}
+        <div className="mb-6 md:mb-8">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="flex items-center space-x-2 bg-white/10 backdrop-blur-md text-white px-4 py-3 md:px-6 md:py-3 rounded-xl md:rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 mb-4"
+          >
+            <SlidersHorizontal className="w-5 h-5" />
+            <span>Filters</span>
+            <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded-full">
+              {Object.values(filters).filter(v => v && v !== 0).length}
+            </span>
+          </button>
 
-              {/* Category Filter */}
-              {filters.category === '' && (
-                <div className="mb-6 md:mb-8">
-                  <h4 className="font-semibold mb-3 md:mb-4 text-white">Category</h4>
-                  <div className="space-y-2 md:space-y-3">
-                    <label className="flex items-center space-x-3 cursor-pointer group">
-                      <input
-                        type="radio"
-                        name="category"
-                        value=""
-                        checked={filters.category === ''}
-                        onChange={(e) => setFilters({...filters, category: e.target.value})}
-                        className="w-4 h-4 text-purple-500 bg-transparent border-2 border-gray-400 focus:ring-purple-500"
-                      />
-                      <span className="text-gray-300 group-hover:text-white transition-colors text-sm md:text-base">All Categories</span>
-                    </label>
-                    {categories.map(category => (
-                      <label key={category.value} className="flex items-center space-x-3 cursor-pointer group">
-                        <input
-                          type="radio"
-                          name="category"
-                          value={category.value}
-                          checked={filters.category === category.value}
-                          onChange={(e) => setFilters({...filters, category: e.target.value})}
-                          className="w-4 h-4 text-purple-500 bg-transparent border-2 border-gray-400 focus:ring-purple-500"
-                        />
-                        <span className="text-gray-300 group-hover:text-white transition-colors text-sm md:text-base">
+          {/* Filters Panel */}
+          <div className={`transition-all duration-500 overflow-hidden ${
+            showFilters ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          }`}>
+            <div className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/10">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
+                {/* Category Filter */}
+                {filters.category === '' && (
+                  <div>
+                    <h4 className="font-semibold mb-3 text-white text-sm">Category</h4>
+                    <select
+                      value={filters.category}
+                      onChange={(e) => setFilters({...filters, category: e.target.value})}
+                      className="w-full bg-white/10 backdrop-blur-md text-white px-3 py-2 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                    >
+                      <option value="">All Categories</option>
+                      {categories.map(category => (
+                        <option key={category.value} value={category.value} className="bg-gray-800">
                           {category.label}
-                        </span>
-                      </label>
-                    ))}
+                        </option>
+                      ))}
+                    </select>
                   </div>
+                )}
+
+                {/* Brand Filter */}
+                <div>
+                  <h4 className="font-semibold mb-3 text-white text-sm">Brand</h4>
+                  <select
+                    value={filters.brand}
+                    onChange={(e) => setFilters({...filters, brand: e.target.value})}
+                    className="w-full bg-white/10 backdrop-blur-md text-white px-3 py-2 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                  >
+                    <option value="">All Brands</option>
+                    {brands.map(brand => (
+                      <option key={brand} value={brand} className="bg-gray-800">{brand}</option>
+                    ))}
+                  </select>
                 </div>
-              )}
 
-              {/* Brand Filter */}
-              <div className="mb-6 md:mb-8">
-                <h4 className="font-semibold mb-3 md:mb-4 text-white">Brand</h4>
-                <select
-                  value={filters.brand}
-                  onChange={(e) => setFilters({...filters, brand: e.target.value})}
-                  className="w-full bg-white/10 backdrop-blur-md text-white px-3 py-2.5 md:px-4 md:py-3 rounded-lg md:rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm md:text-base"
-                >
-                  <option value="">All Brands</option>
-                  {brands.map(brand => (
-                    <option key={brand} value={brand} className="bg-gray-800">{brand}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Price Range */}
-              <div className="mb-6 md:mb-8">
-                <h4 className="font-semibold mb-3 md:mb-4 text-white">Price Range</h4>
-                <div className="space-y-2 md:space-y-3">
+                {/* Price Range */}
+                <div>
+                  <h4 className="font-semibold mb-3 text-white text-sm">Min Price</h4>
                   <input
                     type="number"
                     placeholder="Min Price"
                     value={filters.minPrice || ''}
                     onChange={(e) => setFilters({...filters, minPrice: e.target.value ? parseFloat(e.target.value) : undefined})}
-                    className="w-full bg-white/10 backdrop-blur-md text-white px-3 py-2.5 md:px-4 md:py-3 rounded-lg md:rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400 text-sm md:text-base"
+                    className="w-full bg-white/10 backdrop-blur-md text-white px-3 py-2 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400 text-sm"
                   />
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-3 text-white text-sm">Max Price</h4>
                   <input
                     type="number"
                     placeholder="Max Price"
                     value={filters.maxPrice || ''}
                     onChange={(e) => setFilters({...filters, maxPrice: e.target.value ? parseFloat(e.target.value) : undefined})}
-                    className="w-full bg-white/10 backdrop-blur-md text-white px-3 py-2.5 md:px-4 md:py-3 rounded-lg md:rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400 text-sm md:text-base"
+                    className="w-full bg-white/10 backdrop-blur-md text-white px-3 py-2 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400 text-sm"
                   />
                 </div>
-              </div>
 
-              {/* Rating Filter */}
-              <div className="mb-6 md:mb-8">
-                <h4 className="font-semibold mb-3 md:mb-4 text-white">Minimum Rating</h4>
-                <div className="space-y-2 md:space-y-3">
-                  {[4.5, 4.0, 3.5, 3.0].map(rating => (
-                    <label key={rating} className="flex items-center space-x-3 cursor-pointer group">
-                      <input
-                        type="radio"
-                        name="rating"
-                        value={rating}
-                        checked={filters.rating === rating}
-                        onChange={(e) => setFilters({...filters, rating: parseFloat(e.target.value)})}
-                        className="w-4 h-4 text-purple-500 bg-transparent border-2 border-gray-400 focus:ring-purple-500"
-                      />
-                      <div className="flex items-center space-x-2">
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-3 h-3 md:w-4 md:h-4 ${
-                                i < Math.floor(rating) ? 'text-yellow-400 fill-current' : 'text-gray-600'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-gray-300 group-hover:text-white transition-colors text-sm md:text-base">
-                          {rating}+ Stars
-                        </span>
-                      </div>
-                    </label>
-                  ))}
-                  <label className="flex items-center space-x-3 cursor-pointer group">
-                    <input
-                      type="radio"
-                      name="rating"
-                      value={0}
-                      checked={filters.rating === 0}
-                      onChange={(e) => setFilters({...filters, rating: parseFloat(e.target.value)})}
-                      className="w-4 h-4 text-purple-500 bg-transparent border-2 border-gray-400 focus:ring-purple-500"
-                    />
-                    <span className="text-gray-300 group-hover:text-white transition-colors text-sm md:text-base">All Ratings</span>
-                  </label>
+                {/* Rating Filter */}
+                <div>
+                  <h4 className="font-semibold mb-3 text-white text-sm">Min Rating</h4>
+                  <select
+                    value={filters.rating}
+                    onChange={(e) => setFilters({...filters, rating: parseFloat(e.target.value)})}
+                    className="w-full bg-white/10 backdrop-blur-md text-white px-3 py-2 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                  >
+                    <option value={0}>All Ratings</option>
+                    <option value={4.5} className="bg-gray-800">4.5+ Stars</option>
+                    <option value={4.0} className="bg-gray-800">4.0+ Stars</option>
+                    <option value={3.5} className="bg-gray-800">3.5+ Stars</option>
+                    <option value={3.0} className="bg-gray-800">3.0+ Stars</option>
+                  </select>
                 </div>
               </div>
 
               {/* Clear Filters */}
-              <button
-                onClick={() => {
-                  setFilters({
-                    category: '',
-                    brand: '',
-                    minPrice: undefined,
-                    maxPrice: undefined,
-                    rating: 0,
-                  });
-                  setSearchQuery('');
-                }}
-                className="w-full bg-gradient-to-r from-purple-600 to-cyan-600 text-white py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold hover:shadow-lg transition-all duration-300 text-sm md:text-base"
-              >
-                Clear All Filters
-              </button>
-            </div>
-          </div>
-
-          {/* Products Grid */}
-          <div className="lg:w-3/4">
-            {products.length === 0 ? (
-              <div className="text-center py-12 md:py-20">
-                <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 backdrop-blur-sm border border-white/10">
-                  <Search className="w-12 h-12 md:w-16 md:h-16 text-gray-400" />
-                </div>
-                <h3 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4 text-white">No Products Found</h3>
-                <p className="text-gray-400 text-base md:text-lg mb-6 md:mb-8">Try adjusting your search or filters</p>
+              <div className="mt-4 pt-4 border-t border-white/10">
                 <button
                   onClick={() => {
-                    setSearchQuery('');
                     setFilters({
                       category: '',
                       brand: '',
@@ -341,30 +283,59 @@ const Shop: React.FC = () => {
                       maxPrice: undefined,
                       rating: 0,
                     });
+                    setSearchQuery('');
                   }}
-                  className="bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-semibold hover:shadow-lg transition-all duration-300"
+                  className="bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 text-sm"
                 >
                   Clear All Filters
                 </button>
               </div>
-            ) : (
-              <div className={`grid gap-4 md:gap-6 lg:gap-8 ${
-                viewMode === 'grid' 
-                  ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' 
-                  : 'grid-cols-1'
-              }`}>
-                {products.map((product, index) => (
-                  <div 
-                    key={product.id}
-                    className="transform hover:scale-105 transition-all duration-500"
-                    style={{ animationDelay: `${index * 50}ms` }}
-                  >
-                    <ProductCard product={product} />
-                  </div>
-                ))}
-              </div>
-            )}
+            </div>
           </div>
+        </div>
+
+        {/* Products Grid */}
+        <div>
+          {products.length === 0 ? (
+            <div className="text-center py-12 md:py-20">
+              <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 backdrop-blur-sm border border-white/10">
+                <Search className="w-12 h-12 md:w-16 md:h-16 text-gray-400" />
+              </div>
+              <h3 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4 text-white">No Products Found</h3>
+              <p className="text-gray-400 text-base md:text-lg mb-6 md:mb-8">Try adjusting your search or filters</p>
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilters({
+                    category: '',
+                    brand: '',
+                    minPrice: undefined,
+                    maxPrice: undefined,
+                    rating: 0,
+                  });
+                }}
+                className="bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-semibold hover:shadow-lg transition-all duration-300"
+              >
+                Clear All Filters
+              </button>
+            </div>
+          ) : (
+            <div className={`grid gap-4 md:gap-6 ${
+              viewMode === 'grid' 
+                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                : 'grid-cols-1'
+            }`}>
+              {products.map((product, index) => (
+                <div 
+                  key={product.id}
+                  className="transform transition-all duration-300"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

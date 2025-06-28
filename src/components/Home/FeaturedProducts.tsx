@@ -61,13 +61,13 @@ const FeaturedProducts: React.FC = () => {
           </p>
         </div>
 
-        {/* Products Grid */}
+        {/* Products Grid - Compact layout */}
         {products.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mb-12 md:mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 mb-12 md:mb-16">
             {products.map((product, index) => (
               <div 
                 key={product.id} 
-                className="transform hover:scale-105 transition-all duration-500"
+                className="transform transition-all duration-300"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <ProductCard product={product} />

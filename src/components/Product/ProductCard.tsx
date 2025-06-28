@@ -53,11 +53,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   return (
     <div 
-      className="relative bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-purple-400/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20 hover:-translate-y-1 cursor-pointer group"
+      className="relative bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-2xl overflow-hidden border border-white/10 hover:border-purple-400/50 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20 cursor-pointer group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image Container */}
+      {/* Image Container - Fixed aspect ratio */}
       <div className="relative aspect-square overflow-hidden">
         <img
           src={product.image}
@@ -121,7 +121,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         )}
       </div>
 
-      {/* Content */}
+      {/* Content - Compact design */}
       <div className="p-4 space-y-3">
         {/* Brand & Category */}
         <div className="flex items-center justify-between">
