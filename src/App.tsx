@@ -70,6 +70,7 @@ function App() {
           <Router>
             <Layout>
               <Routes>
+                {/* Public Routes */}
                 <Route path="/" element={<Home />} />
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/about" element={<About />} />
@@ -79,24 +80,23 @@ function App() {
                 <Route path="/service" element={<TermsOfService />} />
                 <Route path="/disclaimer" element={<Disclaimer />} />
                 <Route path="/contact" element={<Contact />} />
+                
+                {/* Auth Routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/verify-otp" element={<VerifyOTP />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                
+                {/* Cart - Now Public (no authentication required) */}
+                <Route path="/cart" element={<Cart />} />
+                
+                {/* Protected Routes - Require Authentication */}
                 <Route 
                   path="/wishlist" 
                   element={
                     <ProtectedRoute>
                       <Wishlist />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/cart" 
-                  element={
-                    <ProtectedRoute>
-                      <Cart />
                     </ProtectedRoute>
                   } 
                 />
@@ -108,6 +108,8 @@ function App() {
                     </ProtectedRoute>
                   } 
                 />
+                
+                {/* Admin Routes - Require Admin Access */}
                 <Route 
                   path="/admin" 
                   element={
