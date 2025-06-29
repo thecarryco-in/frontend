@@ -275,9 +275,6 @@ const Cart: React.FC = () => {
                           {itemOriginalPriceIncludingTax > 0 && (
                             <span className="text-gray-500 text-lg line-through">₹{Math.round(itemOriginalPriceIncludingTax)}</span>
                           )}
-                          <span className="text-xs text-gray-400 bg-white/10 px-2 py-1 rounded-full">
-                            Incl. taxes
-                          </span>
                         </div>
 
                         {/* Features */}
@@ -360,49 +357,6 @@ const Cart: React.FC = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Shipping</span>
                   <span className="text-green-400 font-semibold">Free</span>
-                </div>
-                
-                {/* Expandable Tax Breakdown */}
-                <div className="border border-white/10 rounded-xl overflow-hidden">
-                  <button
-                    onClick={() => setShowTaxBreakdown(!showTaxBreakdown)}
-                    className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors duration-200"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Info className="w-4 h-4 text-blue-400" />
-                      <span className="text-gray-400">Tax Details</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-white font-semibold">₹{Math.round(taxAmount)}</span>
-                      {showTaxBreakdown ? (
-                        <ChevronUp className="w-4 h-4 text-gray-400" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
-                      )}
-                    </div>
-                  </button>
-                  
-                  {showTaxBreakdown && (
-                    <div className="px-4 pb-4 space-y-3 bg-white/5">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-400">Base Amount</span>
-                        <span className="text-white">₹{Math.round(total)}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-400">GST (18%)</span>
-                        <span className="text-white">₹{Math.round(taxAmount)}</span>
-                      </div>
-                      <div className="border-t border-white/10 pt-2">
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-400 font-medium">Total with Tax</span>
-                          <span className="text-white font-semibold">₹{Math.round(totalIncludingTax)}</span>
-                        </div>
-                      </div>
-                      <div className="text-xs text-gray-500 mt-2">
-                        * All product prices shown include GST
-                      </div>
-                    </div>
-                  )}
                 </div>
                 
                 <div className="border-t border-white/20 pt-6">
