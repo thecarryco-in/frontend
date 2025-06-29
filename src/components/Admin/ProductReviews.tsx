@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Star, MessageSquare, Search, Eye, User, Calendar, Package, Filter } from 'lucide-react';
+import { Star, MessageSquare, Search, Eye, User, Calendar } from 'lucide-react';
 import axios from 'axios';
 
 interface Review {
   _id: string;
   user: string;
-  userName: string;
+  userName: string | { [key: string]: any }; // safer typing
   rating: number;
-  comment: string;
+  comment: string | { [key: string]: any };
   createdAt: string;
 }
 
@@ -45,7 +45,7 @@ const ProductReviews: React.FC = () => {
           limit: 100
         }
       });
-      setProducts(response.data.products);
+      setProducts(response.data.products || []);
     } catch (error) {
       console.error('Error fetching product reviews:', error);
     } finally {
@@ -57,7 +57,6 @@ const ProductReviews: React.FC = () => {
     const debounceTimer = setTimeout(() => {
       fetchProductReviews();
     }, 1000);
-
     return () => clearTimeout(debounceTimer);
   }, [searchTerm, ratingFilter, categoryFilter]);
 
@@ -77,15 +76,6 @@ const ProductReviews: React.FC = () => {
       minute: '2-digit'
     });
   };
-
-  if (loading) {
-    return (
-      <div className="text-center py-12 md:py-20">
-        <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-gray-400">Loading product reviews...</p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6 md:space-y-8">
@@ -118,10 +108,10 @@ const ProductReviews: React.FC = () => {
           className="bg-white/10 backdrop-blur-md text-white px-4 py-3 md:px-6 md:py-3 rounded-xl md:rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
           <option value="">All Categories</option>
-          <option value="cases" className="bg-gray-800">Cases</option>
-          <option value="tempered-glass" className="bg-gray-800">Tempered Glass</option>
-          <option value="chargers" className="bg-gray-800">Chargers</option>
-          <option value="accessories" className="bg-gray-800">Accessories</option>
+          <option value="cases">Cases</option>
+          <option value="tempered-glass">Tempered Glass</option>
+          <option value="chargers">Chargers</option>
+          <option value="accessories">Accessories</option>
         </select>
 
         <select
@@ -130,19 +120,19 @@ const ProductReviews: React.FC = () => {
           className="bg-white/10 backdrop-blur-md text-white px-4 py-3 md:px-6 md:py-3 rounded-xl md:rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
           <option value="">All Ratings</option>
-          <option value="5" className="bg-gray-800">5 Stars</option>
-          <option value="4" className="bg-gray-800">4+ Stars</option>
-          <option value="3" className="bg-gray-800">3+ Stars</option>
-          <option value="2" className="bg-gray-800">2+ Stars</option>
-          <option value="1" className="bg-gray-800">1+ Stars</option>
+          <option value="5">5 Stars</option>
+          <option value="4">4+ Stars</option>
+          <option value="3">3+ Stars</option>
+          <option value="2">2+ Stars</option>
+          <option value="1">1+ Stars</option>
         </select>
       </div>
 
-      {/* Products List */}
+      {/* Product List */}
       <div className="space-y-4">
         {products.map((product) => (
-          <div 
-            key={product._id} 
+          <div
+            key={product._id}
             className="bg-white/5 rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/10 hover:border-purple-400/30 transition-all duration-300 cursor-pointer"
             onClick={() => setSelectedProduct(product)}
           >
@@ -153,7 +143,6 @@ const ProductReviews: React.FC = () => {
                   alt={product.name}
                   className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg"
                 />
-                
                 <div className="flex-1">
                   <div className="flex items-center space-x-4 mb-2">
                     <h3 className="text-white font-semibold text-base md:text-lg">{product.name}</h3>
@@ -161,9 +150,7 @@ const ProductReviews: React.FC = () => {
                       {product.category.replace('-', ' ')}
                     </span>
                   </div>
-                  
                   <p className="text-purple-400 text-sm font-medium mb-3">{product.brand}</p>
-                  
                   <div className="flex items-center space-x-6">
                     <div className="flex items-center space-x-2">
                       <div className="flex items-center">
@@ -182,7 +169,6 @@ const ProductReviews: React.FC = () => {
                         {product.rating.toFixed(1)}
                       </span>
                     </div>
-                    
                     <div className="flex items-center space-x-2">
                       <MessageSquare className="w-4 h-4 text-gray-400" />
                       <span className="text-gray-400 text-sm">{product.reviewCount} reviews</span>
@@ -190,8 +176,7 @@ const ProductReviews: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
-              <div className="flex items-center space-x-2 ml-4">
+              <div className="ml-4">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -217,7 +202,7 @@ const ProductReviews: React.FC = () => {
         </div>
       )}
 
-      {/* Review Detail Modal */}
+      {/* Review Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-slate-800 rounded-2xl md:rounded-3xl p-6 md:p-8 max-w-4xl w-full my-8 max-h-[90vh] overflow-y-auto">
@@ -231,7 +216,6 @@ const ProductReviews: React.FC = () => {
               </button>
             </div>
 
-            {/* Product Info */}
             <div className="bg-white/5 rounded-lg md:rounded-xl p-4 md:p-6 mb-6">
               <div className="flex items-start space-x-4">
                 <img
@@ -266,18 +250,21 @@ const ProductReviews: React.FC = () => {
               </div>
             </div>
 
-            {/* Reviews List */}
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-white">Customer Reviews</h3>
               {selectedProduct.reviews.map((review, index) => (
-                <div key={index} className="bg-white/5 rounded-lg md:rounded-xl p-4 md:p-6">
+                <div key={review._id || index} className="bg-white/5 rounded-lg md:rounded-xl p-4 md:p-6">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
                         <User className="w-5 h-5 text-white" />
                       </div>
                       <div>
-                        <p className="text-white font-medium">{review.userName}</p>
+                        <p className="text-white font-medium">
+                          {typeof review.userName === 'string'
+                            ? review.userName
+                            : '[Unknown User]'}
+                        </p>
                         <div className="flex items-center space-x-2">
                           <div className="flex items-center">
                             {[...Array(5)].map((_, i) => (
@@ -300,15 +287,13 @@ const ProductReviews: React.FC = () => {
                       <span>{formatDate(review.createdAt)}</span>
                     </div>
                   </div>
-                  
-                  {review.comment && (
+                  {typeof review.comment === 'string' && (
                     <div className="bg-white/5 rounded-lg p-3 mt-3">
                       <p className="text-gray-300 leading-relaxed">{review.comment}</p>
                     </div>
                   )}
                 </div>
               ))}
-              
               {selectedProduct.reviews.length === 0 && (
                 <div className="text-center py-8">
                   <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-3" />
