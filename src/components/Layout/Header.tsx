@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { ShoppingCart, User, Menu, X, Heart, Smartphone, LogOut, Package } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Heart, Smartphone, LogOut, Package, ChevronDown } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
@@ -10,6 +10,8 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isShopDropdownOpen, setIsShopDropdownOpen] = useState(false);
+  const [isWorkEssentialsDropdownOpen, setIsWorkEssentialsDropdownOpen] = useState(false);
   const { itemCount } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
@@ -36,12 +38,44 @@ const Header: React.FC = () => {
     setIsUserMenuOpen(false);
   }, [user, isAuthenticated]);
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setIsShopDropdownOpen(false);
+      setIsWorkEssentialsDropdownOpen(false);
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
   const navigation = [
     { name: 'Home', href: '/' },
-    { name: 'Shop', href: '/shop' },
-    { name: 'Cases', href: '/shop?category=cases' },
-    { name: 'Tempered Glass', href: '/shop?category=tempered-glass' },
-    { name: 'Accessories', href: '/shop?category=accessories' },
+    { 
+      name: 'Shop', 
+      href: '/shop',
+      hasDropdown: true,
+      dropdownItems: [
+        { name: 'All Products', href: '/shop' },
+        { name: 'Cases', href: '/shop?category=cases' },
+        { name: 'Tempered Glass', href: '/shop?category=tempered-glass' },
+        { name: 'Chargers', href: '/shop?category=chargers' },
+        { name: 'Accessories', href: '/shop?category=accessories' }
+      ]
+    },
+    { name: 'New Arrivals', href: '/shop?filter=new' },
+    { name: 'Gifts', href: '/shop?filter=gifts' },
+    { 
+      name: 'Work Essentials', 
+      href: '/shop?category=work-essentials',
+      hasDropdown: true,
+      dropdownItems: [
+        { name: 'All Work Essentials', href: '/shop?category=work-essentials' },
+        { name: 'Laptop Accessories', href: '/shop?category=work-essentials&subcategory=laptop-accessories' },
+        { name: 'Desk Setup', href: '/shop?category=work-essentials&subcategory=desk-setup' },
+        { name: 'Cable Management', href: '/shop?category=work-essentials&subcategory=cable-management' },
+        { name: 'Productivity Tools', href: '/shop?category=work-essentials&subcategory=productivity-tools' }
+      ]
+    },
     { name: 'About', href: '/about' },
   ];
 
@@ -51,8 +85,12 @@ const Header: React.FC = () => {
       const category = href.split('=')[1];
       return location.pathname === '/shop' && searchParams.get('category') === category;
     }
+    if (href.startsWith('/shop?filter=')) {
+      const filter = href.split('=')[1];
+      return location.pathname === '/shop' && searchParams.get('filter') === filter;
+    }
     if (href === '/shop') {
-      return location.pathname === '/shop' && !searchParams.get('category');
+      return location.pathname === '/shop' && !searchParams.get('category') && !searchParams.get('filter');
     }
     return location.pathname.startsWith(href);
   };
@@ -120,18 +158,69 @@ const Header: React.FC = () => {
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
             {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`relative text-sm font-medium transition-all duration-300 hover:text-purple-400 group ${
-                  isActive(item.href) ? 'text-purple-400' : 'text-gray-300'
-                }`}
-              >
-                {item.name}
-                <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-cyan-400 transition-all duration-300 group-hover:w-full ${
-                  isActive(item.href) ? 'w-full' : ''
-                }`}></span>
-              </Link>
+              <div key={item.name} className="relative">
+                {item.hasDropdown ? (
+                  <div 
+                    className="relative"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (item.name === 'Shop') {
+                        setIsShopDropdownOpen(!isShopDropdownOpen);
+                        setIsWorkEssentialsDropdownOpen(false);
+                      } else if (item.name === 'Work Essentials') {
+                        setIsWorkEssentialsDropdownOpen(!isWorkEssentialsDropdownOpen);
+                        setIsShopDropdownOpen(false);
+                      }
+                    }}
+                  >
+                    <button className={`relative text-sm font-medium transition-all duration-300 hover:text-purple-400 group flex items-center space-x-1 ${
+                      isActive(item.href) ? 'text-purple-400' : 'text-gray-300'
+                    }`}>
+                      <span>{item.name}</span>
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${
+                        (item.name === 'Shop' && isShopDropdownOpen) || 
+                        (item.name === 'Work Essentials' && isWorkEssentialsDropdownOpen) 
+                          ? 'rotate-180' : ''
+                      }`} />
+                    </button>
+                    <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-cyan-400 transition-all duration-300 group-hover:w-full ${
+                      isActive(item.href) ? 'w-full' : ''
+                    }`}></span>
+
+                    {/* Dropdown Menu */}
+                    {((item.name === 'Shop' && isShopDropdownOpen) || 
+                      (item.name === 'Work Essentials' && isWorkEssentialsDropdownOpen)) && (
+                      <div className="absolute top-full left-0 mt-2 w-56 bg-slate-800/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl py-2 z-50">
+                        {item.dropdownItems?.map((dropdownItem) => (
+                          <Link
+                            key={dropdownItem.name}
+                            to={dropdownItem.href}
+                            className="block px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                            onClick={() => {
+                              setIsShopDropdownOpen(false);
+                              setIsWorkEssentialsDropdownOpen(false);
+                            }}
+                          >
+                            {dropdownItem.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    to={item.href}
+                    className={`relative text-sm font-medium transition-all duration-300 hover:text-purple-400 group ${
+                      isActive(item.href) ? 'text-purple-400' : 'text-gray-300'
+                    }`}
+                  >
+                    {item.name}
+                    <span className={`absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-400 to-cyan-400 transition-all duration-300 group-hover:w-full ${
+                      isActive(item.href) ? 'w-full' : ''
+                    }`}></span>
+                  </Link>
+                )}
+              </div>
             ))}
           </nav>
 
@@ -269,16 +358,32 @@ const Header: React.FC = () => {
         }`}>
           <nav className="space-y-1 md:space-y-2 pt-3 md:pt-4">
             {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`block px-4 py-3 md:px-6 md:py-4 text-sm font-medium transition-all duration-200 hover:text-purple-400 hover:bg-white/10 rounded-xl md:rounded-2xl backdrop-blur-sm ${
-                  isActive(item.href) ? 'text-purple-400 bg-white/10' : 'text-gray-300'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {item.name}
-              </Link>
+              <div key={item.name}>
+                <Link
+                  to={item.href}
+                  className={`block px-4 py-3 md:px-6 md:py-4 text-sm font-medium transition-all duration-200 hover:text-purple-400 hover:bg-white/10 rounded-xl md:rounded-2xl backdrop-blur-sm ${
+                    isActive(item.href) ? 'text-purple-400 bg-white/10' : 'text-gray-300'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+                {/* Mobile dropdown items */}
+                {item.hasDropdown && item.dropdownItems && (
+                  <div className="ml-4 mt-2 space-y-1">
+                    {item.dropdownItems.map((dropdownItem) => (
+                      <Link
+                        key={dropdownItem.name}
+                        to={dropdownItem.href}
+                        className="block px-4 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {dropdownItem.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </nav>
         </div>

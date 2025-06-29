@@ -4,7 +4,8 @@ export interface Product {
   name: string;
   price: number;
   originalPrice?: number;
-  category: 'cases' | 'tempered-glass' | 'chargers' | 'accessories';
+  category: 'cases' | 'tempered-glass' | 'chargers' | 'accessories' | 'work-essentials';
+  subcategory?: string;
   brand: string;
   image: string;
   images?: string[];
@@ -16,6 +17,7 @@ export interface Product {
   isFeatured?: boolean;
   isOnSale?: boolean;
   isTopRated?: boolean;
+  isGift?: boolean;
   coloredTags?: {
     label: string;
     color: 'green' | 'red' | 'yellow' | 'blue' | 'purple' | 'pink';

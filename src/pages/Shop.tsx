@@ -1,20 +1,23 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Filter, Grid, List, SlidersHorizontal, Search, Star, Loader, LogIn, UserPlus } from 'lucide-react';
+import { Filter, Grid, List, SlidersHorizontal, Search, Star, Loader, LogIn, UserPlus, ChevronDown } from 'lucide-react';
 import ProductCard from '../components/Product/ProductCard';
 import { useProducts } from '../hooks/useProducts';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { useAuth } from '../context/AuthContext';
 
 const Shop: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [filters, setFilters] = useState({
     category: searchParams.get('category') || '',
+    subcategory: searchParams.get('subcategory') || '',
+    filter: searchParams.get('filter') || '',
     brand: '',
     minPrice: undefined as number | undefined,
     maxPrice: undefined as number | undefined,
@@ -28,6 +31,8 @@ const Shop: React.FC = () => {
     setFilters((prev) => ({
       ...prev,
       category: searchParams.get('category') || '',
+      subcategory: searchParams.get('subcategory') || '',
+      filter: searchParams.get('filter') || '',
     }));
   }, [searchParams]);
 
@@ -54,10 +59,20 @@ const Shop: React.FC = () => {
   }, [products]);
 
   const categories = [
+    { value: '', label: 'All Categories' },
     { value: 'cases', label: 'Cases' },
     { value: 'tempered-glass', label: 'Tempered Glass' },
     { value: 'chargers', label: 'Chargers' },
-    { value: 'accessories', label: 'Accessories' }
+    { value: 'accessories', label: 'Accessories' },
+    { value: 'work-essentials', label: 'Work Essentials' }
+  ];
+
+  const workEssentialsSubcategories = [
+    { value: '', label: 'All Work Essentials' },
+    { value: 'laptop-accessories', label: 'Laptop Accessories' },
+    { value: 'desk-setup', label: 'Desk Setup' },
+    { value: 'cable-management', label: 'Cable Management' },
+    { value: 'productivity-tools', label: 'Productivity Tools' }
   ];
 
   const handleSortChange = (value: string) => {
@@ -84,6 +99,53 @@ const Shop: React.FC = () => {
         setSortOrder('asc');
         break;
     }
+  };
+
+  const handleCategoryChange = (category: string, subcategory?: string) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    
+    if (category) {
+      newSearchParams.set('category', category);
+    } else {
+      newSearchParams.delete('category');
+    }
+    
+    if (subcategory) {
+      newSearchParams.set('subcategory', subcategory);
+    } else {
+      newSearchParams.delete('subcategory');
+    }
+    
+    // Clear filter when changing category
+    newSearchParams.delete('filter');
+    
+    setSearchParams(newSearchParams);
+    setShowCategoryDropdown(false);
+  };
+
+  const getPageTitle = () => {
+    if (filters.filter === 'new') return 'New Arrivals';
+    if (filters.filter === 'gifts') return 'Perfect Gifts';
+    if (filters.category === 'work-essentials') {
+      if (filters.subcategory) {
+        const subcategory = workEssentialsSubcategories.find(s => s.value === filters.subcategory);
+        return subcategory ? subcategory.label : 'Work Essentials';
+      }
+      return 'Work Essentials';
+    }
+    if (filters.category) {
+      const category = categories.find(c => c.value === filters.category);
+      return category ? category.label : 'Shop';
+    }
+    return 'Premium Collection';
+  };
+
+  const getPageDescription = () => {
+    if (filters.filter === 'new') return 'Discover our latest arrivals and cutting-edge mobile accessories';
+    if (filters.filter === 'gifts') return 'Find the perfect gift for tech enthusiasts and mobile lovers';
+    if (filters.category === 'work-essentials') return 'Professional accessories to enhance your productivity and workspace';
+    if (filters.category) return `Explore our premium ${filters.category.replace('-', ' ')} collection`;
+    return 'Discover our curated selection of premium mobile accessories';
   };
 
   if (loading) {
@@ -117,10 +179,10 @@ const Shop: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8 md:mb-12">
           <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-3 md:mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-            Premium Collection
+            {getPageTitle()}
           </h1>
           <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
-            Discover our curated selection of premium mobile accessories
+            {getPageDescription()}
           </p>
         </div>
 
@@ -160,23 +222,68 @@ const Shop: React.FC = () => {
           </div>
         )}
 
-        {/* Search and Controls */}
+        {/* Category Dropdown and Controls */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 md:mb-8 space-y-4 lg:space-y-0 gap-4 md:gap-6">
-          {/* Search Bar */}
-          <div className="relative flex-1 max-w-md">
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/10 backdrop-blur-md text-white rounded-xl md:rounded-2xl px-4 py-3 md:px-6 md:py-4 pl-10 md:pl-12 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
-            />
-            <Search className="absolute left-3 md:left-4 top-3 md:top-4 w-5 h-5 md:w-6 md:h-6 text-gray-400" />
+          {/* Category Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
+              className="flex items-center space-x-2 bg-white/10 backdrop-blur-md text-white px-6 py-3 rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-300"
+            >
+              <span>{categories.find(c => c.value === filters.category)?.label || 'All Categories'}</span>
+              <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showCategoryDropdown ? 'rotate-180' : ''}`} />
+            </button>
+
+            {showCategoryDropdown && (
+              <div className="absolute top-full left-0 mt-2 w-64 bg-slate-800/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl py-2 z-50">
+                {categories.map((category) => (
+                  <button
+                    key={category.value}
+                    onClick={() => handleCategoryChange(category.value)}
+                    className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
+                  >
+                    {category.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          
+
+          {/* Work Essentials Subcategory Filter */}
+          {filters.category === 'work-essentials' && (
+            <div className="flex flex-wrap gap-2">
+              {workEssentialsSubcategories.map((subcategory) => (
+                <button
+                  key={subcategory.value}
+                  onClick={() => handleCategoryChange('work-essentials', subcategory.value)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                    filters.subcategory === subcategory.value
+                      ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white'
+                      : 'bg-white/10 text-gray-300 hover:text-white hover:bg-white/20'
+                  }`}
+                >
+                  {subcategory.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Search and Controls */}
           <div className="flex items-center space-x-3 md:space-x-4 w-full lg:w-auto">
+            {/* Search Bar */}
+            <div className="relative flex-1 max-w-md">
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white/10 backdrop-blur-md text-white rounded-xl md:rounded-2xl px-4 py-3 md:px-6 md:py-4 pl-10 md:pl-12 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
+              />
+              <Search className="absolute left-3 md:left-4 top-3 md:top-4 w-5 h-5 md:w-6 md:h-6 text-gray-400" />
+            </div>
+            
             {/* Results Count */}
-            <span className="text-gray-400 text-sm">
+            <span className="text-gray-400 text-sm whitespace-nowrap">
               {products.length} products
             </span>
 
@@ -218,14 +325,14 @@ const Shop: React.FC = () => {
           </div>
         </div>
 
-        {/* Filters Section - Now at the top */}
+        {/* Filters Section */}
         <div className="mb-6 md:mb-8">
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center space-x-2 bg-white/10 backdrop-blur-md text-white px-4 py-3 md:px-6 md:py-3 rounded-xl md:rounded-2xl border border-white/20 hover:bg-white/20 transition-all duration-300 mb-4"
           >
             <SlidersHorizontal className="w-5 h-5" />
-            <span>Filters</span>
+            <span>Advanced Filters</span>
             <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-1 rounded-full">
               {Object.values(filters).filter(v => v && v !== 0).length}
             </span>
@@ -236,26 +343,7 @@ const Shop: React.FC = () => {
             showFilters ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
           }`}>
             <div className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/10">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
-                {/* Category Filter */}
-                {filters.category === '' && (
-                  <div>
-                    <h4 className="font-semibold mb-3 text-white text-sm">Category</h4>
-                    <select
-                      value={filters.category}
-                      onChange={(e) => setFilters({...filters, category: e.target.value})}
-                      className="w-full bg-white/10 backdrop-blur-md text-white px-3 py-2 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                    >
-                      <option value="">All Categories</option>
-                      {categories.map(category => (
-                        <option key={category.value} value={category.value} className="bg-gray-800">
-                          {category.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 {/* Brand Filter */}
                 <div>
                   <h4 className="font-semibold mb-3 text-white text-sm">Brand</h4>
@@ -317,12 +405,15 @@ const Shop: React.FC = () => {
                   onClick={() => {
                     setFilters({
                       category: '',
+                      subcategory: '',
+                      filter: '',
                       brand: '',
                       minPrice: undefined,
                       maxPrice: undefined,
                       rating: 0,
                     });
                     setSearchQuery('');
+                    setSearchParams(new URLSearchParams());
                   }}
                   className="bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 text-sm"
                 >
@@ -347,11 +438,14 @@ const Shop: React.FC = () => {
                   setSearchQuery('');
                   setFilters({
                     category: '',
+                    subcategory: '',
+                    filter: '',
                     brand: '',
                     minPrice: undefined,
                     maxPrice: undefined,
                     rating: 0,
                   });
+                  setSearchParams(new URLSearchParams());
                 }}
                 className="bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-semibold hover:shadow-lg transition-all duration-300"
               >

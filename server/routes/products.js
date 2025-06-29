@@ -11,6 +11,8 @@ router.get('/', async (req, res) => {
   try {
     const { 
       category, 
+      subcategory,
+      filter,
       brand, 
       search, 
       inStock, 
@@ -24,21 +26,26 @@ router.get('/', async (req, res) => {
     } = req.query;
 
     // Build filter object
-    const filter = { inStock: true }; // Only show in-stock items to users
+    const filterObj = { inStock: true }; // Only show in-stock items to users
 
-    if (category) filter.category = category;
-    if (brand) filter.brand = brand;
-    if (featured === 'true') filter.isFeatured = true;
-    if (inStock === 'true') filter.inStock = true;
+    if (category) filterObj.category = category;
+    if (subcategory) filterObj.subcategory = subcategory;
+    if (brand) filterObj.brand = brand;
+    if (featured === 'true') filterObj.isFeatured = true;
+    if (inStock === 'true') filterObj.inStock = true;
+    
+    // Handle special filters
+    if (filter === 'new') filterObj.isNewProduct = true;
+    if (filter === 'gifts') filterObj.isGift = true;
     
     if (minPrice || maxPrice) {
-      filter.price = {};
-      if (minPrice) filter.price.$gte = parseFloat(minPrice);
-      if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
+      filterObj.price = {};
+      if (minPrice) filterObj.price.$gte = parseFloat(minPrice);
+      if (maxPrice) filterObj.price.$lte = parseFloat(maxPrice);
     }
 
     if (search) {
-      filter.name = { $regex: search, $options: 'i' }; // Case-insensitive partial match
+      filterObj.name = { $regex: search, $options: 'i' }; // Case-insensitive partial match
     }
 
     // Build sort object
@@ -47,12 +54,12 @@ router.get('/', async (req, res) => {
 
     // Execute query with pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    const products = await Product.find(filter)
+    const products = await Product.find(filterObj)
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit));
 
-    const total = await Product.countDocuments(filter);
+    const total = await Product.countDocuments(filterObj);
 
     res.status(200).json({
       products,

@@ -8,6 +8,7 @@ interface Product {
   price: number;
   originalPrice?: number;
   category: string;
+  subcategory?: string;
   brand: string;
   image: string;
   features: string[];
@@ -16,6 +17,7 @@ interface Product {
   isFeatured?: boolean;
   isOnSale?: boolean;
   isTopRated?: boolean;
+  isGift?: boolean;
   coloredTags?: Array<{
     label: string;
     color: 'green' | 'red' | 'yellow' | 'blue' | 'purple' | 'pink';
@@ -34,6 +36,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
     price: 0,
     originalPrice: 0,
     category: 'cases',
+    subcategory: '',
     brand: '',
     image: '',
     features: [],
@@ -42,6 +45,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
     isFeatured: false,
     isOnSale: false,
     isTopRated: false,
+    isGift: false,
     coloredTags: []
   });
 
@@ -55,7 +59,16 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
     { value: 'cases', label: 'Cases' },
     { value: 'tempered-glass', label: 'Tempered Glass' },
     { value: 'chargers', label: 'Chargers' },
-    { value: 'accessories', label: 'Accessories' }
+    { value: 'accessories', label: 'Accessories' },
+    { value: 'work-essentials', label: 'Work Essentials' }
+  ];
+
+  const workEssentialsSubcategories = [
+    { value: '', label: 'No Subcategory' },
+    { value: 'laptop-accessories', label: 'Laptop Accessories' },
+    { value: 'desk-setup', label: 'Desk Setup' },
+    { value: 'cable-management', label: 'Cable Management' },
+    { value: 'productivity-tools', label: 'Productivity Tools' }
   ];
 
   const colorOptions = [
@@ -248,6 +261,25 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
                   ))}
                 </select>
               </div>
+
+              {/* Subcategory for Work Essentials */}
+              {formData.category === 'work-essentials' && (
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-300">Subcategory</label>
+                  <select
+                    name="subcategory"
+                    value={formData.subcategory || ''}
+                    onChange={handleInputChange}
+                    className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  >
+                    {workEssentialsSubcategories.map(subcat => (
+                      <option key={subcat.value} value={subcat.value} className="bg-gray-800">
+                        {subcat.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium mb-2 text-gray-300">Price *</label>
@@ -472,6 +504,17 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
                   className="w-5 h-5 text-purple-500 bg-transparent border-2 border-gray-400 rounded focus:ring-purple-500"
                 />
                 <span className="text-white">Top Rated</span>
+              </label>
+
+              <label className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="isGift"
+                  checked={formData.isGift}
+                  onChange={handleInputChange}
+                  className="w-5 h-5 text-purple-500 bg-transparent border-2 border-gray-400 rounded focus:ring-purple-500"
+                />
+                <span className="text-white">Gift Item</span>
               </label>
             </div>
           </div>

@@ -44,7 +44,11 @@ const productSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['cases', 'tempered-glass', 'chargers', 'accessories']
+    enum: ['cases', 'tempered-glass', 'chargers', 'accessories', 'work-essentials']
+  },
+  subcategory: {
+    type: String,
+    trim: true
   },
   brand: {
     type: String,
@@ -92,6 +96,10 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isGift: {
+    type: Boolean,
+    default: false
+  },
   coloredTags: [{
     label: String,
     color: {
@@ -119,5 +127,8 @@ productSchema.methods.calculateAverageRating = function() {
 productSchema.index({ name: 'text', brand: 'text' });
 productSchema.index({ category: 1, inStock: 1 });
 productSchema.index({ isFeatured: 1, inStock: 1 });
+productSchema.index({ isNewProduct: 1, inStock: 1 });
+productSchema.index({ isGift: 1, inStock: 1 });
+productSchema.index({ subcategory: 1, inStock: 1 });
 
 export default mongoose.model('Product', productSchema);
