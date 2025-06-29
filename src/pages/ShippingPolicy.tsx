@@ -222,18 +222,6 @@ const deliveryZones = [
                 </div>
               ))}
             </div>
-            
-            {/* Shipping Threshold Notice */}
-            <div className="mt-8 p-6 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-2xl border border-orange-500/20 text-center">
-              <div className="flex items-center justify-center space-x-3 mb-3">
-                <Truck className="w-6 h-6 text-orange-400" />
-                <h3 className="text-lg font-bold text-white">Free Shipping Threshold</h3>
-              </div>
-              <p className="text-gray-300 leading-relaxed">
-                Orders below ₹399 will be charged ₹70 for shipping. Add items worth ₹399 or more to enjoy free shipping across India!
-              </p>
-            </div>
-          </div>
 
           {/* Important Terms */}
           <div className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-3xl p-8 border border-white/10">
