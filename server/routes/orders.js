@@ -16,13 +16,13 @@ const razorpay = new Razorpay({
 });
 
 // Shipping configuration
-const SHIPPING_THRESHOLD = 399;
+const SHIPPING_THRESHOLD = 399; // Tax-inclusive threshold
 const SHIPPING_CHARGE = 70;
 
 // Create Razorpay order (DO NOT save order in DB here)
 router.post('/create-order', authenticateToken, async (req, res) => {
   try {
-    const { items, shippingAddress } = req.body;
+    const { items, shippingAddress, totalIncludingTax } = req.body;
 
     // --- Improved validation ---
     if (!Array.isArray(items) || items.length === 0) {
@@ -64,18 +64,18 @@ router.post('/create-order', authenticateToken, async (req, res) => {
       calculatedTotal += product.price * item.quantity;
     }
 
-    // Calculate shipping charges
-    const isShippingFree = calculatedTotal >= SHIPPING_THRESHOLD;
+    // Calculate shipping charges based on tax-inclusive amount
+    const calculatedTotalIncludingTax = calculatedTotal * 1.18;
+    const isShippingFree = calculatedTotalIncludingTax >= SHIPPING_THRESHOLD;
     const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
+    
+    // Final total calculation
     const totalWithShipping = calculatedTotal + shippingCost;
+    const finalTotalWithTax = totalWithShipping * 1.18;
 
-    // Calculate GST (18%) on total including shipping
-    const taxAmount = totalWithShipping * 0.18;
-    const totalWithTax = totalWithShipping + taxAmount;
-
-    // Create Razorpay order with total including shipping and tax
+    // Create Razorpay order with final total including shipping and tax
     const razorpayOrder = await razorpay.orders.create({
-      amount: Math.round(totalWithTax * 100), // Amount in paise
+      amount: Math.round(finalTotalWithTax * 100), // Amount in paise
       currency: 'INR',
       receipt: `receipt_${Date.now()}`,
     });
@@ -88,7 +88,7 @@ router.post('/create-order', authenticateToken, async (req, res) => {
       key: process.env.RAZORPAY_KEY_ID,
       items,
       shippingAddress,
-      totalWithTax,
+      totalWithTax: finalTotalWithTax,
       shippingCost,
       isShippingFree
     });
@@ -173,8 +173,9 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
       calculatedTotal += product.price * item.quantity;
     }
 
-    // Calculate shipping charges for verification
-    const isShippingFree = calculatedTotal >= SHIPPING_THRESHOLD;
+    // Calculate shipping charges for verification based on tax-inclusive amount
+    const calculatedTotalIncludingTax = calculatedTotal * 1.18;
+    const isShippingFree = calculatedTotalIncludingTax >= SHIPPING_THRESHOLD;
     const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
     const totalWithShipping = calculatedTotal + shippingCost;
     const expectedTotalWithTax = totalWithShipping * 1.18;

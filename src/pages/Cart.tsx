@@ -28,16 +28,15 @@ const Cart: React.FC = () => {
     pincode: ''
   });
 
-  // Calculate shipping charges
+  // Calculate shipping charges based on tax-inclusive amount
   const SHIPPING_THRESHOLD = 399;
   const SHIPPING_CHARGE = 70;
-  const isShippingFree = total >= SHIPPING_THRESHOLD;
+  const totalIncludingTax = total * 1.18; // Tax-inclusive subtotal
+  const isShippingFree = totalIncludingTax >= SHIPPING_THRESHOLD;
   const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
   
-  // Calculate tax-inclusive totals
-  const subtotalWithShipping = total + shippingCost;
-  const totalIncludingTax = subtotalWithShipping * 1.18;
-  const taxAmount = subtotalWithShipping * 0.18;
+  // Final totals
+  const finalTotalWithShipping = totalIncludingTax + (shippingCost * 1.18); // Shipping also has tax
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setShippingAddress({
@@ -130,7 +129,8 @@ const Cart: React.FC = () => {
           };
         }),
         shippingAddress,
-        totalAmount: subtotalWithShipping // Include shipping in total
+        totalAmount: total, // Send base total, backend will calculate shipping
+        totalIncludingTax: totalIncludingTax // Send tax-inclusive total for shipping calculation
       };
 
       console.log('Order data being sent:', orderData);
@@ -348,7 +348,7 @@ const Cart: React.FC = () => {
               <div className="space-y-6 mb-8">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Subtotal ({itemCount} items)</span>
-                  <span className="text-white font-semibold">₹{Math.round(total * 1.18)}</span>
+                  <span className="text-white font-semibold">₹{Math.round(totalIncludingTax)}</span>
                 </div>
 
                 {/* Shipping Row */}
@@ -359,7 +359,7 @@ const Cart: React.FC = () => {
                       <div className="group relative">
                         <Info className="w-4 h-4 text-gray-500 cursor-help" />
                         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                          Free shipping on orders ₹399+
+                          Free shipping on orders ₹399+ (incl. tax)
                         </div>
                       </div>
                     )}
@@ -373,13 +373,13 @@ const Cart: React.FC = () => {
                 {!isShippingFree && (
                   <div className="bg-white/5 rounded-lg p-4 border border-orange-500/20">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-orange-400 text-sm font-medium">Add ₹{SHIPPING_THRESHOLD - total} for free shipping</span>
+                      <span className="text-orange-400 text-sm font-medium">Add ₹{Math.round(SHIPPING_THRESHOLD - totalIncludingTax)} for free shipping</span>
                       <Truck className="w-4 h-4 text-orange-400" />
                     </div>
                     <div className="w-full bg-gray-700 rounded-full h-2">
                       <div 
                         className="bg-gradient-to-r from-orange-500 to-yellow-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min((total / SHIPPING_THRESHOLD) * 100, 100)}%` }}
+                        style={{ width: `${Math.min((totalIncludingTax / SHIPPING_THRESHOLD) * 100, 100)}%` }}
                       ></div>
                     </div>
                   </div>
@@ -402,7 +402,7 @@ const Cart: React.FC = () => {
                 <div className="border-t border-white/20 pt-6">
                   <div className="flex justify-between items-center text-xl">
                     <span className="font-bold text-white">Total</span>
-                    <span className="font-bold text-white">₹{Math.round(totalIncludingTax)}</span>
+                    <span className="font-bold text-white">₹{Math.round(finalTotalWithShipping)}</span>
                   </div>
                   <div className="text-xs text-gray-400 mt-1 text-right">
                     Inclusive of all taxes {!isShippingFree && '& shipping'}
@@ -566,7 +566,7 @@ const Cart: React.FC = () => {
                           disabled={isProcessing}
                           className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-5 rounded-2xl font-bold text-lg hover:shadow-2xl hover:shadow-green-500/25 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {isProcessing ? 'Processing...' : `Pay ₹${Math.round(totalIncludingTax)}`}
+                          {isProcessing ? 'Processing...' : `Pay ₹${Math.round(finalTotalWithShipping)}`}
                         </button>
                         
                         <button
