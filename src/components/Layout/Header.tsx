@@ -4,6 +4,7 @@ import { ShoppingCart, User, Menu, X, Heart, Smartphone, LogOut, Package } from 
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
+import logo from '../../assets/logo.jpg';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -101,7 +102,7 @@ const Header: React.FC = () => {
             <div className="relative">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-xl md:rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg overflow-hidden">
                 <img 
-                  src="logo.jpg" 
+                  src={logo}
                   alt="The CarryCo Logo" 
                   className="w-full h-full object-contain"
                 />
