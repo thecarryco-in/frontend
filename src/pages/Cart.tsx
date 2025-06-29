@@ -59,6 +59,11 @@ const Cart: React.FC = () => {
     return sum;
   }, 0);
 
+  // Helper function to safely get product ID
+  const getProductId = (product: any): string => {
+    return product.id || product._id || '';
+  };
+
   const handlePayment = async () => {
     if (!isAuthenticated) {
       navigate('/login');
@@ -104,10 +109,16 @@ const Cart: React.FC = () => {
 
       // Create order with proper product data
       const orderData = {
-        items: items.map(item => ({
-          productId: item.product.id || item.product._id,
-          quantity: item.quantity
-        })),
+        items: items.map(item => {
+          const productId = getProductId(item.product);
+          if (!productId) {
+            throw new Error(`Product missing ID: ${item.product.name}`);
+          }
+          return {
+            productId,
+            quantity: item.quantity
+          };
+        }),
         shippingAddress,
         totalAmount: total
       };
@@ -164,7 +175,7 @@ const Cart: React.FC = () => {
       razorpay.open();
     } catch (error: any) {
       console.error('Payment error:', error);
-      alert(error.response?.data?.message || 'Failed to process payment');
+      alert(error.response?.data?.message || error.message || 'Failed to process payment');
       setIsProcessing(false);
     }
   };
@@ -227,10 +238,17 @@ const Cart: React.FC = () => {
               {items.map((item, index) => {
                 const itemPriceIncludingTax = item.product.price * 1.18;
                 const itemOriginalPriceIncludingTax = item.product.originalPrice ? item.product.originalPrice * 1.18 : 0;
+                const productId = getProductId(item.product);
+                
+                // Skip items without valid IDs
+                if (!productId) {
+                  console.warn('Cart item missing product ID:', item);
+                  return null;
+                }
                 
                 return (
                   <div 
-                    key={item.product.id || item.product._id} 
+                    key={productId} 
                     className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-3xl p-8 border border-white/10 hover:border-purple-400/30 transition-all duration-300"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
@@ -278,14 +296,14 @@ const Cart: React.FC = () => {
                       <div className="flex lg:flex-col items-center lg:items-end justify-between lg:justify-start space-y-4">
                         <div className="flex items-center space-x-3 bg-white/10 backdrop-blur-sm rounded-2xl p-2 border border-white/20">
                           <button
-                            onClick={() => updateQuantity(item.product.id || item.product._id, item.quantity - 1)}
+                            onClick={() => updateQuantity(productId, item.quantity - 1)}
                             className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 transition-colors duration-200 text-white"
                           >
                             <Minus className="w-5 h-5" />
                           </button>
                           <span className="w-12 text-center font-bold text-lg text-white">{item.quantity}</span>
                           <button
-                            onClick={() => updateQuantity(item.product.id || item.product._id, item.quantity + 1)}
+                            onClick={() => updateQuantity(productId, item.quantity + 1)}
                             className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/20 transition-colors duration-200 text-white"
                           >
                             <Plus className="w-5 h-5" />
@@ -293,7 +311,7 @@ const Cart: React.FC = () => {
                         </div>
 
                         <button
-                          onClick={() => removeFromCart(item.product.id || item.product._id)}
+                          onClick={() => removeFromCart(productId)}
                           className="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200 border border-transparent hover:border-red-400/30"
                         >
                           <Trash2 className="w-6 h-6" />

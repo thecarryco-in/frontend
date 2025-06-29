@@ -11,7 +11,7 @@ interface Order {
       name: string;
       image: string;
       brand: string;
-    };
+    } | null;
     productSnapshot: {
       name: string;
       price: number;
@@ -92,6 +92,12 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
   };
 
   const handleRateProduct = (product: any) => {
+    // Ensure we have a valid product with an ID
+    if (!product || (!product._id && !product.id)) {
+      console.error('Invalid product for rating:', product);
+      return;
+    }
+    
     setSelectedProduct(product);
     setShowRatingModal(true);
     setRating(0);
@@ -104,15 +110,22 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
       return;
     }
 
+    // Get product ID safely
+    const productId = selectedProduct._id || selectedProduct.id;
+    if (!productId) {
+      alert('Invalid product selected');
+      return;
+    }
+
     setSubmittingReview(true);
     try {
-      await axios.post(`/products/${selectedProduct._id}/review`, {
+      await axios.post(`/products/${productId}/review`, {
         rating,
         comment: comment.trim()
       });
       
       // Add to reviewed products set
-      setReviewedProducts(prev => new Set([...prev, selectedProduct._id]));
+      setReviewedProducts(prev => new Set([...prev, productId]));
       
       alert('Review submitted successfully!');
       setShowRatingModal(false);
@@ -133,6 +146,17 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  // Helper function to get product ID safely
+  const getProductId = (product: any) => {
+    return product?._id || product?.id || null;
+  };
+
+  // Helper function to check if product was reviewed
+  const isProductReviewed = (product: any) => {
+    const productId = getProductId(product);
+    return productId ? reviewedProducts.has(productId) : false;
   };
 
   if (ordersLoading) {
@@ -232,23 +256,38 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
             {order.status === 'delivered' && (
               <div className="border-t border-white/10 pt-4">
                 <div className="flex flex-wrap gap-3">
-                  {order.items.map((item, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleRateProduct(item.product)}
-                      disabled={reviewedProducts.has(item.product._id)}
-                      className={`flex items-center space-x-2 px-3 py-2 md:px-4 md:py-2 rounded-lg md:rounded-xl font-semibold transition-all duration-300 ${
-                        reviewedProducts.has(item.product._id)
-                          ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
-                          : 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white hover:shadow-lg'
-                      }`}
-                    >
-                      <Star className="w-3 h-3 md:w-4 md:h-4" />
-                      <span className="text-sm">
-                        {reviewedProducts.has(item.product._id) ? 'Reviewed' : `Rate ${item.productSnapshot.name}`}
-                      </span>
-                    </button>
-                  ))}
+                  {order.items.map((item, index) => {
+                    // Use product from snapshot if product reference is null
+                    const productToRate = item.product || {
+                      _id: `snapshot-${order._id}-${index}`,
+                      name: item.productSnapshot.name,
+                      ...item.productSnapshot
+                    };
+                    
+                    const productId = getProductId(productToRate);
+                    const isReviewed = productId ? isProductReviewed(productToRate) : false;
+                    
+                    // Only show button if we have a valid product ID
+                    if (!productId) return null;
+                    
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => handleRateProduct(productToRate)}
+                        disabled={isReviewed}
+                        className={`flex items-center space-x-2 px-3 py-2 md:px-4 md:py-2 rounded-lg md:rounded-xl font-semibold transition-all duration-300 ${
+                          isReviewed
+                            ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white hover:shadow-lg'
+                        }`}
+                      >
+                        <Star className="w-3 h-3 md:w-4 md:h-4" />
+                        <span className="text-sm">
+                          {isReviewed ? 'Reviewed' : `Rate ${item.productSnapshot.name}`}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -323,7 +362,7 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
           <div className="bg-slate-800 rounded-2xl md:rounded-3xl p-6 md:p-8 max-w-md w-full">
             <div className="text-center mb-6">
               <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Rate Product</h3>
-              <p className="text-gray-400">{selectedProduct.name}</p>
+              <p className="text-gray-400">{selectedProduct.name || selectedProduct.productSnapshot?.name}</p>
             </div>
 
             <div className="space-y-6">

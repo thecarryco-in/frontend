@@ -19,20 +19,36 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const priceIncludingTax = product.price * 1.18;
   const originalPriceIncludingTax = product.originalPrice ? product.originalPrice * 1.18 : 0;
 
+  // Safely get product ID
+  const productId = product.id || product._id || '';
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart({ ...product, id: product.id || product._id });
+    if (!productId) {
+      console.error('Cannot add product without ID to cart:', product);
+      return;
+    }
+    // Ensure product has an ID for cart operations
+    const productWithId = { ...product, id: productId };
+    addToCart(productWithId);
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const productId = product.id || product._id;
+    if (!productId) {
+      console.error('Cannot add product without ID to wishlist:', product);
+      return;
+    }
+    
+    // Ensure product has an ID for wishlist operations
+    const productWithId = { ...product, id: productId };
+    
     if (isInWishlist(productId)) {
       removeFromWishlist(productId);
     } else {
-      addToWishlist({ ...product, id: productId });
+      addToWishlist(productWithId);
     }
   };
 
@@ -48,7 +64,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     return colors[color as keyof typeof colors] || 'from-gray-500 to-gray-600';
   };
 
-  const productId = product.id || product._id;
+  // Don't render if product doesn't have an ID
+  if (!productId) {
+    console.warn('Product missing ID, skipping render:', product);
+    return null;
+  }
 
   return (
     <div 

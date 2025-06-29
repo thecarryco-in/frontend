@@ -45,7 +45,7 @@ export const useProducts = (options: UseProductsOptions = {}) => {
 
         const response = await axios.get(`/products?${params.toString()}`);
         
-        // After fetching products from API
+        // Transform products to ensure consistent ID handling
         const products = response.data.products.map((product: any) => ({
           ...product,
           id: product.id || product._id, // Always ensure id exists
@@ -77,10 +77,10 @@ export const useFeaturedProducts = () => {
         setError(null);
         const response = await axios.get('/products/featured');
         
-        // Transform the data to match our Product interface
+        // Transform the data to ensure consistent ID handling
         const transformedProducts = response.data.products.map((product: any) => ({
           ...product,
-          id: product._id // Map MongoDB _id to id
+          id: product.id || product._id // Ensure id exists
         }));
         
         setProducts(transformedProducts);

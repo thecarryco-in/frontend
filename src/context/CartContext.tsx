@@ -23,12 +23,20 @@ type CartAction =
   | { type: 'CLEAR_CART' }
   | { type: 'LOAD_CART'; payload: CartItem[] };
 
-const getProductId = (product: Product) => product.id;
+// Helper function to safely get product ID
+const getProductId = (product: Product): string => {
+  return product.id || product._id || '';
+};
 
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   switch (action.type) {
     case 'ADD_TO_CART': {
       const newProductId = getProductId(action.payload.product);
+      if (!newProductId) {
+        console.error('Product missing ID:', action.payload.product);
+        return state;
+      }
+
       const existingItem = state.items.find(
         item => getProductId(item.product) === newProductId
       );
@@ -91,7 +99,22 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
-      dispatch({ type: 'LOAD_CART', payload: JSON.parse(savedCart) });
+      try {
+        const parsedCart = JSON.parse(savedCart);
+        // Ensure all products have valid IDs
+        const validCart = parsedCart.filter((item: CartItem) => {
+          const productId = getProductId(item.product);
+          if (!productId) {
+            console.warn('Removing cart item with invalid product ID:', item);
+            return false;
+          }
+          return true;
+        });
+        dispatch({ type: 'LOAD_CART', payload: validCart });
+      } catch (error) {
+        console.error('Error loading cart from localStorage:', error);
+        localStorage.removeItem('cart');
+      }
     }
   }, []);
 
@@ -100,14 +123,27 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [state.items]);
 
   const addToCart = (product: Product, quantity = 1) => {
+    // Ensure product has an ID
+    if (!getProductId(product)) {
+      console.error('Cannot add product without ID to cart:', product);
+      return;
+    }
     dispatch({ type: 'ADD_TO_CART', payload: { product, quantity } });
   };
 
   const removeFromCart = (productId: string) => {
+    if (!productId) {
+      console.error('Cannot remove product without ID from cart');
+      return;
+    }
     dispatch({ type: 'REMOVE_FROM_CART', payload: productId });
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
+    if (!productId) {
+      console.error('Cannot update quantity for product without ID');
+      return;
+    }
     if (quantity <= 0) {
       removeFromCart(productId);
     } else {

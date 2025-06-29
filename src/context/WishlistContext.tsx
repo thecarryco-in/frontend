@@ -21,10 +21,21 @@ type WishlistAction =
   | { type: 'CLEAR_WISHLIST' }
   | { type: 'LOAD_WISHLIST'; payload: Product[] };
 
+// Helper function to safely get product ID
+const getProductId = (product: Product): string => {
+  return product.id || product._id || '';
+};
+
 const wishlistReducer = (state: WishlistState, action: WishlistAction): WishlistState => {
   switch (action.type) {
     case 'ADD_TO_WISHLIST': {
-      const existingItem = state.items.find(item => item.id === action.payload.id);
+      const productId = getProductId(action.payload);
+      if (!productId) {
+        console.error('Product missing ID:', action.payload);
+        return state;
+      }
+
+      const existingItem = state.items.find(item => getProductId(item) === productId);
       if (existingItem) return state;
       
       const newItems = [...state.items, action.payload];
@@ -35,7 +46,12 @@ const wishlistReducer = (state: WishlistState, action: WishlistAction): Wishlist
     }
     
     case 'REMOVE_FROM_WISHLIST': {
-      const newItems = state.items.filter(item => item.id !== action.payload);
+      if (!action.payload) {
+        console.error('Cannot remove product without ID from wishlist');
+        return state;
+      }
+
+      const newItems = state.items.filter(item => getProductId(item) !== action.payload);
       return {
         items: newItems,
         itemCount: newItems.length
@@ -69,7 +85,16 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (savedWishlist) {
       try {
         const parsedWishlist = JSON.parse(savedWishlist);
-        dispatch({ type: 'LOAD_WISHLIST', payload: parsedWishlist });
+        // Ensure all products have valid IDs
+        const validWishlist = parsedWishlist.filter((product: Product) => {
+          const productId = getProductId(product);
+          if (!productId) {
+            console.warn('Removing wishlist item with invalid product ID:', product);
+            return false;
+          }
+          return true;
+        });
+        dispatch({ type: 'LOAD_WISHLIST', payload: validWishlist });
       } catch (error) {
         console.error('Error loading wishlist from localStorage:', error);
         localStorage.removeItem('wishlist');
@@ -82,15 +107,25 @@ export const WishlistProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, [state.items]);
 
   const addToWishlist = (product: Product) => {
+    // Ensure product has an ID
+    if (!getProductId(product)) {
+      console.error('Cannot add product without ID to wishlist:', product);
+      return;
+    }
     dispatch({ type: 'ADD_TO_WISHLIST', payload: product });
   };
 
   const removeFromWishlist = (productId: string) => {
+    if (!productId) {
+      console.error('Cannot remove product without ID from wishlist');
+      return;
+    }
     dispatch({ type: 'REMOVE_FROM_WISHLIST', payload: productId });
   };
 
   const isInWishlist = (productId: string) => {
-    return state.items.some(item => item.id === productId);
+    if (!productId) return false;
+    return state.items.some(item => getProductId(item) === productId);
   };
 
   const clearWishlist = () => {
