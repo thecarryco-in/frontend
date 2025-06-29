@@ -12,6 +12,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import RefundPolicy from './pages/CancellationRefundPolicy';
 import ShippingPolicy from './pages/ShippingPolicy';
 import TermsOfService from './pages/TermsAndConditions';
+import Disclaimer from './pages/Disclaimer';
 import Contact from './pages/Contact';
 import Cart from './pages/Cart';
 import Wishlist from './pages/Wishlist';
@@ -76,6 +77,7 @@ function App() {
                 <Route path="/refund" element={<RefundPolicy />} />
                 <Route path="/shipping" element={<ShippingPolicy />} />
                 <Route path="/service" element={<TermsOfService />} />
+                <Route path="/disclaimer" element={<Disclaimer />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />

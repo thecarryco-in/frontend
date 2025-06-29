@@ -158,11 +158,11 @@ const Footer: React.FC = () => {
               <Link to="/privacy" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
                 Privacy Policy
               </Link>
-              <Link to="/terms" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
+              <Link to="/service" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
                 Terms of Service
               </Link>
-              <Link to="/cookies" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
-                Cookie Policy
+              <Link to="/disclaimer" onClick={scrollToTop} className="text-gray-400 hover:text-white text-sm transition-colors duration-200">
+                Disclaimer
               </Link>
             </div>
           </div>
