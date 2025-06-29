@@ -21,8 +21,12 @@ const Footer: React.FC = () => {
           <div className="space-y-6">
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Smartphone className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg overflow-hidden">
+                  <img 
+                    src="/src/assets/logo.png" 
+                    alt="The CarryCo Logo" 
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-2xl blur opacity-50"></div>
               </div>
