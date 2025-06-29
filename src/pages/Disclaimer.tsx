@@ -53,21 +53,21 @@ const Disclaimer: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-black text-white">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-900/50 to-red-900/50 backdrop-blur-md border-b border-white/10">
+      <div className="bg-gradient-to-r from-green-900/50 to-green-800/50 backdrop-blur-md border-b border-white/10">
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <AlertTriangle className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent mb-4">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-green-400 to-green-500 bg-clip-text text-transparent mb-4">
               Website Disclaimer
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
               Important information about the use of our website and services. Please read this disclaimer 
               carefully before using our electronics e-commerce platform.
             </p>
-            <div className="mt-8 inline-flex items-center space-x-2 bg-gradient-to-r from-orange-500/20 to-red-500/20 backdrop-blur-sm border border-white/10 rounded-full px-6 py-3">
-              <Scale className="w-5 h-5 text-orange-400" />
+            <div className="mt-8 inline-flex items-center space-x-2 bg-gradient-to-r from-green-500/20 to-green-600/20 backdrop-blur-sm border border-white/10 rounded-full px-6 py-3">
+              <Scale className="w-5 h-5 text-green-400" />
               <span className="text-sm font-semibold">Governed by Indian Law</span>
             </div>
           </div>
@@ -100,17 +100,17 @@ const Disclaimer: React.FC = () => {
             return (
               <div key={section.id} className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-3xl p-8 border border-white/10">
                 <div className="flex items-center space-x-4 mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-2xl flex items-center justify-center">
-                    <Icon className="w-8 h-8 text-orange-400" />
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-2xl flex items-center justify-center">
+                    <Icon className="w-8 h-8 text-green-400" />
                   </div>
                   <div>
-                    <span className="text-orange-400 font-semibold text-sm">Section {index + 1}</span>
+                    <span className="text-green-400 font-semibold text-sm">Section {index + 1}</span>
                     <h2 className="text-2xl font-bold text-white">{section.title}</h2>
                   </div>
                 </div>
                 <div className="space-y-4">
                   {section.content.map((paragraph, pIndex) => (
-                    <p key={pIndex} className="text-gray-300 leading-relaxed pl-4 border-l-2 border-orange-500/30">
+                    <p key={pIndex} className="text-gray-300 leading-relaxed pl-4 border-l-2 border-green-500/30">
                       {paragraph}
                     </p>
                   ))}
@@ -120,7 +120,7 @@ const Disclaimer: React.FC = () => {
           })}
 
           {/* Contact Information */}
-          <div className="bg-gradient-to-br from-orange-900/30 to-red-900/30 backdrop-blur-md rounded-3xl p-8 border border-orange-500/20">
+          <div className="bg-gradient-to-br from-green-900/30 to-green-800/30 backdrop-blur-md rounded-3xl p-8 border border-green-500/20">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-white mb-4">Questions About This Disclaimer?</h2>
               <p className="text-gray-300 mb-6">
@@ -128,7 +128,7 @@ const Disclaimer: React.FC = () => {
                 please don't hesitate to contact us.
               </p>
               <Link to="/contact" onClick={scrollToTop}>
-                <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-orange-600 to-red-600 text-white px-8 py-4 rounded-2xl font-semibold hover:shadow-lg transition-all duration-300 cursor-pointer">
+                <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-4 rounded-2xl font-semibold hover:shadow-lg transition-all duration-300 cursor-pointer">
                   <AlertTriangle className="w-5 h-5" />
                   <span>Contact Support</span>
                 </div>
