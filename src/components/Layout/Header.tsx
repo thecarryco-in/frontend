@@ -101,7 +101,7 @@ const Header: React.FC = () => {
             <div className="relative">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-xl md:rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg overflow-hidden">
                 <img 
-                  src="/src/assets/logo.png" 
+                  src="/src/assets/logo.jpg" 
                   alt="The CarryCo Logo" 
                   className="w-full h-full object-contain"
                 />
