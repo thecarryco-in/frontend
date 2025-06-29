@@ -15,6 +15,10 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+// Shipping configuration
+const SHIPPING_THRESHOLD = 399;
+const SHIPPING_CHARGE = 70;
+
 // Create Razorpay order (DO NOT save order in DB here)
 router.post('/create-order', authenticateToken, async (req, res) => {
   try {
@@ -60,11 +64,16 @@ router.post('/create-order', authenticateToken, async (req, res) => {
       calculatedTotal += product.price * item.quantity;
     }
 
-    // Calculate GST (18%)
-    const taxAmount = calculatedTotal * 0.18;
-    const totalWithTax = calculatedTotal + taxAmount;
+    // Calculate shipping charges
+    const isShippingFree = calculatedTotal >= SHIPPING_THRESHOLD;
+    const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
+    const totalWithShipping = calculatedTotal + shippingCost;
 
-    // Create Razorpay order with total including tax
+    // Calculate GST (18%) on total including shipping
+    const taxAmount = totalWithShipping * 0.18;
+    const totalWithTax = totalWithShipping + taxAmount;
+
+    // Create Razorpay order with total including shipping and tax
     const razorpayOrder = await razorpay.orders.create({
       amount: Math.round(totalWithTax * 100), // Amount in paise
       currency: 'INR',
@@ -79,7 +88,9 @@ router.post('/create-order', authenticateToken, async (req, res) => {
       key: process.env.RAZORPAY_KEY_ID,
       items,
       shippingAddress,
-      totalWithTax
+      totalWithTax,
+      shippingCost,
+      isShippingFree
     });
   } catch (error) {
     console.error('Create order error:', error);
@@ -138,6 +149,7 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
     const products = await Product.find({ _id: { $in: productIds } });
 
     const orderItems = [];
+    let calculatedTotal = 0;
     for (const item of items) {
       const product = products.find(p => p._id.toString() === item.productId);
       if (!product) {
@@ -158,6 +170,18 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
         quantity: item.quantity,
         price: product.price
       });
+      calculatedTotal += product.price * item.quantity;
+    }
+
+    // Calculate shipping charges for verification
+    const isShippingFree = calculatedTotal >= SHIPPING_THRESHOLD;
+    const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
+    const totalWithShipping = calculatedTotal + shippingCost;
+    const expectedTotalWithTax = totalWithShipping * 1.18;
+
+    // Verify the total amount matches what was paid
+    if (Math.abs(totalWithTax - expectedTotalWithTax) > 1) { // Allow 1 rupee difference for rounding
+      return res.status(400).json({ message: 'Payment amount mismatch' });
     }
 
     // Generate order number
@@ -181,7 +205,7 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
 
     // Update user total spent
     await User.findByIdAndUpdate(
-      order.user._id,
+      req.userId,
       { $inc: { totalSpent: order.totalAmount } }
     );
 

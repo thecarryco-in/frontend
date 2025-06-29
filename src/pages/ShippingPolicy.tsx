@@ -77,12 +77,12 @@ const deliveryZones = [
 
   const shippingCharges = [
     {
-      orderValue: 'Below 399',
+      orderValue: 'Below ₹399',
       charge: '₹70',
       description: 'Standard shipping charges apply'
     },
     {
-      orderValue: '399 & Above',
+      orderValue: '₹399 & Above',
       charge: 'FREE',
       description: 'Complimentary shipping on all orders'
     }
@@ -205,22 +205,33 @@ const deliveryZones = [
           {/* Shipping Charges */}
           <div className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-3xl p-8 border border-white/10">
             <h2 className="text-3xl font-bold text-white mb-8 text-center">Shipping Charges</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {shippingCharges.map((charge, index) => (
-                <div key={index} className={`rounded-2xl p-6 border text-center ${index === 1 ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-500/30' : 'bg-white/5 border-white/10'}`}>
-                  <h3 className="text-lg font-bold text-white mb-2">{charge.orderValue}</h3>
-                  <div className={`text-3xl font-bold mb-3 ${index === 1 ? 'text-green-400' : 'text-blue-400'}`}>
+                <div key={index} className={`rounded-2xl p-8 border text-center ${index === 1 ? 'bg-gradient-to-br from-green-500/20 to-emerald-500/20 border-green-500/30' : 'bg-white/5 border-white/10'}`}>
+                  <h3 className="text-xl font-bold text-white mb-4">{charge.orderValue}</h3>
+                  <div className={`text-4xl font-bold mb-4 ${index === 1 ? 'text-green-400' : 'text-blue-400'}`}>
                     {charge.charge}
                   </div>
-                  <p className="text-gray-300 text-sm">{charge.description}</p>
+                  <p className="text-gray-300 text-sm leading-relaxed">{charge.description}</p>
                   {index === 1 && (
-                    <div className="mt-3 inline-flex items-center space-x-1 bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold">
-                      <CheckCircle className="w-3 h-3" />
+                    <div className="mt-4 inline-flex items-center space-x-1 bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-sm font-bold">
+                      <CheckCircle className="w-4 h-4" />
                       <span>BEST VALUE</span>
                     </div>
                   )}
                 </div>
               ))}
+            </div>
+            
+            {/* Shipping Threshold Notice */}
+            <div className="mt-8 p-6 bg-gradient-to-r from-orange-500/10 to-yellow-500/10 rounded-2xl border border-orange-500/20 text-center">
+              <div className="flex items-center justify-center space-x-3 mb-3">
+                <Truck className="w-6 h-6 text-orange-400" />
+                <h3 className="text-lg font-bold text-white">Free Shipping Threshold</h3>
+              </div>
+              <p className="text-gray-300 leading-relaxed">
+                Orders below ₹399 will be charged ₹70 for shipping. Add items worth ₹399 or more to enjoy free shipping across India!
+              </p>
             </div>
           </div>
 
@@ -254,7 +265,7 @@ const deliveryZones = [
                 <div className="pl-4 border-l-2 border-blue-500/30">
                   <h3 className="text-lg font-semibold text-white mb-2">Tracking Information</h3>
                     <p className="text-gray-300 leading-relaxed">
-                      Stay updated with real-time order progress on your dashboard. We’ll notify you by email about delivery.
+                      Stay updated with real-time order progress on your dashboard. We'll notify you by email about delivery.
                     </p>
                 </div>
               </div>
