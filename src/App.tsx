@@ -84,19 +84,12 @@ function App() {
                 <Route path="/verify-otp" element={<VerifyOTP />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/cart" element={<Cart />} />
                 <Route 
                   path="/wishlist" 
                   element={
                     <ProtectedRoute>
                       <Wishlist />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/cart" 
-                  element={
-                    <ProtectedRoute>
-                      <Cart />
                     </ProtectedRoute>
                   } 
                 />

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Filter, Grid, List, SlidersHorizontal, Search, Star, Loader, LogIn, UserPlus, ChevronDown } from 'lucide-react';
+import { Filter, Grid, List, SlidersHorizontal, Search, Star, Loader, ChevronDown } from 'lucide-react';
 import ProductCard from '../components/Product/ProductCard';
 import { useProducts } from '../hooks/useProducts';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
@@ -13,7 +13,6 @@ const Shop: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [filters, setFilters] = useState({
     category: searchParams.get('category') || '',
     subcategory: searchParams.get('subcategory') || '',
@@ -58,15 +57,6 @@ const Shop: React.FC = () => {
     return uniqueBrands.sort();
   }, [products]);
 
-  const categories = [
-    { value: '', label: 'All Categories' },
-    { value: 'cases', label: 'Cases' },
-    { value: 'tempered-glass', label: 'Tempered Glass' },
-    { value: 'chargers', label: 'Chargers' },
-    { value: 'accessories', label: 'Accessories' },
-    { value: 'work-essentials', label: 'Work Essentials' }
-  ];
-
   const workEssentialsSubcategories = [
     { value: '', label: 'All Work Essentials' },
     { value: 'laptop-accessories', label: 'Laptop Accessories' },
@@ -101,14 +91,8 @@ const Shop: React.FC = () => {
     }
   };
 
-  const handleCategoryChange = (category: string, subcategory?: string) => {
+  const handleSubcategoryChange = (subcategory: string) => {
     const newSearchParams = new URLSearchParams(searchParams);
-    
-    if (category) {
-      newSearchParams.set('category', category);
-    } else {
-      newSearchParams.delete('category');
-    }
     
     if (subcategory) {
       newSearchParams.set('subcategory', subcategory);
@@ -116,11 +100,7 @@ const Shop: React.FC = () => {
       newSearchParams.delete('subcategory');
     }
     
-    // Clear filter when changing category
-    newSearchParams.delete('filter');
-    
     setSearchParams(newSearchParams);
-    setShowCategoryDropdown(false);
   };
 
   const getPageTitle = () => {
@@ -133,10 +113,10 @@ const Shop: React.FC = () => {
       }
       return 'Work Essentials';
     }
-    if (filters.category) {
-      const category = categories.find(c => c.value === filters.category);
-      return category ? category.label : 'Shop';
-    }
+    if (filters.category === 'cases') return 'Premium Cases';
+    if (filters.category === 'tempered-glass') return 'Tempered Glass';
+    if (filters.category === 'chargers') return 'Chargers & Power';
+    if (filters.category === 'accessories') return 'Mobile Accessories';
     return 'Premium Collection';
   };
 
@@ -144,7 +124,10 @@ const Shop: React.FC = () => {
     if (filters.filter === 'new') return 'Discover our latest arrivals and cutting-edge mobile accessories';
     if (filters.filter === 'gifts') return 'Find the perfect gift for tech enthusiasts and mobile lovers';
     if (filters.category === 'work-essentials') return 'Professional accessories to enhance your productivity and workspace';
-    if (filters.category) return `Explore our premium ${filters.category.replace('-', ' ')} collection`;
+    if (filters.category === 'cases') return 'Premium protection for your mobile device with style and durability';
+    if (filters.category === 'tempered-glass') return 'Crystal clear protection with maximum screen clarity';
+    if (filters.category === 'chargers') return 'Fast and reliable charging solutions for all your devices';
+    if (filters.category === 'accessories') return 'Essential accessories to enhance your mobile experience';
     return 'Discover our curated selection of premium mobile accessories';
   };
 
@@ -186,102 +169,42 @@ const Shop: React.FC = () => {
           </p>
         </div>
 
-        {/* Login Prompt - Only show if not authenticated */}
-        {!isAuthenticated && (
+        {/* Work Essentials Subcategory Filter */}
+        {filters.category === 'work-essentials' && (
           <div className="mb-8 md:mb-12">
-            <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 backdrop-blur-md rounded-2xl p-6 md:p-8 border border-purple-400/30 text-center max-w-4xl mx-auto">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full flex items-center justify-center">
-                  <LogIn className="w-8 h-8 text-purple-400" />
-                </div>
-              </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
-                Login to Add Items to Cart & Wishlist
-              </h2>
-              <p className="text-gray-300 mb-6 text-lg">
-                Create an account or sign in to save your favorite products and add them to your cart for a seamless shopping experience.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  to="/login"
-                  className="group inline-flex items-center space-x-2 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 relative overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-pink-700 to-cyan-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                  <LogIn className="w-5 h-5 relative z-10" />
-                  <span className="relative z-10">Login</span>
-                </Link>
-                <Link
-                  to="/register"
-                  className="group border-2 border-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-2xl font-semibold text-lg hover:border-purple-400/50 hover:bg-white/10 transition-all duration-300 flex items-center justify-center space-x-2"
-                >
-                  <UserPlus className="w-5 h-5" />
-                  <span>Sign Up</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Category Dropdown and Controls */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 md:mb-8 space-y-4 lg:space-y-0 gap-4 md:gap-6">
-          {/* Category Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-              className="flex items-center space-x-2 bg-white/10 backdrop-blur-md text-white px-6 py-3 rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-300"
-            >
-              <span>{categories.find(c => c.value === filters.category)?.label || 'All Categories'}</span>
-              <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showCategoryDropdown ? 'rotate-180' : ''}`} />
-            </button>
-
-            {showCategoryDropdown && (
-              <div className="absolute top-full left-0 mt-2 w-64 bg-slate-800/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl py-2 z-50">
-                {categories.map((category) => (
-                  <button
-                    key={category.value}
-                    onClick={() => handleCategoryChange(category.value)}
-                    className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
-                  >
-                    {category.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Work Essentials Subcategory Filter */}
-          {filters.category === 'work-essentials' && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap justify-center gap-3">
               {workEssentialsSubcategories.map((subcategory) => (
                 <button
                   key={subcategory.value}
-                  onClick={() => handleCategoryChange('work-essentials', subcategory.value)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
+                  onClick={() => handleSubcategoryChange(subcategory.value)}
+                  className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
                     filters.subcategory === subcategory.value
-                      ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white'
-                      : 'bg-white/10 text-gray-300 hover:text-white hover:bg-white/20'
+                      ? 'bg-gradient-to-r from-purple-500 to-cyan-500 text-white shadow-lg'
+                      : 'bg-white/10 text-gray-300 hover:text-white hover:bg-white/20 border border-white/20'
                   }`}
                 >
                   {subcategory.label}
                 </button>
               ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Search and Controls */}
+        {/* Search and Controls */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 md:mb-8 space-y-4 lg:space-y-0 gap-4 md:gap-6">
+          {/* Search Bar */}
+          <div className="relative flex-1 max-w-md">
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white/10 backdrop-blur-md text-white rounded-xl md:rounded-2xl px-4 py-3 md:px-6 md:py-4 pl-10 md:pl-12 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
+            />
+            <Search className="absolute left-3 md:left-4 top-3 md:top-4 w-5 h-5 md:w-6 md:h-6 text-gray-400" />
+          </div>
+          
           <div className="flex items-center space-x-3 md:space-x-4 w-full lg:w-auto">
-            {/* Search Bar */}
-            <div className="relative flex-1 max-w-md">
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/10 backdrop-blur-md text-white rounded-xl md:rounded-2xl px-4 py-3 md:px-6 md:py-4 pl-10 md:pl-12 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
-              />
-              <Search className="absolute left-3 md:left-4 top-3 md:top-4 w-5 h-5 md:w-6 md:h-6 text-gray-400" />
-            </div>
-            
             {/* Results Count */}
             <span className="text-gray-400 text-sm whitespace-nowrap">
               {products.length} products
@@ -325,7 +248,7 @@ const Shop: React.FC = () => {
           </div>
         </div>
 
-        {/* Filters Section */}
+        {/* Advanced Filters Section */}
         <div className="mb-6 md:mb-8">
           <button
             onClick={() => setShowFilters(!showFilters)}

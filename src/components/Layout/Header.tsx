@@ -324,20 +324,36 @@ const Header: React.FC = () => {
                 </div>
               </>
             ) : !isLoading && !isAuthenticated ? (
-              <div className="flex items-center space-x-2">
-                <Link
-                  to="/login"
-                  className="px-3 py-1.5 md:px-6 md:py-2 text-gray-300 hover:text-white transition-colors duration-200 font-medium text-sm md:text-base"
+              <>
+                {/* Cart for non-authenticated users */}
+                <Link 
+                  to="/cart" 
+                  className="relative p-2 md:p-3 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:bg-white/10 rounded-lg md:rounded-xl backdrop-blur-sm group flex items-center space-x-1 md:space-x-2"
                 >
-                  Login
+                  <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
+                  <span className="hidden sm:block text-sm font-medium">Cart</span>
+                  {itemCount > 0 && (
+                    <span className="w-5 h-5 md:w-6 md:h-6 bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
+                      {itemCount}
+                    </span>
+                  )}
                 </Link>
-                <Link
-                  to="/register"
-                  className="px-3 py-1.5 md:px-6 md:py-2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white rounded-lg md:rounded-xl font-medium hover:shadow-lg transition-all duration-300 text-sm md:text-base"
-                >
-                  Sign Up
-                </Link>
-              </div>
+
+                <div className="flex items-center space-x-2">
+                  <Link
+                    to="/login"
+                    className="px-3 py-1.5 md:px-6 md:py-2 text-gray-300 hover:text-white transition-colors duration-200 font-medium text-sm md:text-base"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="px-3 py-1.5 md:px-6 md:py-2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white rounded-lg md:rounded-xl font-medium hover:shadow-lg transition-all duration-300 text-sm md:text-base"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              </>
             ) : (
               <div className="w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
             )}
