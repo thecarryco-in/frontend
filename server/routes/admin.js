@@ -109,7 +109,7 @@ router.get('/products', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
-// Get product reviews (admin) - NEW ROUTE
+// Get product reviews (admin) - READ-ONLY ACCESS
 router.get('/reviews', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { 
@@ -133,6 +133,17 @@ router.get('/reviews', authenticateToken, requireAdmin, async (req, res) => {
       },
       {
         $unwind: '$productDetails'
+      },
+      {
+        $lookup: {
+          from: 'orders',
+          localField: 'order',
+          foreignField: '_id',
+          as: 'orderDetails'
+        }
+      },
+      {
+        $unwind: '$orderDetails'
       }
     ];
 
@@ -188,63 +199,9 @@ router.get('/reviews', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
-// Update review status (admin) - NEW ROUTE
-router.put('/reviews/:id/status', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const { status } = req.body;
-    
-    if (!['pending', 'approved', 'rejected'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
-    }
-
-    const review = await Review.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    ).populate('product');
-
-    if (!review) {
-      return res.status(404).json({ message: 'Review not found' });
-    }
-
-    // Update product rating if review status changed
-    if (review.product) {
-      await review.product.updateRatingFromReviews();
-    }
-
-    res.status(200).json({ 
-      message: 'Review status updated successfully', 
-      review 
-    });
-  } catch (error) {
-    console.error('Update review status error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Delete review (admin) - NEW ROUTE
-router.delete('/reviews/:id', authenticateToken, requireAdmin, async (req, res) => {
-  try {
-    const review = await Review.findById(req.params.id).populate('product');
-
-    if (!review) {
-      return res.status(404).json({ message: 'Review not found' });
-    }
-
-    const product = review.product;
-    await Review.findByIdAndDelete(req.params.id);
-
-    // Update product rating after deletion
-    if (product) {
-      await product.updateRatingFromReviews();
-    }
-
-    res.status(200).json({ message: 'Review deleted successfully' });
-  } catch (error) {
-    console.error('Delete review error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+// REMOVED: Admin cannot modify review status or delete reviews
+// Reviews are automatically approved when users rate delivered orders
+// Admins can only view reviews for monitoring purposes
 
 // Create product (admin)
 router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
@@ -399,7 +356,9 @@ router.get('/dashboard', authenticateToken, requireAdmin, async (req, res) => {
 
     // Review stats
     const totalReviews = await Review.countDocuments();
-    const pendingReviews = await Review.countDocuments({ status: 'pending' });
+    const recentReviews = await Review.countDocuments({
+      createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } // Last 7 days
+    });
 
     res.status(200).json({
       stats: {
@@ -408,7 +367,7 @@ router.get('/dashboard', authenticateToken, requireAdmin, async (req, res) => {
         outOfStockProducts,
         featuredProducts,
         totalReviews,
-        pendingReviews
+        recentReviews
       },
       productsByCategory,
       recentProducts

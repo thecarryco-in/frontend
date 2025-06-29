@@ -255,6 +255,15 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
             {/* Rate Products Button - Only show for delivered orders */}
             {order.status === 'delivered' && (
               <div className="border-t border-white/10 pt-4">
+                <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 backdrop-blur-md rounded-xl p-4 border border-green-500/20 mb-4">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <CheckCircle className="w-5 h-5 text-green-400" />
+                    <h4 className="text-white font-semibold">Order Delivered - Rate Your Products</h4>
+                  </div>
+                  <p className="text-gray-300 text-sm">
+                    Your order has been delivered! Share your experience by rating the products you received.
+                  </p>
+                </div>
                 <div className="flex flex-wrap gap-3">
                   {order.items.map((item, index) => {
                     // Use product from snapshot if product reference is null

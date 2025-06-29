@@ -111,7 +111,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Add product review (authenticated users only)
+// Add product review (authenticated users only) - STRICT DELIVERY CHECK
 router.post('/:id/review', reviewLimiter, authenticateToken, async (req, res) => {
   try {
     const { rating, comment } = req.body;
@@ -123,15 +123,17 @@ router.post('/:id/review', reviewLimiter, authenticateToken, async (req, res) =>
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
 
-    // Check if user has purchased this product and it's delivered
+    // CRITICAL: Check if user has purchased this product AND it's delivered
     const userOrder = await Order.findOne({
       user: userId,
       'items.product': productId,
-      status: 'delivered'
+      status: 'delivered' // MUST be delivered by admin
     });
 
     if (!userOrder) {
-      return res.status(403).json({ message: 'You can only review products you have purchased and received' });
+      return res.status(403).json({ 
+        message: 'You can only review products from orders that have been delivered' 
+      });
     }
 
     const product = await Product.findById(productId);
@@ -149,7 +151,7 @@ router.post('/:id/review', reviewLimiter, authenticateToken, async (req, res) =>
     const User = (await import('../models/User.js')).default;
     const user = await User.findById(userId);
 
-    // Create new review
+    // Create new review - automatically approved for delivered orders
     const newReview = new Review({
       user: userId,
       product: productId,
@@ -162,7 +164,8 @@ router.post('/:id/review', reviewLimiter, authenticateToken, async (req, res) =>
         brand: product.brand,
         category: product.category,
         image: product.image
-      }
+      },
+      status: 'approved' // Auto-approve since order is delivered
     });
 
     await newReview.save();

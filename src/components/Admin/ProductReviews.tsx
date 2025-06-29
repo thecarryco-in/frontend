@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, MessageSquare, Search, Eye, User, Calendar, CheckCircle, XCircle, Clock, Trash2 } from 'lucide-react';
+import { Star, MessageSquare, Search, Eye, User, Calendar, CheckCircle, Package, Truck } from 'lucide-react';
 import axios from 'axios';
 
 interface Review {
@@ -16,6 +16,12 @@ interface Review {
     brand: string;
     category: string;
     image: string;
+  };
+  orderDetails: {
+    _id: string;
+    orderNumber: string;
+    status: string;
+    createdAt: string;
   };
 }
 
@@ -60,36 +66,6 @@ const ProductReviews: React.FC = () => {
     return () => clearTimeout(debounceTimer);
   }, [searchTerm, ratingFilter, categoryFilter, statusFilter]);
 
-  const updateReviewStatus = async (reviewId: string, status: string) => {
-    try {
-      await axios.put(`/admin/reviews/${reviewId}/status`, { status });
-      setReviews(reviews.map(review => 
-        review._id === reviewId ? { ...review, status: status as any } : review
-      ));
-      if (selectedReview?._id === reviewId) {
-        setSelectedReview({ ...selectedReview, status: status as any });
-      }
-    } catch (error) {
-      console.error('Error updating review status:', error);
-      alert('Failed to update review status');
-    }
-  };
-
-  const deleteReview = async (reviewId: string) => {
-    if (!confirm('Are you sure you want to delete this review?')) return;
-
-    try {
-      await axios.delete(`/admin/reviews/${reviewId}`);
-      setReviews(reviews.filter(review => review._id !== reviewId));
-      if (selectedReview?._id === reviewId) {
-        setSelectedReview(null);
-      }
-    } catch (error) {
-      console.error('Error deleting review:', error);
-      alert('Failed to delete review');
-    }
-  };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved': return 'text-green-400 bg-green-400/20';
@@ -102,9 +78,21 @@ const ProductReviews: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved': return <CheckCircle className="w-4 h-4" />;
-      case 'pending': return <Clock className="w-4 h-4" />;
-      case 'rejected': return <XCircle className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
+      case 'pending': return <Package className="w-4 h-4" />;
+      case 'rejected': return <Package className="w-4 h-4" />;
+      default: return <Package className="w-4 h-4" />;
+    }
+  };
+
+  const getOrderStatusColor = (status: string) => {
+    switch (status) {
+      case 'delivered': return 'text-green-400 bg-green-400/20';
+      case 'dispatched': return 'text-blue-400 bg-blue-400/20';
+      case 'packed': return 'text-purple-400 bg-purple-400/20';
+      case 'confirmed': return 'text-cyan-400 bg-cyan-400/20';
+      case 'pending': return 'text-yellow-400 bg-yellow-400/20';
+      case 'cancelled': return 'text-red-400 bg-red-400/20';
+      default: return 'text-gray-400 bg-gray-400/20';
     }
   };
 
@@ -139,6 +127,18 @@ const ProductReviews: React.FC = () => {
         </div>
       </div>
 
+      {/* Admin Notice */}
+      <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-6 border border-blue-500/20">
+        <div className="flex items-center space-x-3 mb-3">
+          <Eye className="w-6 h-6 text-blue-400" />
+          <h3 className="text-lg font-bold text-white">Review Monitoring</h3>
+        </div>
+        <p className="text-gray-300 leading-relaxed">
+          Reviews are automatically approved when customers rate products from delivered orders. 
+          This section is for monitoring customer feedback and ensuring quality standards.
+        </p>
+      </div>
+
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="relative flex-1">
@@ -151,16 +151,6 @@ const ProductReviews: React.FC = () => {
           />
           <Search className="absolute left-3 md:left-4 top-3.5 w-4 h-4 md:w-5 md:h-5 text-gray-400" />
         </div>
-
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="bg-white/10 backdrop-blur-md text-white px-4 py-3 md:px-6 md:py-3 rounded-xl md:rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500"
-        >
-          <option value="approved" className="bg-gray-800">Approved</option>
-          <option value="pending" className="bg-gray-800">Pending</option>
-          <option value="rejected" className="bg-gray-800">Rejected</option>
-        </select>
 
         <select
           value={categoryFilter}
@@ -239,6 +229,17 @@ const ProductReviews: React.FC = () => {
                       <span className="text-gray-400 text-sm">{formatDate(review.createdAt)}</span>
                     </div>
                   </div>
+
+                  {/* Order Information */}
+                  <div className="flex items-center space-x-4 mb-3">
+                    <div className="flex items-center space-x-2">
+                      <Truck className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-400 text-sm">Order: {review.orderDetails.orderNumber}</span>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-bold capitalize ${getOrderStatusColor(review.orderDetails.status)}`}>
+                      {review.orderDetails.status}
+                    </span>
+                  </div>
                   
                   {review.comment && (
                     <p className="text-gray-300 line-clamp-2 text-sm">{review.comment}</p>
@@ -256,15 +257,6 @@ const ProductReviews: React.FC = () => {
                 >
                   <Eye className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteReview(review._id);
-                  }}
-                  className="p-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
               </div>
             </div>
           </div>
@@ -281,12 +273,12 @@ const ProductReviews: React.FC = () => {
         </div>
       )}
 
-      {/* Review Detail Modal */}
+      {/* Review Detail Modal - READ-ONLY */}
       {selectedReview && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-slate-800 rounded-2xl md:rounded-3xl p-6 md:p-8 max-w-2xl w-full my-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl md:text-2xl font-bold text-white">Review Details</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-white">Review Details (Read-Only)</h2>
               <button
                 onClick={() => setSelectedReview(null)}
                 className="text-gray-400 hover:text-white transition-colors text-xl md:text-2xl"
@@ -309,6 +301,27 @@ const ProductReviews: React.FC = () => {
                     <h4 className="text-xl font-bold text-white mb-2">{selectedReview.productDetails.name}</h4>
                     <p className="text-purple-400 font-medium mb-1">{selectedReview.productDetails.brand}</p>
                     <p className="text-gray-400 text-sm capitalize">{selectedReview.productDetails.category.replace('-', ' ')}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Info */}
+              <div className="bg-white/5 rounded-lg md:rounded-xl p-4 md:p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Order Information</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Order Number:</span>
+                    <span className="text-white font-medium">{selectedReview.orderDetails.orderNumber}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Order Status:</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${getOrderStatusColor(selectedReview.orderDetails.status)}`}>
+                      {selectedReview.orderDetails.status}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Order Date:</span>
+                    <span className="text-white">{formatDate(selectedReview.orderDetails.createdAt)}</span>
                   </div>
                 </div>
               </div>
@@ -340,7 +353,7 @@ const ProductReviews: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Date:</span>
+                    <span className="text-gray-400">Review Date:</span>
                     <span className="text-white">{formatDate(selectedReview.createdAt)}</span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -356,34 +369,21 @@ const ProductReviews: React.FC = () => {
               {/* Comment */}
               {selectedReview.comment && (
                 <div className="bg-white/5 rounded-lg md:rounded-xl p-4 md:p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">Comment</h3>
+                  <h3 className="text-lg font-semibold text-white mb-4">Customer Comment</h3>
                   <p className="text-gray-300 leading-relaxed">{selectedReview.comment}</p>
                 </div>
               )}
 
-              {/* Actions */}
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => updateReviewStatus(selectedReview._id, 'approved')}
-                  disabled={selectedReview.status === 'approved'}
-                  className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Approve
-                </button>
-                <button
-                  onClick={() => updateReviewStatus(selectedReview._id, 'rejected')}
-                  disabled={selectedReview.status === 'rejected'}
-                  className="flex-1 bg-gradient-to-r from-red-600 to-pink-600 text-white py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Reject
-                </button>
-                <button
-                  onClick={() => updateReviewStatus(selectedReview._id, 'pending')}
-                  disabled={selectedReview.status === 'pending'}
-                  className="flex-1 bg-gradient-to-r from-yellow-600 to-orange-600 text-white py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Pending
-                </button>
+              {/* Admin Notice */}
+              <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 backdrop-blur-md rounded-xl p-4 border border-blue-500/20">
+                <div className="flex items-center space-x-3 mb-2">
+                  <Eye className="w-5 h-5 text-blue-400" />
+                  <h4 className="text-white font-semibold">Admin Note</h4>
+                </div>
+                <p className="text-gray-300 text-sm">
+                  This review was automatically approved when the customer rated their delivered order. 
+                  Reviews cannot be modified to maintain customer trust and authenticity.
+                </p>
               </div>
             </div>
           </div>
