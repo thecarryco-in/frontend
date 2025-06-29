@@ -76,7 +76,6 @@ const Header: React.FC = () => {
         { name: 'Productivity Tools', href: '/shop?category=work-essentials&subcategory=productivity-tools' }
       ]
     },
-    { name: 'About', href: '/about' },
   ];
 
   const isActive = (href: string) => {
@@ -245,7 +244,6 @@ const Header: React.FC = () => {
                   className="relative p-2 md:p-3 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:bg-white/10 rounded-lg md:rounded-xl backdrop-blur-sm group flex items-center space-x-1 md:space-x-2"
                 >
                   <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
-                  <span className="hidden sm:block text-sm font-medium">Cart</span>
                   {itemCount > 0 && (
                     <span className="w-5 h-5 md:w-6 md:h-6 bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
                       {itemCount}
@@ -331,7 +329,6 @@ const Header: React.FC = () => {
                   className="relative p-2 md:p-3 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:bg-white/10 rounded-lg md:rounded-xl backdrop-blur-sm group flex items-center space-x-1 md:space-x-2"
                 >
                   <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
-                  <span className="hidden sm:block text-sm font-medium">Cart</span>
                   {itemCount > 0 && (
                     <span className="w-5 h-5 md:w-6 md:h-6 bg-gradient-to-r from-purple-500 to-cyan-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
                       {itemCount}
