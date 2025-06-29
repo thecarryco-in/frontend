@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, Smartphone, Heart } from 'lucide-react';
+import logo from '../../assets/logo.jpg';
 
 const scrollToTop = () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -23,7 +24,7 @@ const Footer: React.FC = () => {
               <div className="relative">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg overflow-hidden">
                   <img 
-                    src="logo.jpg" 
+                    src={logo}
                     alt="The CarryCo Logo" 
                     className="w-full h-full object-contain"
                   />
