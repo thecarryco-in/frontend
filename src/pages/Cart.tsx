@@ -326,7 +326,7 @@ const Cart: React.FC = () => {
                     </div>
                   </div>
                 );
-              })}
+              }).filter(Boolean)}
             </div>
           </div>
 
