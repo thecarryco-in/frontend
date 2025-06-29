@@ -23,7 +23,7 @@ const Footer: React.FC = () => {
               <div className="relative">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg overflow-hidden">
                   <img 
-                    src="/src/assets/logo.png" 
+                    src="/src/assets/logo.jpg" 
                     alt="The CarryCo Logo" 
                     className="w-full h-full object-contain"
                   />
@@ -45,13 +45,21 @@ const Footer: React.FC = () => {
               <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-purple-500 transition-all duration-300">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-blue-500 transition-all duration-300">
-                <Twitter className="w-5 h-5" />
-              </a>
-              <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-pink-500 transition-all duration-300">
+              <a
+                href="https://www.instagram.com/thecarryco.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-pink-500 transition-all duration-300"
+              >
                 <Instagram className="w-5 h-5" />
               </a>
-              <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500 transition-all duration-300">
+              
+              <a
+                href="https://www.youtube.com/@TheCarryCo.18"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500 transition-all duration-300"
+              >
                 <Youtube className="w-5 h-5" />
               </a>
             </div>
