@@ -115,9 +115,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
         </div>
 
-        {/* Action Buttons - Only show if authenticated */}
-        {isAuthenticated && (
-          <div className="absolute top-2 right-2">
+        {/* Action Buttons - Show for everyone, but wishlist only for authenticated users */}
+        <div className="absolute top-2 right-2">
+          {isAuthenticated && (
             <button
               onClick={handleToggleWishlist}
               className={`w-8 h-8 backdrop-blur-md rounded-full flex items-center justify-center transition-all duration-300 border ${
@@ -128,8 +128,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             >
               <Heart className={`w-4 h-4 ${isInWishlist(productId) ? 'fill-current' : ''}`} />
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Fast Charging Badge */}
         {product.category === 'chargers' && (
@@ -216,7 +216,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </div>
         )}
 
-        {/* Action Button - Always show, but different behavior */}
+        {/* Action Button - Always show for everyone */}
         <button
           onClick={handleAddToCart}
           className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white py-2.5 rounded-xl font-semibold text-sm transition-all duration-300 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
