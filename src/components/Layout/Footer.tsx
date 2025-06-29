@@ -64,10 +64,8 @@ const Footer: React.FC = () => {
                 { label: 'Shop',           path: '/shop' },
                 { label: 'About Us',       path: '/about' },
                 { label: 'Contact',        path: '/contact' },
-                { label: 'Privacy Policy',  path: '/privacy' },
                 { label: 'Refund Policy',   path: '/refund' },
                 { label: 'Shipping Info',   path: '/shipping' },
-                { label: 'Terms of Service',path: '/service' },
               ].map((item) => (
                 <li key={item.label}>
                   <Link
@@ -139,7 +137,7 @@ const Footer: React.FC = () => {
                   <MapPin className="w-5 h-5 text-pink-400 group-hover:text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-medium">Anand Vihar</p>
+                  <p className="text-white font-medium">HIG-68 Brij Vihar</p>
                   <p className="text-gray-400 text-xs">Ghaziabad, Uttar Pradesh</p>
                 </div>
               </div>
