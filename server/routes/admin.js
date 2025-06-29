@@ -1,5 +1,6 @@
 import express from 'express';
 import Product from '../models/Product.js';
+import Review from '../models/Review.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
 import { upload, deleteImage, getPublicIdFromUrl } from '../config/cloudinary.js';
@@ -108,32 +109,139 @@ router.get('/products', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
-// Get product reviews (admin)
-router.get('/product-reviews', authenticateToken, requireAdmin, async (req, res) => {
+// Get product reviews (admin) - NEW ROUTE
+router.get('/reviews', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { 
+      page = 1, 
+      limit = 20, 
       search, 
       category, 
-      rating 
+      rating,
+      status = 'approved'
     } = req.query;
 
-    const filter = { 'reviews.0': { $exists: true } }; // Only products with reviews
+    // Build aggregation pipeline
+    const pipeline = [
+      {
+        $lookup: {
+          from: 'products',
+          localField: 'product',
+          foreignField: '_id',
+          as: 'productDetails'
+        }
+      },
+      {
+        $unwind: '$productDetails'
+      }
+    ];
+
+    // Add match conditions
+    const matchConditions = { status };
     
     if (search) {
-      filter.name = { $regex: search, $options: 'i' };
+      matchConditions.$or = [
+        { 'productDetails.name': { $regex: search, $options: 'i' } },
+        { 'productDetails.brand': { $regex: search, $options: 'i' } },
+        { userName: { $regex: search, $options: 'i' } }
+      ];
     }
-    if (category) filter.category = category;
-    if (rating) filter.rating = { $gte: parseFloat(rating) };
+    
+    if (category) {
+      matchConditions['productDetails.category'] = category;
+    }
+    
+    if (rating) {
+      matchConditions.rating = { $gte: parseFloat(rating) };
+    }
 
-    const products = await Product.find(filter)
-      .select('name brand category image rating reviewCount reviews')
-      .sort({ rating: -1, reviewCount: -1 });
+    pipeline.push({ $match: matchConditions });
+
+    // Add sorting
+    pipeline.push({ $sort: { createdAt: -1 } });
+
+    // Execute aggregation for total count
+    const totalPipeline = [...pipeline, { $count: 'total' }];
+    const totalResult = await Review.aggregate(totalPipeline);
+    const total = totalResult[0]?.total || 0;
+
+    // Add pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: parseInt(limit) });
+
+    // Execute main query
+    const reviews = await Review.aggregate(pipeline);
 
     res.status(200).json({
-      products
+      reviews,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
     });
   } catch (error) {
-    console.error('Admin get product reviews error:', error);
+    console.error('Admin get reviews error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update review status (admin) - NEW ROUTE
+router.put('/reviews/:id/status', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { status } = req.body;
+    
+    if (!['pending', 'approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const review = await Review.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    ).populate('product');
+
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+
+    // Update product rating if review status changed
+    if (review.product) {
+      await review.product.updateRatingFromReviews();
+    }
+
+    res.status(200).json({ 
+      message: 'Review status updated successfully', 
+      review 
+    });
+  } catch (error) {
+    console.error('Update review status error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete review (admin) - NEW ROUTE
+router.delete('/reviews/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id).populate('product');
+
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+
+    const product = review.product;
+    await Review.findByIdAndDelete(req.params.id);
+
+    // Update product rating after deletion
+    if (product) {
+      await product.updateRatingFromReviews();
+    }
+
+    res.status(200).json({ message: 'Review deleted successfully' });
+  } catch (error) {
+    console.error('Delete review error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -258,6 +366,9 @@ router.delete('/products/:id', authenticateToken, requireAdmin, async (req, res)
       }
     }
 
+    // Delete all reviews for this product
+    await Review.deleteMany({ product: req.params.id });
+
     await Product.findByIdAndDelete(req.params.id);
 
     res.status(200).json({ message: 'Product deleted successfully' });
@@ -286,12 +397,18 @@ router.get('/dashboard', authenticateToken, requireAdmin, async (req, res) => {
       .limit(5)
       .select('name category price inStock createdAt');
 
+    // Review stats
+    const totalReviews = await Review.countDocuments();
+    const pendingReviews = await Review.countDocuments({ status: 'pending' });
+
     res.status(200).json({
       stats: {
         totalProducts,
         inStockProducts,
         outOfStockProducts,
-        featuredProducts
+        featuredProducts,
+        totalReviews,
+        pendingReviews
       },
       productsByCategory,
       recentProducts

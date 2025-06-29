@@ -1,5 +1,6 @@
 import express from 'express';
 import Product from '../models/Product.js';
+import Review from '../models/Review.js';
 import Order from '../models/Order.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { reviewLimiter } from '../middleware/rateLimiters.js';
@@ -97,7 +98,7 @@ router.get('/:id', async (req, res) => {
     const product = await Product.findOne({ 
       _id: req.params.id, 
       inStock: true 
-    }).populate('reviews.user', 'name avatar');
+    });
     
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
@@ -139,7 +140,7 @@ router.post('/:id/review', reviewLimiter, authenticateToken, async (req, res) =>
     }
 
     // Check if user has already reviewed this product
-    const existingReview = product.reviews.find(review => review.user.toString() === userId);
+    const existingReview = await Review.findOne({ user: userId, product: productId });
     if (existingReview) {
       return res.status(400).json({ message: 'You have already reviewed this product' });
     }
@@ -148,22 +149,36 @@ router.post('/:id/review', reviewLimiter, authenticateToken, async (req, res) =>
     const User = (await import('../models/User.js')).default;
     const user = await User.findById(userId);
 
-    // Add review
-    const newReview = {
+    // Create new review
+    const newReview = new Review({
       user: userId,
+      product: productId,
+      order: userOrder._id,
       userName: user.name,
       rating: parseInt(rating),
       comment: comment ? comment.trim() : '',
-      createdAt: new Date()
-    };
+      productSnapshot: {
+        name: product.name,
+        brand: product.brand,
+        category: product.category,
+        image: product.image
+      }
+    });
 
-    product.reviews.push(newReview);
-    product.calculateAverageRating();
-    await product.save();
+    await newReview.save();
+
+    // Update product rating and review count
+    await product.updateRatingFromReviews();
 
     res.status(201).json({ 
       message: 'Review added successfully',
-      review: newReview,
+      review: {
+        _id: newReview._id,
+        rating: newReview.rating,
+        comment: newReview.comment,
+        userName: newReview.userName,
+        createdAt: newReview.createdAt
+      },
       averageRating: product.rating,
       totalReviews: product.reviewCount
     });
@@ -176,18 +191,38 @@ router.post('/:id/review', reviewLimiter, authenticateToken, async (req, res) =>
 // Get product reviews (public)
 router.get('/:id/reviews', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id)
-      .populate('reviews.user', 'name avatar')
-      .select('reviews rating reviewCount');
+    const { page = 1, limit = 10 } = req.query;
     
+    const product = await Product.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const reviews = await Review.find({ 
+      product: req.params.id, 
+      status: 'approved' 
+    })
+    .populate('user', 'name avatar')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(parseInt(limit));
+
+    const total = await Review.countDocuments({ 
+      product: req.params.id, 
+      status: 'approved' 
+    });
+
     res.status(200).json({
-      reviews: product.reviews,
+      reviews,
       averageRating: product.rating,
-      totalReviews: product.reviewCount
+      totalReviews: product.reviewCount,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
     });
   } catch (error) {
     console.error('Get reviews error:', error);

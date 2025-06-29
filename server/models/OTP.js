@@ -9,12 +9,13 @@ const otpSchema = new mongoose.Schema({
   otp: {
     type: String,
     required: true,
-    maxlength: 6 // <-- Add this line to enforce max length for OTP
+    maxlength: 6
   },
   userData: {
     name: String,
     email: String,
-    password: String
+    password: String,
+    resetPassword: Boolean
   },
   expiresAt: {
     type: Date,
