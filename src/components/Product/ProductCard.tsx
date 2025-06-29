@@ -197,13 +197,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
         </div>
 
-        {/* Tax Inclusive Notice */}
-        <div className="text-center">
-          <span className="text-xs text-gray-400 bg-white/5 px-2 py-1 rounded-full">
-            Inclusive of all taxes
-          </span>
-        </div>
-
         {/* Features Preview */}
         {product.features && product.features.length > 0 && (
           <div className="flex flex-wrap gap-1">
