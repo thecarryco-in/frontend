@@ -32,7 +32,7 @@ const Cart: React.FC = () => {
   const SHIPPING_THRESHOLD = 399;
   const SHIPPING_CHARGE = 70;
   const totalIncludingTax = total * 1.18; // Tax-inclusive subtotal
-  const isShippingFree = totalIncludingTax >= SHIPPING_THRESHOLD;
+  const isShippingFree = totalIncludingTax > SHIPPING_THRESHOLD;
   const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
   
   // Final totals
