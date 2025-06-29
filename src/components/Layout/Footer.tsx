@@ -23,7 +23,7 @@ const Footer: React.FC = () => {
               <div className="relative">
                 <div className="w-12 h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg overflow-hidden">
                   <img 
-                    src="/src/assets/logo.jpg" 
+                    src="logo.jpg" 
                     alt="The CarryCo Logo" 
                     className="w-full h-full object-contain"
                   />
