@@ -66,7 +66,7 @@ router.post('/create-order', authenticateToken, async (req, res) => {
 
     // Calculate shipping charges based on tax-inclusive amount
     const calculatedTotalIncludingTax = calculatedTotal * 1.18;
-    const isShippingFree = calculatedTotalIncludingTax >= SHIPPING_THRESHOLD;
+    const isShippingFree = calculatedTotalIncludingTax > SHIPPING_THRESHOLD;
     const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
     
     // Final total calculation
@@ -175,7 +175,7 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
 
     // Calculate shipping charges for verification based on tax-inclusive amount
     const calculatedTotalIncludingTax = calculatedTotal * 1.18;
-    const isShippingFree = calculatedTotalIncludingTax >= SHIPPING_THRESHOLD;
+    const isShippingFree = calculatedTotalIncludingTax > SHIPPING_THRESHOLD;
     const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
     const totalWithShipping = calculatedTotal + shippingCost;
     const expectedTotalWithTax = totalWithShipping * 1.18;
