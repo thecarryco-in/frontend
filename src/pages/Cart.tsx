@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Shield, Truck, CreditCard, User, MapPin, Phone, ChevronDown, ChevronUp, Info, LogIn } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Shield, Truck, CreditCard, User, MapPin, Phone, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -65,10 +65,7 @@ const Cart: React.FC = () => {
   };
 
   const handlePayment = async () => {
-    // Check authentication at payment time
     if (!isAuthenticated) {
-      // Store current cart state and redirect to login
-      localStorage.setItem('pendingCheckout', 'true');
       navigate('/login');
       return;
     }
@@ -152,7 +149,6 @@ const Cart: React.FC = () => {
             });
 
             clearCart();
-            localStorage.removeItem('pendingCheckout');
             alert('Payment successful! Your order has been placed.');
             navigate('/dashboard?tab=orders');
           } catch (error) {
@@ -393,155 +389,129 @@ const Cart: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {/* Login Prompt if not authenticated */}
-                  {!isAuthenticated && (
-                    <div className="bg-gradient-to-r from-purple-500/10 to-cyan-500/10 backdrop-blur-md rounded-2xl p-6 border border-purple-400/30 text-center">
-                      <div className="flex items-center justify-center mb-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full flex items-center justify-center">
-                          <LogIn className="w-6 h-6 text-purple-400" />
+                  <h3 className="text-xl font-bold text-white mb-4">Shipping Address</h3>
+                  
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">Full Name</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            name="name"
+                            value={shippingAddress.name}
+                            onChange={handleAddressChange}
+                            minLength={2}
+                            maxLength={50}
+                            required
+                            className="w-full bg-white/10 text-white px-4 py-3 pl-12 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                            placeholder="Enter full name"
+                          />
+                          <User className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
                         </div>
                       </div>
-                      <h3 className="text-lg font-bold text-white mb-3">Login Required</h3>
-                      <p className="text-gray-300 mb-4 text-sm">
-                        Please login to complete your purchase and track your order.
-                      </p>
-                      <Link
-                        to="/login"
-                        className="inline-flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
-                      >
-                        <LogIn className="w-4 h-4" />
-                        <span>Login to Continue</span>
-                      </Link>
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">Phone Number</label>
+                        <div className="relative">
+                          <input
+                            type="tel"
+                            name="phone"
+                            value={shippingAddress.phone}
+                            onChange={handleAddressChange}
+                            minLength={10}
+                            maxLength={10}
+                            required
+                            className="w-full bg-white/10 text-white px-4 py-3 pl-12 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                            placeholder="Enter phone number"
+                          />
+                          <Phone className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+                        </div>
+                      </div>
                     </div>
-                  )}
-
-                  {isAuthenticated && (
-                    <>
-                      <h3 className="text-xl font-bold text-white mb-4">Shipping Address</h3>
-                      
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium mb-2 text-gray-300">Full Name</label>
-                            <div className="relative">
-                              <input
-                                type="text"
-                                name="name"
-                                value={shippingAddress.name}
-                                onChange={handleAddressChange}
-                                minLength={2}
-                                maxLength={50}
-                                required
-                                className="w-full bg-white/10 text-white px-4 py-3 pl-12 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
-                                placeholder="Enter full name"
-                              />
-                              <User className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium mb-2 text-gray-300">Phone Number</label>
-                            <div className="relative">
-                              <input
-                                type="tel"
-                                name="phone"
-                                value={shippingAddress.phone}
-                                onChange={handleAddressChange}
-                                minLength={10}
-                                maxLength={10}
-                                required
-                                className="w-full bg-white/10 text-white px-4 py-3 pl-12 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
-                                placeholder="Enter phone number"
-                              />
-                              <Phone className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium mb-2 text-gray-300">Address</label>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              name="address"
-                              value={shippingAddress.address}
-                              onChange={handleAddressChange}
-                              minLength={5}
-                              maxLength={100}
-                              required
-                              className="w-full bg-white/10 text-white px-4 py-3 pl-12 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
-                              placeholder="Enter full address"
-                            />
-                            <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium mb-2 text-gray-300">City</label>
-                            <input
-                              type="text"
-                              name="city"
-                              value={shippingAddress.city}
-                              onChange={handleAddressChange}
-                              minLength={2}
-                              maxLength={50}
-                              required
-                              className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
-                              placeholder="City"
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium mb-2 text-gray-300">State</label>
-                            <input
-                              type="text"
-                              name="state"
-                              value={shippingAddress.state}
-                              onChange={handleAddressChange}
-                              minLength={2}
-                              maxLength={50}
-                              required
-                              className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
-                              placeholder="State"
-                            />
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium mb-2 text-gray-300">Pincode</label>
-                            <input
-                              type="text"
-                              name="pincode"
-                              value={shippingAddress.pincode}
-                              onChange={handleAddressChange}
-                              minLength={6}
-                              maxLength={6}
-                              required
-                              className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
-                              placeholder="Pincode"
-                            />
-                          </div>
-                        </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-gray-300">Address</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="address"
+                          value={shippingAddress.address}
+                          onChange={handleAddressChange}
+                          minLength={5}
+                          maxLength={100}
+                          required
+                          className="w-full bg-white/10 text-white px-4 py-3 pl-12 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                          placeholder="Enter full address"
+                        />
+                        <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">City</label>
+                        <input
+                          type="text"
+                          name="city"
+                          value={shippingAddress.city}
+                          onChange={handleAddressChange}
+                          minLength={2}
+                          maxLength={50}
+                          required
+                          className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                          placeholder="City"
+                        />
                       </div>
                       
-                      <div className="space-y-3">
-                        <button
-                          onClick={handlePayment}
-                          disabled={isProcessing}
-                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-5 rounded-2xl font-bold text-lg hover:shadow-2xl hover:shadow-green-500/25 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isProcessing ? 'Processing...' : `Pay ₹${Math.round(totalIncludingTax)}`}
-                        </button>
-                        
-                        <button
-                          onClick={() => setShowCheckout(false)}
-                          className="w-full border-2 border-white/20 text-white py-3 rounded-xl font-semibold hover:border-white/40 hover:bg-white/5 transition-all duration-300"
-                        >
-                          Back to Cart
-                        </button>
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">State</label>
+                        <input
+                          type="text"
+                          name="state"
+                          value={shippingAddress.state}
+                          onChange={handleAddressChange}
+                          minLength={2}
+                          maxLength={50}
+                          required
+                          className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                          placeholder="State"
+                        />
                       </div>
-                    </>
-                  )}
+                      
+                      <div>
+                        <label className="block text-sm font-medium mb-2 text-gray-300">Pincode</label>
+                        <input
+                          type="text"
+                          name="pincode"
+                          value={shippingAddress.pincode}
+                          onChange={handleAddressChange}
+                          minLength={6}
+                          maxLength={6}
+                          required
+                          className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                          placeholder="Pincode"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <button
+                      onClick={handlePayment}
+                      disabled={isProcessing}
+                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-5 rounded-2xl font-bold text-lg hover:shadow-2xl hover:shadow-green-500/25 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isProcessing ? 'Processing...' : `Pay ₹${Math.round(totalIncludingTax)}`}
+                    </button>
+                    
+                    <button
+                      onClick={() => setShowCheckout(false)}
+                      className="w-full border-2 border-white/20 text-white py-3 rounded-xl font-semibold hover:border-white/40 hover:bg-white/5 transition-all duration-300"
+                    >
+                      Back to Cart
+                    </button>
+                  </div>
                 </div>
               )}
 
