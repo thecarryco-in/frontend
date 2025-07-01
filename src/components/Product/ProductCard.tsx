@@ -4,6 +4,7 @@ import { Product } from '../../types';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../hooks/useToast';
 
 interface ProductCardProps {
   product: Product;
@@ -13,6 +14,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { isAuthenticated } = useAuth();
+  const { success, warning } = useToast();
   const [isHovered, setIsHovered] = useState(false);
 
   // Calculate tax-inclusive prices
@@ -32,11 +34,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     // Ensure product has an ID for cart operations
     const productWithId = { ...product, id: productId };
     addToCart(productWithId);
+    success('Added to Cart!', `${product.name} has been added to your cart`);
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      warning('Login Required', 'Please login to add items to your wishlist');
+      return;
+    }
+    
     if (!productId) {
       console.error('Cannot add product without ID to wishlist:', product);
       return;
@@ -47,8 +56,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     
     if (isInWishlist(productId)) {
       removeFromWishlist(productId);
+      success('Removed from Wishlist', `${product.name} has been removed from your wishlist`);
     } else {
       addToWishlist(productWithId);
+      success('Added to Wishlist!', `${product.name} has been saved to your wishlist`);
     }
   };
 
