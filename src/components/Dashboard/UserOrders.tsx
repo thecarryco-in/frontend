@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Clock, CheckCircle, Truck, Star, Eye, IndianRupee } from 'lucide-react';
-import { useToast } from '../../hooks/useToast';
-import ConfirmDialog from '../UI/ConfirmDialog';
 import axios from 'axios';
 
 interface Order {
@@ -53,7 +51,6 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
   const [comment, setComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewedProducts, setReviewedProducts] = useState<Set<string>>(new Set());
-  const { success, error, warning } = useToast();
 
   useEffect(() => {
     fetchOrders();
@@ -67,7 +64,6 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
       onOrdersCountChange(response.data.orders.length);
     } catch (error) {
       console.error('Error fetching orders:', error);
-      error('Failed to Load', 'Unable to fetch your orders. Please try again.');
     } finally {
       setOrdersLoading(false);
     }
@@ -99,7 +95,6 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
     // Ensure we have a valid product with an ID
     if (!product || (!product._id && !product.id)) {
       console.error('Invalid product for rating:', product);
-      error('Rating Error', 'Unable to rate this product. Please try again.');
       return;
     }
     
@@ -111,14 +106,14 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
 
   const submitReview = async () => {
     if (!selectedProduct || rating === 0) {
-      warning('Rating Required', 'Please provide a rating before submitting');
+      alert('Please provide a rating');
       return;
     }
 
     // Get product ID safely
     const productId = selectedProduct._id || selectedProduct.id;
     if (!productId) {
-      error('Rating Error', 'Invalid product selected');
+      alert('Invalid product selected');
       return;
     }
 
@@ -132,14 +127,14 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
       // Add to reviewed products set
       setReviewedProducts(prev => new Set([...prev, productId]));
       
-      success('Review Submitted!', 'Thank you for your feedback. Your review helps other customers.');
+      alert('Review submitted successfully!');
       setShowRatingModal(false);
       setSelectedProduct(null);
       setRating(0);
       setComment('');
     } catch (error: any) {
       console.error('Review submission error:', error);
-      error('Review Failed', error.response?.data?.message || 'Failed to submit review. Please try again.');
+      alert(error.response?.data?.message || 'Failed to submit review');
     } finally {
       setSubmittingReview(false);
     }
@@ -371,17 +366,6 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
       </div>
 
       {/* Rating Modal */}
-      <ConfirmDialog
-        isOpen={showRatingModal}
-        title="Rate Product"
-        message={`How would you rate ${selectedProduct?.name || selectedProduct?.productSnapshot?.name}?`}
-        confirmText={submittingReview ? 'Submitting...' : 'Submit Review'}
-        cancelText="Cancel"
-        type="info"
-        onConfirm={submitReview}
-        onCancel={() => setShowRatingModal(false)}
-      />
-
       {showRatingModal && selectedProduct && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-slate-800 rounded-2xl md:rounded-3xl p-6 md:p-8 max-w-md w-full">

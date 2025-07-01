@@ -3,8 +3,6 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
-import { useToast } from './hooks/useToast';
-import ToastContainer from './components/UI/ToastContainer';
 import Header from './components/Layout/Header';
 import Footer from './components/Layout/Footer';
 import Home from './pages/Home';
@@ -47,7 +45,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 function App() {
   const [serverAwake, setServerAwake] = useState(false);
-  const { toasts, removeToast } = useToast();
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL}/health`)
@@ -114,7 +111,6 @@ function App() {
                 />
               </Routes>
             </Layout>
-            <ToastContainer toasts={toasts} onRemoveToast={removeToast} />
           </Router>
         </CartProvider>
       </WishlistProvider>

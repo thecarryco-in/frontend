@@ -3,8 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Shield, Truck, CreditCard, User, MapPin, Phone, ChevronDown, ChevronUp, Info, LogIn } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../hooks/useToast';
-import ConfirmDialog from '../components/UI/ConfirmDialog';
 import axios from 'axios';
 
 declare global {
@@ -16,14 +14,11 @@ declare global {
 const Cart: React.FC = () => {
   const { items, total, itemCount, updateQuantity, removeFromCart, clearCart } = useCart();
   const { user, isAuthenticated } = useAuth();
-  const { success, error, warning } = useToast();
   const navigate = useNavigate();
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showTaxBreakdown, setShowTaxBreakdown] = useState(false);
-  const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [showRemoveConfirm, setShowRemoveConfirm] = useState<string | null>(null);
   const [shippingAddress, setShippingAddress] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -75,34 +70,11 @@ const Cart: React.FC = () => {
     return product.id || product._id || '';
   };
 
-  const handleRemoveItem = (productId: string, productName: string) => {
-    setShowRemoveConfirm(productId);
-  };
-
-  const confirmRemoveItem = () => {
-    if (showRemoveConfirm) {
-      removeFromCart(showRemoveConfirm);
-      success('Item Removed', 'Product has been removed from your cart');
-      setShowRemoveConfirm(null);
-    }
-  };
-
-  const handleClearCart = () => {
-    setShowClearConfirm(true);
-  };
-
-  const confirmClearCart = () => {
-    clearCart();
-    success('Cart Cleared', 'All items have been removed from your cart');
-    setShowClearConfirm(false);
-  };
-
   const handlePayment = async () => {
     // Check authentication at payment time
     if (!isAuthenticated) {
       // Store current cart state and redirect to login
       localStorage.setItem('pendingCheckout', 'true');
-      warning('Login Required', 'Please login to complete your purchase');
       navigate('/login');
       return;
     }
@@ -117,19 +89,19 @@ const Cart: React.FC = () => {
       !state.trim() ||
       !pincode.trim()
     ) {
-      error('Incomplete Address', 'Please fill in all shipping address fields');
+      alert('Please fill in all shipping address fields.');
       return;
     }
     if (!/^\d{10}$/.test(phone)) {
-      error('Invalid Phone', 'Phone number must be exactly 10 digits');
+      alert('Phone number must be exactly 10 digits.');
       return;
     }
     if (!/^\d{6}$/.test(pincode)) {
-      error('Invalid Pincode', 'Pincode must be exactly 6 digits');
+      alert('Pincode must be exactly 6 digits.');
       return;
     }
     if (!items || items.length === 0) {
-      error('Empty Cart', 'Your cart is empty');
+      alert('Your cart is empty.');
       return;
     }
 
@@ -139,7 +111,7 @@ const Cart: React.FC = () => {
       // Load Razorpay script
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
-        error('Payment Error', 'Failed to load payment gateway. Please try again');
+        alert('Failed to load payment gateway. Please try again.');
         setIsProcessing(false);
         return;
       }
@@ -188,11 +160,11 @@ const Cart: React.FC = () => {
 
             clearCart();
             localStorage.removeItem('pendingCheckout');
-            success('Payment Successful!', 'Your order has been placed successfully');
+            alert('Payment successful! Your order has been placed.');
             navigate('/dashboard?tab=orders');
           } catch (error) {
             console.error('Payment verification failed:', error);
-            error('Payment Verification Failed', 'Please contact support for assistance');
+            alert('Payment verification failed. Please contact support.');
           }
         },
         prefill: {
@@ -206,7 +178,6 @@ const Cart: React.FC = () => {
         modal: {
           ondismiss: () => {
             setIsProcessing(false);
-            warning('Payment Cancelled', 'You can complete your purchase anytime');
           }
         }
       };
@@ -215,7 +186,7 @@ const Cart: React.FC = () => {
       razorpay.open();
     } catch (error: any) {
       console.error('Payment error:', error);
-      error('Payment Failed', error.response?.data?.message || 'Failed to process payment');
+      alert(error.response?.data?.message || error.message || 'Failed to process payment');
       setIsProcessing(false);
     }
   };
@@ -267,7 +238,7 @@ const Cart: React.FC = () => {
                 <p className="text-gray-400 mt-2">{itemCount} items in your cart</p>
               </div>
               <button
-                onClick={handleClearCart}
+                onClick={clearCart}
                 className="text-gray-400 hover:text-red-400 text-sm font-medium transition-colors duration-200 hover:bg-red-500/10 px-4 py-2 rounded-lg"
               >
                 Clear All Items
@@ -348,7 +319,7 @@ const Cart: React.FC = () => {
                         </div>
 
                         <button
-                          onClick={() => handleRemoveItem(productId, item.product.name)}
+                          onClick={() => removeFromCart(productId)}
                           className="w-12 h-12 flex items-center justify-center text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200 border border-transparent hover:border-red-400/30"
                         >
                           <Trash2 className="w-6 h-6" />
@@ -629,29 +600,6 @@ const Cart: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Confirmation Dialogs */}
-      <ConfirmDialog
-        isOpen={showClearConfirm}
-        title="Clear Cart"
-        message="Are you sure you want to remove all items from your cart? This action cannot be undone."
-        confirmText="Clear Cart"
-        cancelText="Keep Items"
-        type="danger"
-        onConfirm={confirmClearCart}
-        onCancel={() => setShowClearConfirm(false)}
-      />
-
-      <ConfirmDialog
-        isOpen={!!showRemoveConfirm}
-        title="Remove Item"
-        message="Are you sure you want to remove this item from your cart?"
-        confirmText="Remove"
-        cancelText="Keep"
-        type="warning"
-        onConfirm={confirmRemoveItem}
-        onCancel={() => setShowRemoveConfirm(null)}
-      />
     </div>
   );
 };

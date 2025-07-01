@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Eye, EyeOff } from 'lucide-react';
-import { useToast } from '../../hooks/useToast';
-import ConfirmDialog from '../UI/ConfirmDialog';
 import axios from 'axios';
 import ProductForm from './ProductForm';
 
@@ -36,8 +34,6 @@ const ProductManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [stockFilter, setStockFilter] = useState('');
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const { success, error } = useToast();
 
   const categories = [
     { value: 'cases', label: 'Cases' },
@@ -64,7 +60,6 @@ const ProductManagement: React.FC = () => {
       setProducts(response.data.products);
     } catch (error) {
       console.error('Error fetching products:', error);
-      error('Failed to Load', 'Unable to fetch products. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -79,14 +74,14 @@ const ProductManagement: React.FC = () => {
   }, [searchTerm, categoryFilter, stockFilter]);
 
   const handleDeleteProduct = async (productId: string) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+
     try {
       await axios.delete(`/admin/products/${productId}`);
       setProducts(products.filter(p => p._id !== productId));
-      success('Product Deleted', 'Product has been successfully removed');
-      setDeleteConfirm(null);
     } catch (error) {
       console.error('Error deleting product:', error);
-      error('Delete Failed', 'Failed to delete product. Please try again.');
+      alert('Failed to delete product');
     }
   };
 
@@ -99,23 +94,17 @@ const ProductManagement: React.FC = () => {
       setProducts(products.map(p => 
         p._id === product._id ? response.data.product : p
       ));
-      success(
-        'Stock Updated', 
-        `Product is now ${!product.inStock ? 'in stock' : 'out of stock'}`
-      );
     } catch (error) {
       console.error('Error updating stock:', error);
-      error('Update Failed', 'Failed to update stock status');
+      alert('Failed to update stock status');
     }
   };
 
   const handleProductSave = (savedProduct: Product) => {
     if (editingProduct) {
       setProducts(products.map(p => p._id === savedProduct._id ? savedProduct : p));
-      success('Product Updated', 'Product has been successfully updated');
     } else {
       setProducts([savedProduct, ...products]);
-      success('Product Created', 'New product has been added successfully');
     }
     setEditingProduct(null);
     setShowAddModal(false);
@@ -262,7 +251,7 @@ const ProductManagement: React.FC = () => {
                   <span>Edit</span>
                 </button>
                 <button
-                  onClick={() => setDeleteConfirm(product._id)}
+                  onClick={() => handleDeleteProduct(product._id)}
                   className="flex-1 flex items-center justify-center space-x-2 bg-red-500/20 text-red-400 py-2 rounded-xl hover:bg-red-500/30 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -301,18 +290,6 @@ const ProductManagement: React.FC = () => {
           onSave={handleProductSave}
         />
       )}
-
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        isOpen={!!deleteConfirm}
-        title="Delete Product"
-        message="Are you sure you want to delete this product? This action cannot be undone and will also remove all associated reviews."
-        confirmText="Delete Product"
-        cancelText="Keep Product"
-        type="danger"
-        onConfirm={() => deleteConfirm && handleDeleteProduct(deleteConfirm)}
-        onCancel={() => setDeleteConfirm(null)}
-      />
     </div>
   );
 };
