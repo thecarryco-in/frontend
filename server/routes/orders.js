@@ -16,7 +16,7 @@ const razorpay = new Razorpay({
 });
 
 // Shipping configuration
-const SHIPPING_THRESHOLD = 399; // Tax-inclusive threshold
+const SHIPPING_THRESHOLD = 398; // Tax-inclusive threshold
 const SHIPPING_CHARGE = 70;
 
 // Create Razorpay order (DO NOT save order in DB here)
