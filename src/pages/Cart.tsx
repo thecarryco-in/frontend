@@ -29,7 +29,7 @@ const Cart: React.FC = () => {
   });
 
   // Calculate shipping charges based on tax-inclusive amount
-  const SHIPPING_THRESHOLD = 399;
+  const SHIPPING_THRESHOLD = 398;
   const SHIPPING_CHARGE = 70;
   const totalIncludingTax = total * 1.18; // Tax-inclusive subtotal
   const isShippingFree = totalIncludingTax > SHIPPING_THRESHOLD;
@@ -410,24 +410,7 @@ const Cart: React.FC = () => {
                 </div>
               </div>
 
-              {!showCheckout ? (
-                <div className="space-y-4">
-                  <button 
-                    onClick={() => setShowCheckout(true)}
-                    className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 text-white py-5 rounded-2xl font-bold text-lg hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 relative overflow-hidden group"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-pink-700 to-cyan-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    <span className="relative z-10">Proceed to Checkout</span>
-                  </button>
-                  
-                  <Link
-                    to="/shop"
-                    className="w-full border-2 border-white/20 text-white py-5 rounded-2xl font-semibold text-lg hover:border-purple-400/50 hover:bg-white/5 transition-all duration-300 flex items-center justify-center backdrop-blur-sm"
-                  >
-                    Continue Shopping
-                  </Link>
-                </div>
-              ) : (
+              {showCheckout ? (
                 <div className="space-y-6">
                   {/* Login Prompt if not authenticated */}
                   {!isAuthenticated && (
@@ -578,6 +561,30 @@ const Cart: React.FC = () => {
                       </div>
                     </>
                   )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Policy Notice for Razorpay compliance */}
+                  <div className="bg-white/10 rounded-xl p-4 border border-white/20 text-gray-200 text-sm text-center">
+                    By placing your order, you agree to our
+                    <Link to="/refund" className="text-blue-400 underline ml-1">
+                      Return/Refund Policy
+                    </Link>.
+                  </div>
+                  <button 
+                    onClick={() => setShowCheckout(true)}
+                    className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 text-white py-5 rounded-2xl font-bold text-lg hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 relative overflow-hidden group"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-700 via-pink-700 to-cyan-700 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    <span className="relative z-10">Proceed to Checkout</span>
+                  </button>
+                  
+                  <Link
+                    to="/shop"
+                    className="w-full border-2 border-white/20 text-white py-5 rounded-2xl font-semibold text-lg hover:border-purple-400/50 hover:bg-white/5 transition-all duration-300 flex items-center justify-center backdrop-blur-sm"
+                  >
+                    Continue Shopping
+                  </Link>
                 </div>
               )}
 
