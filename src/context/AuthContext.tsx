@@ -101,6 +101,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string) => {
     try {
       const { data } = await axios.post('/auth/login', { email, password });
+      // If token is present in response, set cookie and localStorage for iOS/Safari
+      if (data.token) {
+        document.cookie = `token=${data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=None; Secure`;
+        if (isIOS() || isSafari()) {
+          localStorage.setItem('token', data.token);
+        } else {
+          localStorage.removeItem('token');
+        }
+      }
       dispatch({ type: 'SET_USER', payload: data.user });
       
       // Force a small delay to ensure state is updated
