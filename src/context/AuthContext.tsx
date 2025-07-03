@@ -138,12 +138,49 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Utility: Detect iOS or Safari
+  const isIOS = () => {
+    return /iP(ad|hone|od)/.test(navigator.userAgent) ||
+      (navigator.userAgent.includes('Macintosh') && 'ontouchend' in document);
+  };
+  const isSafari = () => {
+    return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  };
+
+  // Handle Google OAuth callback and set token from URL for iOS compatibility
+  useEffect(() => {
+    const handleGoogleCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('auth') === 'success') {
+        // If token is present in URL (iOS/third-party browser fix)
+        const token = urlParams.get('token');
+        if (token) {
+          // Always set cookie for API requests
+          document.cookie = `token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=None; Secure`;
+          // Only store in localStorage if iOS/Safari
+          if (isIOS() || isSafari()) {
+            localStorage.setItem('token', token);
+          } else {
+            localStorage.removeItem('token');
+          }
+        }
+        // Google OAuth successful, refresh user data
+        await refreshUser();
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    };
+    handleGoogleCallback();
+  }, []);
+
+  // Clear token from localStorage on logout
   const logout = async () => {
     try {
       await axios.post('/auth/logout');
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
+      localStorage.removeItem('token');
       dispatch({ type: 'CLEAR_USER' });
     }
   };
@@ -160,21 +197,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Check auth on mount
   useEffect(() => {
     checkAuth();
-  }, []);
-
-  // Handle Google OAuth callback
-  useEffect(() => {
-    const handleGoogleCallback = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('auth') === 'success') {
-        // Google OAuth successful, refresh user data
-        await refreshUser();
-        // Clean up URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    };
-
-    handleGoogleCallback();
   }, []);
 
   return (
