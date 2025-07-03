@@ -79,10 +79,19 @@ axios.defaults.withCredentials = true;
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
+  const getAuthHeaders = () => {
+    // If token cookie is missing but localStorage token exists, use Authorization header
+    const token = localStorage.getItem('token');
+    if (token && !document.cookie.includes('token=')) {
+      return { Authorization: `Bearer ${token}` };
+    }
+    return {};
+  };
+
   const checkAuth = async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      const { data } = await axios.get('/auth/me');
+      const { data } = await axios.get('/auth/me', { headers: getAuthHeaders() });
       dispatch({ type: 'SET_USER', payload: data.user });
     } catch {
       dispatch({ type: 'CLEAR_USER' });
@@ -91,7 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const refreshUser = async () => {
     try {
-      const { data } = await axios.get('/auth/me');
+      const { data } = await axios.get('/auth/me', { headers: getAuthHeaders() });
       dispatch({ type: 'SET_USER', payload: data.user });
     } catch (error) {
       console.error('Failed to refresh user:', error);
