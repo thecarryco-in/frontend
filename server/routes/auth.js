@@ -220,7 +220,8 @@ router.post('/login', authLimiter, async (req, res) => {
         totalSpent: user.totalSpent,
         joinDate: user.createdAt,
         isAdmin: user.email === process.env.ADMIN_EMAIL
-      }
+      },
+      token // <-- Add token to response for iOS/Safari compatibility
     });
   } catch (error) {
     console.error('Login error:', error);
