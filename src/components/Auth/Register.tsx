@@ -1,7 +1,47 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User, Loader, Chrome } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Loader, Chrome, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+
+// Custom notification component
+const Notification: React.FC<{ 
+  type: 'success' | 'error' | 'info'; 
+  message: string; 
+  onClose: () => void 
+}> = ({ type, message, onClose }) => {
+  const getIcon = () => {
+    switch (type) {
+      case 'success': return <CheckCircle className="w-6 h-6 text-green-400" />;
+      case 'error': return <AlertTriangle className="w-6 h-6 text-red-400" />;
+      case 'info': return <AlertTriangle className="w-6 h-6 text-blue-400" />;
+    }
+  };
+
+  const getColors = () => {
+    switch (type) {
+      case 'success': return 'bg-green-500/10 border-green-500/20';
+      case 'error': return 'bg-red-500/10 border-red-500/20';
+      case 'info': return 'bg-blue-500/10 border-blue-500/20';
+    }
+  };
+
+  return (
+    <div className={`fixed top-24 right-4 z-50 ${getColors()} backdrop-blur-md rounded-2xl p-6 border max-w-md animate-in slide-in-from-right duration-300`}>
+      <div className="flex items-start space-x-3">
+        {getIcon()}
+        <div className="flex-1">
+          <p className="text-white font-medium leading-relaxed">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-white transition-colors"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -13,27 +53,30 @@ const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
 
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
-    setError('');
   };
 
   const validateForm = () => {
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long');
+      showNotification('error', 'Password must be at least 8 characters long');
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      showNotification('error', 'Passwords do not match');
       return false;
     }
     return true;
@@ -45,16 +88,15 @@ const Register: React.FC = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    setError('');
 
     try {
       await register(formData.name, formData.email, formData.password);
-      setSuccess('OTP sent to your email! Please check your inbox.');
+      showNotification('success', 'OTP sent to your email! Please check your inbox.');
       setTimeout(() => {
         navigate('/verify-otp', { state: { email: formData.email } });
       }, 2000);
     } catch (error: any) {
-      setError(error.message);
+      showNotification('error', error.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -66,6 +108,15 @@ const Register: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Notification */}
+      {notification && (
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
+
       {/* Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
@@ -81,20 +132,6 @@ const Register: React.FC = () => {
             </h1>
             <p className="text-gray-400">Create your premium account</p>
           </div>
-
-          {/* Success Message */}
-          {success && (
-            <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4 mb-6">
-              <p className="text-green-400 text-sm text-center">{success}</p>
-            </div>
-          )}
-
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 mb-6">
-              <p className="text-red-400 text-sm text-center">{error}</p>
-            </div>
-          )}
 
           {/* Register Form */}
           <form onSubmit={handleSubmit} className="space-y-6">

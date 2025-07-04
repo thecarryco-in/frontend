@@ -17,6 +17,24 @@ const generateToken = (userId) => {
   });
 };
 
+// Enhanced cookie setting function for iOS/Mac compatibility
+const setCookie = (res, token) => {
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    path: '/'
+  };
+
+  // For development, ensure cookies work on localhost
+  if (process.env.NODE_ENV !== 'production') {
+    cookieOptions.domain = undefined;
+  }
+
+  res.cookie('token', token, cookieOptions);
+};
+
 // Generate OTP
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -111,13 +129,8 @@ router.post('/verify-otp', authLimiter, async (req, res) => {
     // Generate JWT token
     const token = generateToken(user._id);
 
-    // Set cookie
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
+    // Set cookie with enhanced compatibility
+    setCookie(res, token);
 
     res.status(201).json({
       message: 'Registration successful! Welcome to The CarryCo!',
@@ -200,13 +213,8 @@ router.post('/login', authLimiter, async (req, res) => {
     // Generate JWT token
     const token = generateToken(user._id);
 
-    // Set cookie
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
+    // Set cookie with enhanced compatibility
+    setCookie(res, token);
 
     res.status(200).json({
       message: 'Login successful',
@@ -335,13 +343,8 @@ router.get('/google/callback',
       // Generate JWT token
       const token = generateToken(req.user._id);
 
-      // Set cookie
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none',
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-      });
+      // Set cookie with enhanced compatibility
+      setCookie(res, token);
 
       // Get redirect URL from session storage or default to home
       const redirectUrl = process.env.CLIENT_URL || 'http://localhost:5173';
@@ -357,11 +360,14 @@ router.get('/google/callback',
 
 // Logout
 router.post('/logout', (req, res) => {
-  res.clearCookie('token', {
+  const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'none',
-  });
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    path: '/'
+  };
+
+  res.clearCookie('token', cookieOptions);
   res.status(200).json({ message: 'Logged out successfully' });
 });
 

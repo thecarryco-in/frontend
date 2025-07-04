@@ -1,7 +1,47 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, Loader, Chrome } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Loader, Chrome, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+
+// Custom notification component
+const Notification: React.FC<{ 
+  type: 'success' | 'error' | 'info'; 
+  message: string; 
+  onClose: () => void 
+}> = ({ type, message, onClose }) => {
+  const getIcon = () => {
+    switch (type) {
+      case 'success': return <CheckCircle className="w-6 h-6 text-green-400" />;
+      case 'error': return <AlertTriangle className="w-6 h-6 text-red-400" />;
+      case 'info': return <AlertTriangle className="w-6 h-6 text-blue-400" />;
+    }
+  };
+
+  const getColors = () => {
+    switch (type) {
+      case 'success': return 'bg-green-500/10 border-green-500/20';
+      case 'error': return 'bg-red-500/10 border-red-500/20';
+      case 'info': return 'bg-blue-500/10 border-blue-500/20';
+    }
+  };
+
+  return (
+    <div className={`fixed top-24 right-4 z-50 ${getColors()} backdrop-blur-md rounded-2xl p-6 border max-w-md animate-in slide-in-from-right duration-300`}>
+      <div className="flex items-start space-x-3">
+        {getIcon()}
+        <div className="flex-1">
+          <p className="text-white font-medium leading-relaxed">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-white transition-colors"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -10,7 +50,7 @@ const Login: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -19,29 +59,34 @@ const Login: React.FC = () => {
   // Get the intended destination from location state
   const from = location.state?.from?.pathname || '/';
 
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
-    setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
 
     try {
       // Convert email to lowercase for case insensitive login
       await login(formData.email.toLowerCase().trim(), formData.password);
       
+      showNotification('success', 'Login successful! Redirecting...');
+      
       // Small delay to ensure state is fully updated
       setTimeout(() => {
         navigate(from, { replace: true });
-      }, 200);
+      }, 1000);
     } catch (error: any) {
-      setError(error.message);
+      showNotification('error', error.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -55,6 +100,15 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Notification */}
+      {notification && (
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
+
       {/* Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
@@ -70,13 +124,6 @@ const Login: React.FC = () => {
             </h1>
             <p className="text-gray-400">Sign in to your The CarryCo account</p>
           </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 mb-6">
-              <p className="text-red-400 text-sm text-center">{error}</p>
-            </div>
-          )}
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Shield, Truck, CreditCard, User, MapPin, Phone, ChevronDown, ChevronUp, Info, LogIn } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Shield, Truck, CreditCard, User, MapPin, Phone, ChevronDown, ChevronUp, Info, LogIn, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -11,6 +11,46 @@ declare global {
   }
 }
 
+// Custom notification component
+const Notification: React.FC<{ 
+  type: 'success' | 'error' | 'info'; 
+  message: string; 
+  onClose: () => void 
+}> = ({ type, message, onClose }) => {
+  const getIcon = () => {
+    switch (type) {
+      case 'success': return <CheckCircle className="w-6 h-6 text-green-400" />;
+      case 'error': return <AlertTriangle className="w-6 h-6 text-red-400" />;
+      case 'info': return <Info className="w-6 h-6 text-blue-400" />;
+    }
+  };
+
+  const getColors = () => {
+    switch (type) {
+      case 'success': return 'bg-green-500/10 border-green-500/20';
+      case 'error': return 'bg-red-500/10 border-red-500/20';
+      case 'info': return 'bg-blue-500/10 border-blue-500/20';
+    }
+  };
+
+  return (
+    <div className={`fixed top-24 right-4 z-50 ${getColors()} backdrop-blur-md rounded-2xl p-6 border max-w-md animate-in slide-in-from-right duration-300`}>
+      <div className="flex items-start space-x-3">
+        {getIcon()}
+        <div className="flex-1">
+          <p className="text-white font-medium leading-relaxed">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-white transition-colors"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const Cart: React.FC = () => {
   const { items, total, itemCount, updateQuantity, removeFromCart, clearCart } = useCart();
   const { user, isAuthenticated } = useAuth();
@@ -19,6 +59,7 @@ const Cart: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showTaxBreakdown, setShowTaxBreakdown] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [shippingAddress, setShippingAddress] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -37,6 +78,11 @@ const Cart: React.FC = () => {
   
   // Final totals
   const finalTotalWithShipping = totalIncludingTax + (shippingCost * 1.18); // Shipping also has tax
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setShippingAddress({
@@ -89,19 +135,19 @@ const Cart: React.FC = () => {
       !state.trim() ||
       !pincode.trim()
     ) {
-      alert('Please fill in all shipping address fields.');
+      showNotification('error', 'Please fill in all shipping address fields.');
       return;
     }
     if (!/^\d{10}$/.test(phone)) {
-      alert('Phone number must be exactly 10 digits.');
+      showNotification('error', 'Phone number must be exactly 10 digits.');
       return;
     }
     if (!/^\d{6}$/.test(pincode)) {
-      alert('Pincode must be exactly 6 digits.');
+      showNotification('error', 'Pincode must be exactly 6 digits.');
       return;
     }
     if (!items || items.length === 0) {
-      alert('Your cart is empty.');
+      showNotification('error', 'Your cart is empty.');
       return;
     }
 
@@ -111,7 +157,7 @@ const Cart: React.FC = () => {
       // Load Razorpay script
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
-        alert('Failed to load payment gateway. Please try again.');
+        showNotification('error', 'Failed to load payment gateway. Please try again.');
         setIsProcessing(false);
         return;
       }
@@ -160,11 +206,11 @@ const Cart: React.FC = () => {
 
             clearCart();
             localStorage.removeItem('pendingCheckout');
-            alert('Payment successful! Your order has been placed.');
-            navigate('/dashboard?tab=orders');
+            showNotification('success', 'Payment successful! Your order has been placed.');
+            setTimeout(() => navigate('/dashboard?tab=orders'), 2000);
           } catch (error) {
             console.error('Payment verification failed:', error);
-            alert('Payment verification failed. Please contact support.');
+            showNotification('error', 'Payment verification failed. Please contact support.');
           }
         },
         prefill: {
@@ -186,7 +232,7 @@ const Cart: React.FC = () => {
       razorpay.open();
     } catch (error: any) {
       console.error('Payment error:', error);
-      alert(error.response?.data?.message || error.message || 'Failed to process payment');
+      showNotification('error', error.response?.data?.message || error.message || 'Failed to process payment');
       setIsProcessing(false);
     }
   };
@@ -226,6 +272,15 @@ const Cart: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-black text-white pt-24">
+      {/* Notification */}
+      {notification && (
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
+
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col xl:flex-row gap-12">
           {/* Cart Items */}

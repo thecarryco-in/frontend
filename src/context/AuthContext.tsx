@@ -72,9 +72,46 @@ const initialState: AuthState = {
   isAuthenticated: false,
 };
 
-// Axios defaults
+// Enhanced Axios configuration for iOS/Mac compatibility
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 axios.defaults.withCredentials = true;
+axios.defaults.timeout = 30000; // 30 second timeout
+
+// Add request interceptor for better error handling
+axios.interceptors.request.use(
+  (config) => {
+    // Ensure credentials are always sent
+    config.withCredentials = true;
+    
+    // Add headers for better compatibility
+    config.headers = {
+      ...config.headers,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    
+    return config;
+  },
+  (error) => {
+    console.error('Request interceptor error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for better error handling
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('Response interceptor error:', error);
+    
+    // Handle network errors
+    if (!error.response) {
+      console.error('Network error or server unreachable');
+    }
+    
+    return Promise.reject(error);
+  }
+);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
@@ -84,7 +121,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       dispatch({ type: 'SET_LOADING', payload: true });
       const { data } = await axios.get('/auth/me');
       dispatch({ type: 'SET_USER', payload: data.user });
-    } catch {
+    } catch (error) {
+      console.error('Auth check failed:', error);
       dispatch({ type: 'CLEAR_USER' });
     }
   };
@@ -95,6 +133,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       dispatch({ type: 'SET_USER', payload: data.user });
     } catch (error) {
       console.error('Failed to refresh user:', error);
+      dispatch({ type: 'CLEAR_USER' });
     }
   };
 
@@ -106,6 +145,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Force a small delay to ensure state is updated
       await new Promise(resolve => setTimeout(resolve, 100));
     } catch (err: any) {
+      console.error('Login error:', err);
       throw new Error(err.response?.data?.message || 'Login failed');
     }
   };
@@ -114,6 +154,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await axios.post('/auth/register', { name, email, password });
     } catch (err: any) {
+      console.error('Registration error:', err);
       throw new Error(err.response?.data?.message || 'Registration failed');
     }
   };
@@ -126,6 +167,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Force a small delay to ensure state is updated
       await new Promise(resolve => setTimeout(resolve, 100));
     } catch (err: any) {
+      console.error('OTP verification error:', err);
       throw new Error(err.response?.data?.message || 'OTP verification failed');
     }
   };
@@ -134,6 +176,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await axios.post('/auth/resend-otp', { email });
     } catch (err: any) {
+      console.error('Resend OTP error:', err);
       throw new Error(err.response?.data?.message || 'Failed to resend OTP');
     }
   };
@@ -153,6 +196,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { data: res } = await axios.put('/user/profile', data);
       dispatch({ type: 'UPDATE_USER', payload: res.user });
     } catch (err: any) {
+      console.error('Profile update error:', err);
       throw new Error(err.response?.data?.message || 'Failed to update profile');
     }
   };
@@ -162,13 +206,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     checkAuth();
   }, []);
 
-  // Handle Google OAuth callback
+  // Handle Google OAuth callback with better error handling
   useEffect(() => {
     const handleGoogleCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('auth') === 'success') {
-        // Google OAuth successful, refresh user data
-        await refreshUser();
+        try {
+          // Google OAuth successful, refresh user data
+          await refreshUser();
+          // Clean up URL
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (error) {
+          console.error('Google OAuth callback error:', error);
+          // Clean up URL even on error
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } else if (urlParams.get('error') === 'auth_failed') {
+        console.error('Google OAuth failed');
         // Clean up URL
         window.history.replaceState({}, document.title, window.location.pathname);
       }
