@@ -87,20 +87,14 @@ app.use(session({
     mongoUrl: process.env.MONGODB_URI,
     collectionName: 'sessions'
   }),
-  name: 'sessionId',
   cookie: {
+    secure: process.env.NODE_ENV === 'production' ? 'auto' : false,
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',           // HTTPS only in prod
-    sameSite: process.env.NODE_ENV === 'production'          // must be lowercase
-               ? 'none' 
-               : 'lax',
-    domain: process.env.NODE_ENV === 'production'            // allow subdomains
-               ? '.thecarryco.in' 
-               : undefined,
-    path: '/',                                               // explicit path
-    maxAge: 7 * 24 * 60 * 60 * 1000,                             // 7 days
-    expires: new Date(Date.now() + 24 * 60 * 60 * 1000)      // explicit expiry
-  }
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    domain: process.env.NODE_ENV === 'production' ? undefined : undefined
+  },
+  name: 'sessionId' // Custom session name
 }));
 
 app.use(passport.initialize());
