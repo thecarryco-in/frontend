@@ -39,11 +39,7 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
   process.env.CLIENT_URL,
   process.env.CLIENT_URL2,
-  process.env.CLIENT_URL3,
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://localhost:5173',
-  'https://localhost:3000'
+  process.env.CLIENT_URL3
 ];
 
 // Enhanced CORS configuration for iOS/Mac compatibility
