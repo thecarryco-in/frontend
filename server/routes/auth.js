@@ -19,22 +19,24 @@ const generateToken = (userId) => {
 
 // Enhanced cookie setting function for iOS/Mac compatibility
 const setCookie = (res, token) => {
+  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+
   const cookieOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production',            // HTTPS only in prod
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    expires: new Date(Date.now() + sevenDays),                // explicit expiry
+    maxAge: sevenDays,                                        // 7 days
     path: '/'
   };
 
-  // For development, ensure cookies work on localhost
-  if (process.env.NODE_ENV !== 'production') {
-    cookieOptions.domain = undefined;
+  if (process.env.NODE_ENV === 'production') {
+    // ensure thecookie is valid for all your subdomains + main domain
+    cookieOptions.domain = '.thecarryco.in';
   }
 
   res.cookie('token', token, cookieOptions);
 };
-
 // Generate OTP
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -364,7 +366,9 @@ router.post('/logout', (req, res) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    path: '/'
+    path: '/',
+    // must match what you used in setCookie()
+    domain: process.env.NODE_ENV === 'production' ? '.thecarryco.in' : undefined
   };
 
   res.clearCookie('token', cookieOptions);
