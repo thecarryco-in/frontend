@@ -39,14 +39,23 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
   process.env.CLIENT_URL,
   process.env.CLIENT_URL2,
-  process.env.CLIENT_URL3
+  process.env.CLIENT_URL3,
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://localhost:5173',
+  'https://localhost:3000'
 ];
 
-// Enhanced CORS configuration for iOS/Mac compatibility
+// Safari/iOS specific CORS configuration
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
+    // Always allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
+    
+    // Allow all localhost variations for development
+    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
+      return callback(null, true);
+    }
     
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -56,7 +65,7 @@ app.use(cors({
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH'],
   allowedHeaders: [
     'Origin',
     'X-Requested-With',
@@ -65,40 +74,71 @@ app.use(cors({
     'Authorization',
     'Cookie',
     'Set-Cookie',
-    'Access-Control-Allow-Credentials'
+    'Access-Control-Allow-Credentials',
+    'Access-Control-Allow-Origin',
+    'Cache-Control',
+    'Pragma'
   ],
-  exposedHeaders: ['Set-Cookie'],
-  optionsSuccessStatus: 200 // For legacy browser support
+  exposedHeaders: ['Set-Cookie', 'Access-Control-Allow-Credentials'],
+  optionsSuccessStatus: 200,
+  preflightContinue: false
 }));
 
-// Handle preflight requests
-app.options('*', cors());
+// Handle preflight requests explicitly
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,HEAD,PATCH');
+  res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization,Cookie,Set-Cookie');
+  res.header('Access-Control-Max-Age', '86400'); // 24 hours
+  res.sendStatus(200);
+});
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// Enhanced session configuration for iOS/Mac compatibility
+// Safari/iOS compatible session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({
     mongoUrl: process.env.MONGODB_URI,
-    collectionName: 'sessions'
+    collectionName: 'sessions',
+    touchAfter: 24 * 3600 // lazy session update
   }),
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 7 * 1000, // 7 days
+    secure: process.env.NODE_ENV === 'production' ? 'auto' : false,
+    httpOnly: false, // Allow JavaScript access for Safari compatibility
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    domain: process.env.NODE_ENV === 'production' ? '.thecarryco.in' : undefined
+    domain: process.env.NODE_ENV === 'production' ? undefined : undefined // Let browser handle domain
   },
-  name: 'sessionId' // Custom session name
+  name: 'connect.sid', // Use standard session name
+  rolling: true, // Reset expiry on activity
+  proxy: true // Trust proxy for secure cookies
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Add Safari-specific headers middleware
+app.use((req, res, next) => {
+  // Safari-specific headers
+  res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.header('Pragma', 'no-cache');
+  res.header('Expires', '0');
+  
+  // Ensure CORS headers are always set
+  const origin = req.headers.origin;
+  if (origin && (allowedOrigins.includes(origin) || origin.includes('localhost'))) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  next();
+});
 
 // ────────────────────────────────────────────────
 // 4.  MongoDB connection
@@ -125,7 +165,9 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    cookies: req.cookies,
+    session: req.session?.id || 'No session'
   });
 });
 

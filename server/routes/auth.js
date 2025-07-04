@@ -17,22 +17,31 @@ const generateToken = (userId) => {
   });
 };
 
-// Enhanced cookie setting function for iOS/Mac compatibility
-const setCookie = (res, token) => {
+// Safari/iOS compatible cookie setting function
+const setCookie = (res, token, req) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
+  
   const cookieOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    httpOnly: false, // Allow JavaScript access for Safari
+    secure: isProduction ? isSecure : false,
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    path: '/'
+    path: '/',
+    domain: undefined // Let browser handle domain
   };
 
-  // For development, ensure cookies work on localhost
-  if (process.env.NODE_ENV !== 'production') {
-    cookieOptions.domain = undefined;
-  }
-
+  console.log('Setting cookie with options:', cookieOptions);
   res.cookie('token', token, cookieOptions);
+  
+  // Also set in session for Safari fallback
+  if (req.session) {
+    req.session.token = token;
+    req.session.userId = jwt.decode(token)?.userId;
+  }
+  
+  // Set additional headers for Safari
+  res.header('Set-Cookie', `token=${token}; Path=/; Max-Age=${cookieOptions.maxAge}; ${isProduction ? 'Secure; ' : ''}SameSite=${cookieOptions.sameSite}`);
 };
 
 // Generate OTP
@@ -129,8 +138,8 @@ router.post('/verify-otp', authLimiter, async (req, res) => {
     // Generate JWT token
     const token = generateToken(user._id);
 
-    // Set cookie with enhanced compatibility
-    setCookie(res, token);
+    // Set cookie with Safari compatibility
+    setCookie(res, token, req);
 
     res.status(201).json({
       message: 'Registration successful! Welcome to The CarryCo!',
@@ -144,7 +153,8 @@ router.post('/verify-otp', authLimiter, async (req, res) => {
         totalSpent: user.totalSpent,
         joinDate: user.createdAt,
         isAdmin: user.email === process.env.ADMIN_EMAIL
-      }
+      },
+      token // Also send token in response for Safari fallback
     });
   } catch (error) {
     console.error('OTP verification error:', error);
@@ -213,8 +223,8 @@ router.post('/login', authLimiter, async (req, res) => {
     // Generate JWT token
     const token = generateToken(user._id);
 
-    // Set cookie with enhanced compatibility
-    setCookie(res, token);
+    // Set cookie with Safari compatibility
+    setCookie(res, token, req);
 
     res.status(200).json({
       message: 'Login successful',
@@ -228,7 +238,8 @@ router.post('/login', authLimiter, async (req, res) => {
         totalSpent: user.totalSpent,
         joinDate: user.createdAt,
         isAdmin: user.email === process.env.ADMIN_EMAIL
-      }
+      },
+      token // Also send token in response for Safari fallback
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -343,14 +354,14 @@ router.get('/google/callback',
       // Generate JWT token
       const token = generateToken(req.user._id);
 
-      // Set cookie with enhanced compatibility
-      setCookie(res, token);
+      // Set cookie with Safari compatibility
+      setCookie(res, token, req);
 
       // Get redirect URL from session storage or default to home
       const redirectUrl = process.env.CLIENT_URL || 'http://localhost:5173';
       
       // Redirect with success parameter to trigger frontend auth refresh
-      res.redirect(`${redirectUrl}?auth=success`);
+      res.redirect(`${redirectUrl}?auth=success&token=${token}`);
     } catch (error) {
       console.error('Google callback error:', error);
       res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
@@ -361,13 +372,21 @@ router.get('/google/callback',
 // Logout
 router.post('/logout', (req, res) => {
   const cookieOptions = {
-    httpOnly: true,
+    httpOnly: false,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     path: '/'
   };
 
   res.clearCookie('token', cookieOptions);
+  
+  // Also clear session
+  if (req.session) {
+    req.session.destroy((err) => {
+      if (err) console.error('Session destroy error:', err);
+    });
+  }
+  
   res.status(200).json({ message: 'Logged out successfully' });
 });
 

@@ -95,7 +95,14 @@ const Login: React.FC = () => {
   const handleGoogleLogin = () => {
     // Store the intended destination in sessionStorage for Google OAuth
     sessionStorage.setItem('authRedirect', from);
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
+    
+    // For Safari compatibility, open in same window
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    if (isSafari) {
+      window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
+    } else {
+      window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
+    }
   };
 
   return (
@@ -125,6 +132,17 @@ const Login: React.FC = () => {
             <p className="text-gray-400">Sign in to your The CarryCo account</p>
           </div>
 
+          {/* Safari Notice */}
+          <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
+            <div className="flex items-center space-x-3">
+              <AlertTriangle className="w-5 h-5 text-blue-400" />
+              <div>
+                <p className="text-blue-400 font-medium text-sm">Safari Users</p>
+                <p className="text-gray-300 text-xs">Please ensure cookies are enabled for the best experience</p>
+              </div>
+            </div>
+          </div>
+
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
@@ -139,6 +157,7 @@ const Login: React.FC = () => {
                   className="w-full bg-white/10 backdrop-blur-md text-white rounded-2xl px-6 py-4 pl-12 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
                   placeholder="Enter your email"
                   required
+                  autoComplete="email"
                 />
                 <Mail className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
               </div>
@@ -156,6 +175,7 @@ const Login: React.FC = () => {
                   className="w-full bg-white/10 backdrop-blur-md text-white rounded-2xl px-6 py-4 pl-12 pr-12 border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent placeholder-gray-400"
                   placeholder="Enter your password"
                   required
+                  autoComplete="current-password"
                 />
                 <Lock className="absolute left-4 top-4 w-5 h-5 text-gray-400" />
                 <button
