@@ -220,8 +220,7 @@ router.post('/login', authLimiter, async (req, res) => {
         totalSpent: user.totalSpent,
         joinDate: user.createdAt,
         isAdmin: user.email === process.env.ADMIN_EMAIL
-      },
-      token // <-- Add token to response for iOS/Safari compatibility
+      }
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -347,8 +346,8 @@ router.get('/google/callback',
       // Get redirect URL from session storage or default to home
       const redirectUrl = process.env.CLIENT_URL || 'http://localhost:5173';
       
-      // Redirect with success parameter and token for iOS/frontend compatibility
-      res.redirect(`${redirectUrl}?auth=success&token=${token}`);
+      // Redirect with success parameter to trigger frontend auth refresh
+      res.redirect(`${redirectUrl}?auth=success`);
     } catch (error) {
       console.error('Google callback error:', error);
       res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
