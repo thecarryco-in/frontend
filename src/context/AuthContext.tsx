@@ -27,7 +27,6 @@ interface AuthContextType extends AuthState {
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
   checkAuth: () => Promise<void>;
-  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,8 +34,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_USER'; payload: User | null }
-  | { type: 'UPDATE_USER'; payload: Partial<User> }
-  | { type: 'CLEAR_USER' };
+  | { type: 'UPDATE_USER'; payload: Partial<User> };
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
@@ -53,13 +51,6 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
       return {
         ...state,
         user: state.user ? { ...state.user, ...action.payload } : null,
-      };
-    case 'CLEAR_USER':
-      return {
-        ...state,
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
       };
     default:
       return state;
@@ -79,50 +70,21 @@ axios.defaults.withCredentials = true;
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  const getAuthHeaders = () => {
-    // If token cookie is missing but localStorage token exists, use Authorization header
-    const token = localStorage.getItem('token');
-    if (token && !document.cookie.includes('token=')) {
-      return { Authorization: `Bearer ${token}` };
-    }
-    return {};
-  };
-
   const checkAuth = async () => {
+    dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      const { data } = await axios.get('/auth/me', { headers: getAuthHeaders() });
+      const { data } = await axios.get('/auth/me');
       dispatch({ type: 'SET_USER', payload: data.user });
     } catch {
-      dispatch({ type: 'CLEAR_USER' });
-    }
-  };
-
-  const refreshUser = async () => {
-    try {
-      const { data } = await axios.get('/auth/me', { headers: getAuthHeaders() });
-      dispatch({ type: 'SET_USER', payload: data.user });
-    } catch (error) {
-      console.error('Failed to refresh user:', error);
+      dispatch({ type: 'SET_USER', payload: null });
+      // no redirect here: allow public pages to render
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
       const { data } = await axios.post('/auth/login', { email, password });
-      // If token is present in response, set cookie and localStorage for iOS/Safari
-      if (data.token) {
-        document.cookie = `token=${data.token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=None; Secure`;
-        if (isIOS() || isSafari()) {
-          localStorage.setItem('token', data.token);
-        } else {
-          localStorage.removeItem('token');
-        }
-      }
       dispatch({ type: 'SET_USER', payload: data.user });
-      
-      // Force a small delay to ensure state is updated
-      await new Promise(resolve => setTimeout(resolve, 100));
     } catch (err: any) {
       throw new Error(err.response?.data?.message || 'Login failed');
     }
@@ -140,9 +102,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const { data } = await axios.post('/auth/verify-otp', { email, otp });
       dispatch({ type: 'SET_USER', payload: data.user });
-      
-      // Force a small delay to ensure state is updated
-      await new Promise(resolve => setTimeout(resolve, 100));
     } catch (err: any) {
       throw new Error(err.response?.data?.message || 'OTP verification failed');
     }
@@ -156,66 +115,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Utility: Detect iOS or Safari
-  const isIOS = () => {
-    return /iP(ad|hone|od)/.test(navigator.userAgent) ||
-      (navigator.userAgent.includes('Macintosh') && 'ontouchend' in document);
-  };
-  const isSafari = () => {
-    return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  };
-
-  // Handle Google OAuth callback and set token from URL for iOS compatibility
-  useEffect(() => {
-    const handleGoogleCallback = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('auth') === 'success') {
-        // If token is present in URL (iOS/third-party browser fix)
-        const token = urlParams.get('token');
-        if (token) {
-          // Always set cookie for API requests
-          document.cookie = `token=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=None; Secure`;
-          // Only store in localStorage if iOS/Safari
-          if (isIOS() || isSafari()) {
-            localStorage.setItem('token', token);
-          } else {
-            localStorage.removeItem('token');
-          }
-        }
-        // Google OAuth successful, refresh user data
-        await refreshUser();
-        // Clean up URL
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    };
-    handleGoogleCallback();
-  }, []);
-
-  // Clear token from localStorage on logout
   const logout = async () => {
     try {
       await axios.post('/auth/logout');
     } catch (err) {
-      console.error('Logout error:', err);
+      console.error(err);
     } finally {
-      localStorage.removeItem('token');
-      dispatch({ type: 'CLEAR_USER' });
+      dispatch({ type: 'SET_USER', payload: null });
     }
   };
 
-  const updateProfile = async (data: Partial<User>) => {
-    try {
-      const { data: res } = await axios.put('/user/profile', data);
-      dispatch({ type: 'UPDATE_USER', payload: res.user });
-    } catch (err: any) {
-      throw new Error(err.response?.data?.message || 'Failed to update profile');
-    }
-  };
-
-  // Check auth on mount
   useEffect(() => {
     checkAuth();
   }, []);
+
+  if (state.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-white text-lg">Please Wait...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider
@@ -226,9 +149,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         verifyOTP,
         resendOTP,
         logout,
-        updateProfile,
+        updateProfile: async (data) => {
+          const { data: res } = await axios.put('/user/profile', data);
+          dispatch({ type: 'UPDATE_USER', payload: res.user });
+        },
         checkAuth,
-        refreshUser,
       }}
     >
       {children}
