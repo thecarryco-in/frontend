@@ -88,11 +88,11 @@ app.use(session({
     collectionName: 'sessions'
   }),
   cookie: {
-    secure: process.env.NODE_ENV === 'production' ? 'auto' : false,
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 24 * 60 * 60 * 7 * 1000, // 7 days
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    domain: process.env.NODE_ENV === 'production' ? undefined : undefined
+    domain: process.env.NODE_ENV === 'production' ? '.thecarryco.in' : undefined
   },
   name: 'sessionId' // Custom session name
 }));
