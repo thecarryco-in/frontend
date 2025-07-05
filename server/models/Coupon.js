@@ -57,15 +57,20 @@ const couponSchema = new mongoose.Schema({
 });
 
 // Auto-set expiry date based on validity days
-couponSchema.pre('save', function(next) {
-  if (this.isNew || this.isModified('validityDays')) {
-    this.expiresAt = new Date(Date.now() + this.validityDays * 24 * 60 * 60 * 1000);
+couponSchema.pre('validate', function(next) {
+  // Always coerce validityDays to a number
+  this.validityDays = Number(this.validityDays);
+  if (!this.validityDays || isNaN(this.validityDays)) {
+    return next(new Error('validityDays must be a valid number'));
   }
+  // Only set expiresAt if not already set, or always set it for consistency
+  this.expiresAt = new Date(Date.now() + this.validityDays * 24 * 60 * 60 * 1000);
   next();
 });
 
 // Index for better performance
-couponSchema.index({ code: 1 });
+// Remove duplicate index warning by commenting out code index (already unique in schema)
+// couponSchema.index({ code: 1 });
 couponSchema.index({ expiresAt: 1 });
 couponSchema.index({ isActive: 1 });
 
