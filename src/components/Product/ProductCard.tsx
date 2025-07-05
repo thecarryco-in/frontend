@@ -4,6 +4,7 @@ import { Product } from '../../types';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-toastify';
 
 interface ProductCardProps {
   product: Product;
@@ -32,6 +33,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     // Ensure product has an ID for cart operations
     const productWithId = { ...product, id: productId };
     addToCart(productWithId);
+    toast.success('Added to cart!');
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
@@ -41,14 +43,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       console.error('Cannot add product without ID to wishlist:', product);
       return;
     }
-    
     // Ensure product has an ID for wishlist operations
     const productWithId = { ...product, id: productId };
     
     if (isInWishlist(productId)) {
       removeFromWishlist(productId);
+      toast.info('Removed from wishlist');
     } else {
       addToWishlist(productWithId);
+      toast.success('Added to wishlist!');
     }
   };
 
