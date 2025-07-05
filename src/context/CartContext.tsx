@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import { toast } from 'react-toastify';
 import { CartItem, Product } from '../types';
 
 interface CartState {
@@ -153,6 +154,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const clearCart = () => {
     dispatch({ type: 'CLEAR_CART' });
+    toast.info('Cart cleared');
   };
 
   return (
