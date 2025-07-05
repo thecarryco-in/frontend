@@ -1,6 +1,7 @@
 import express from 'express';
 import Product from '../models/Product.js';
 import Review from '../models/Review.js';
+import User from '../models/User.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
 import { upload, deleteImage, getPublicIdFromUrl } from '../config/cloudinary.js';
@@ -360,6 +361,50 @@ router.get('/dashboard', authenticateToken, requireAdmin, async (req, res) => {
       createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } // Last 7 days
     });
 
+    // Membership stats - Calculate user distribution by spending tiers
+    const membershipStats = await User.aggregate([
+      {
+        $addFields: {
+          membershipTier: {
+            $switch: {
+              branches: [
+                { case: { $gte: ['$totalSpent', 10000] }, then: 'Platinum' },
+                { case: { $gte: ['$totalSpent', 5000] }, then: 'Gold' },
+                { case: { $gte: ['$totalSpent', 1000] }, then: 'Silver' }
+              ],
+              default: 'Bronze'
+            }
+          }
+        }
+      },
+      {
+        $group: {
+          _id: '$membershipTier',
+          count: { $sum: 1 },
+          totalSpent: { $sum: '$totalSpent' }
+        }
+      },
+      {
+        $sort: { 
+          _id: 1 // Sort by tier name
+        }
+      }
+    ]);
+
+    // Ensure all tiers are represented
+    const allTiers = ['Bronze', 'Silver', 'Gold', 'Platinum'];
+    const membershipData = allTiers.map(tier => {
+      const found = membershipStats.find(stat => stat._id === tier);
+      return {
+        tier,
+        count: found ? found.count : 0,
+        totalSpent: found ? found.totalSpent : 0
+      };
+    });
+
+    // Total users
+    const totalUsers = await User.countDocuments();
+
     res.status(200).json({
       stats: {
         totalProducts,
@@ -367,10 +412,12 @@ router.get('/dashboard', authenticateToken, requireAdmin, async (req, res) => {
         outOfStockProducts,
         featuredProducts,
         totalReviews,
-        recentReviews
+        recentReviews,
+        totalUsers
       },
       productsByCategory,
-      recentProducts
+      recentProducts,
+      membershipStats: membershipData
     });
   } catch (error) {
     console.error('Admin dashboard error:', error);

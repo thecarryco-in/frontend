@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, MessageSquare, TrendingUp, ShoppingBag, IndianRupee } from 'lucide-react';
+import { Package, MessageSquare, TrendingUp, ShoppingBag, IndianRupee, Users, Crown, Award, Star, Shield } from 'lucide-react';
 import axios from 'axios';
 
 interface DashboardStats {
@@ -7,6 +7,7 @@ interface DashboardStats {
   inStockProducts: number;
   outOfStockProducts: number;
   featuredProducts: number;
+  totalUsers: number;
 }
 
 interface ContactStats {
@@ -26,10 +27,17 @@ interface OrderStats {
   totalRevenue: number;
 }
 
+interface MembershipStat {
+  tier: string;
+  count: number;
+  totalSpent: number;
+}
+
 const AdminDashboard: React.FC = () => {
   const [productStats, setProductStats] = useState<DashboardStats | null>(null);
   const [contactStats, setContactStats] = useState<ContactStats | null>(null);
   const [orderStats, setOrderStats] = useState<OrderStats | null>(null);
+  const [membershipStats, setMembershipStats] = useState<MembershipStat[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,6 +52,7 @@ const AdminDashboard: React.FC = () => {
         setProductStats(productResponse.data.stats);
         setContactStats(contactResponse.data.stats);
         setOrderStats(orderResponse.data.stats);
+        setMembershipStats(productResponse.data.membershipStats || []);
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
       } finally {
@@ -53,6 +62,36 @@ const AdminDashboard: React.FC = () => {
 
     fetchStats();
   }, []);
+
+  const getMembershipIcon = (tier: string) => {
+    switch (tier) {
+      case 'Platinum': return Shield;
+      case 'Gold': return Crown;
+      case 'Silver': return Award;
+      case 'Bronze': return Star;
+      default: return Users;
+    }
+  };
+
+  const getMembershipColor = (tier: string) => {
+    switch (tier) {
+      case 'Platinum': return 'from-gray-400 to-gray-600';
+      case 'Gold': return 'from-yellow-400 to-yellow-600';
+      case 'Silver': return 'from-gray-300 to-gray-500';
+      case 'Bronze': return 'from-orange-400 to-orange-600';
+      default: return 'from-gray-400 to-gray-600';
+    }
+  };
+
+  const getMembershipTextColor = (tier: string) => {
+    switch (tier) {
+      case 'Platinum': return 'text-gray-400';
+      case 'Gold': return 'text-yellow-400';
+      case 'Silver': return 'text-gray-400';
+      case 'Bronze': return 'text-orange-400';
+      default: return 'text-gray-400';
+    }
+  };
 
   if (loading) {
     return (
@@ -118,6 +157,53 @@ const AdminDashboard: React.FC = () => {
                 <p className="text-2xl md:text-3xl font-bold text-white">{orderStats?.deliveredOrders || 0}</p>
               </div>
               <Package className="w-8 h-8 md:w-12 md:h-12 text-purple-400" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Membership Statistics */}
+      <div>
+        <h2 className="text-xl md:text-2xl font-bold text-white mb-4 md:mb-6">Membership Distribution</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          {membershipStats.map((membership, index) => {
+            const Icon = getMembershipIcon(membership.tier);
+            const colorClass = getMembershipColor(membership.tier);
+            const textColorClass = getMembershipTextColor(membership.tier);
+            
+            return (
+              <div key={index} className={`bg-gradient-to-br ${colorClass}/20 rounded-xl md:rounded-2xl p-4 md:p-6 border ${colorClass.replace('from-', 'border-').replace(' to-', '/30 border-').replace('-600', '-400')}/30`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className={`${textColorClass} text-sm font-medium`}>{membership.tier} Members</p>
+                    <p className="text-2xl md:text-3xl font-bold text-white">{membership.count}</p>
+                  </div>
+                  <Icon className={`w-8 h-8 md:w-12 md:h-12 ${textColorClass}`} />
+                </div>
+                <div className="text-xs text-gray-400">
+                  Total Spent: ₹{Math.round(membership.totalSpent)}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-4 p-4 bg-gradient-to-r from-purple-500/10 to-cyan-500/10 rounded-xl border border-purple-400/20">
+          <div className="flex items-center space-x-3 mb-2">
+            <Users className="w-5 h-5 text-purple-400" />
+            <h4 className="text-white font-semibold">Membership Tiers</h4>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-300">
+            <div>
+              <span className="text-orange-400 font-medium">Bronze:</span> ₹0 - ₹999
+            </div>
+            <div>
+              <span className="text-gray-400 font-medium">Silver:</span> ₹1,000 - ₹4,999
+            </div>
+            <div>
+              <span className="text-yellow-400 font-medium">Gold:</span> ₹5,000 - ₹9,999
+            </div>
+            <div>
+              <span className="text-gray-400 font-medium">Platinum:</span> ₹10,000+
             </div>
           </div>
         </div>

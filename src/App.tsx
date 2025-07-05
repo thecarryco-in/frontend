@@ -5,6 +5,7 @@ import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import Header from './components/Layout/Header';
 import Footer from './components/Layout/Footer';
+import CookieConsent from './components/Layout/CookieConsent';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
 import About from './pages/About';
@@ -39,6 +40,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         {children}
       </main>
       {!hideHeaderFooter && <Footer />}
+      {!hideHeaderFooter && <CookieConsent />}
     </div>
   );
 };
