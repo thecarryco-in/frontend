@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Package, MessageSquare, ShoppingBag, Star } from 'lucide-react';
+import { LayoutDashboard, Package, MessageSquare, ShoppingBag, Star, Tag } from 'lucide-react';
 import AdminDashboard from '../components/Admin/AdminDashboard';
 import ProductManagement from '../components/Admin/ProductManagement';
 import ContactManagement from '../components/Admin/ContactManagement';
 import OrderManagement from '../components/Admin/OrderManagement';
 import ProductReviews from '../components/Admin/ProductReviews';
+import CouponManagement from '../components/Admin/CouponManagement';
 
 const AdminPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -13,6 +14,7 @@ const AdminPanel: React.FC = () => {
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'orders', label: 'Orders', icon: ShoppingBag },
     { id: 'products', label: 'Products', icon: Package },
+    { id: 'coupons', label: 'Discounts', icon: Tag },
     { id: 'reviews', label: 'Reviews', icon: Star },
     { id: 'contacts', label: 'Messages', icon: MessageSquare },
   ];
@@ -25,6 +27,8 @@ const AdminPanel: React.FC = () => {
         return <OrderManagement />;
       case 'products':
         return <ProductManagement />;
+      case 'coupons':
+        return <CouponManagement />;
       case 'reviews':
         return <ProductReviews />;
       case 'contacts':
@@ -51,7 +55,7 @@ const AdminPanel: React.FC = () => {
         {/* Top Tab Navigation */}
         <div className="mb-6 md:mb-8">
           <div className="bg-gradient-to-br from-slate-800/50 to-gray-900/50 backdrop-blur-md rounded-xl md:rounded-2xl p-2 border border-white/10">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 return (
