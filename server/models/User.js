@@ -30,7 +30,8 @@ const userSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    default: ''
+    default: '',
+    maxlength: 13
   },
   isVerified: {
     type: Boolean,
