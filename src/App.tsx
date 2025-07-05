@@ -26,6 +26,8 @@ import ForgotPassword from './components/Auth/ForgotPassword';
 import ResetPassword from './components/Auth/ResetPassword';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import AdminRoute from './components/Auth/AdminRoute';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Component to conditionally render Header and Footer
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -41,6 +43,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       </main>
       {!hideHeaderFooter && <Footer />}
       {!hideHeaderFooter && <CookieConsent />}
+      <ToastContainer position="top-right" autoClose={2000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover theme="dark" />
     </div>
   );
 };
