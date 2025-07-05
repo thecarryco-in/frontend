@@ -170,7 +170,9 @@ const UserProfile: React.FC = () => {
                 type="tel"
                 value={editData.phone}
                 onChange={(e) => setEditData({...editData, phone: e.target.value})}
-                placeholder="+91 98765 43210"
+                placeholder="9876543210"
+                minLength={2}
+                maxLength={20}
                 className="w-full bg-white/10 backdrop-blur-md text-white px-4 py-3 md:px-6 md:py-4 rounded-xl md:rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
               />
             ) : (
@@ -184,23 +186,6 @@ const UserProfile: React.FC = () => {
             <label className="block text-sm font-medium mb-3 text-gray-300">Member Since</label>
             <div className="bg-white/5 px-4 py-3 md:px-6 md:py-4 rounded-xl md:rounded-2xl border border-white/10">
               <span className="text-white font-medium">{formatDate(user.joinDate)}</span>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-3 text-gray-300">Membership Status</label>
-            <div className="bg-white/5 px-4 py-3 md:px-6 md:py-4 rounded-xl md:rounded-2xl border border-white/10">
-              <div className={`inline-flex items-center space-x-2 px-3 py-1 rounded-full ${getMemberStatusColor(memberStatus)}`}>
-                <Star className="w-4 h-4 text-yellow-400" />
-                <span className="text-sm font-semibold">{memberStatus} Member</span>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-3 text-gray-300">Total Spent</label>
-            <div className="bg-white/5 px-4 py-3 md:px-6 md:py-4 rounded-xl md:rounded-2xl border border-white/10">
-              <span className="text-white font-medium">₹{user.totalSpent ? Math.round(user.totalSpent) : 0}</span>
             </div>
           </div>
         </div>
