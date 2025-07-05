@@ -10,43 +10,32 @@ import { authLimiter } from '../middleware/rateLimiters.js';
 
 const router = express.Router();
 
-// Generate JWT token
-const generateToken = (userId) => {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: '7d'
-  });
-};
-
-// Safari/iOS compatible cookie setting function
-const setCookie = (res, token, req) => {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
-  
-  const cookieOptions = {
-    httpOnly: false, // Allow JavaScript access for Safari
-    secure: isProduction ? isSecure : false,
-    sameSite: isProduction ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    path: '/',
-    domain: undefined // Let browser handle domain
-  };
-
-  console.log('Setting cookie with options:', cookieOptions);
-  res.cookie('token', token, cookieOptions);
-  
-  // Also set in session for Safari fallback
-  if (req.session) {
-    req.session.token = token;
-    req.session.userId = jwt.decode(token)?.userId;
-  }
-  
-  // Set additional headers for Safari
-  res.header('Set-Cookie', `token=${token}; Path=/; Max-Age=${cookieOptions.maxAge}; ${isProduction ? 'Secure; ' : ''}SameSite=${cookieOptions.sameSite}`);
-};
-
 // Generate OTP
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// SECURE: Session-based authentication (no localStorage)
+const createSecureSession = (req, user) => {
+  req.session.userId = user._id.toString();
+  req.session.userEmail = user.email;
+  req.session.isAuthenticated = true;
+  req.session.loginTime = new Date().toISOString();
+  
+  // Regenerate session ID for security
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => {
+      if (err) {
+        reject(err);
+      } else {
+        req.session.userId = user._id.toString();
+        req.session.userEmail = user.email;
+        req.session.isAuthenticated = true;
+        req.session.loginTime = new Date().toISOString();
+        resolve();
+      }
+    });
+  });
 };
 
 // Register user (send OTP)
@@ -135,11 +124,8 @@ router.post('/verify-otp', authLimiter, async (req, res) => {
       // Don't fail the registration if welcome email fails
     }
 
-    // Generate JWT token
-    const token = generateToken(user._id);
-
-    // Set cookie with Safari compatibility
-    setCookie(res, token, req);
+    // SECURE: Create session instead of JWT token
+    await createSecureSession(req, user);
 
     res.status(201).json({
       message: 'Registration successful! Welcome to The CarryCo!',
@@ -153,8 +139,7 @@ router.post('/verify-otp', authLimiter, async (req, res) => {
         totalSpent: user.totalSpent,
         joinDate: user.createdAt,
         isAdmin: user.email === process.env.ADMIN_EMAIL
-      },
-      token // Also send token in response for Safari fallback
+      }
     });
   } catch (error) {
     console.error('OTP verification error:', error);
@@ -220,11 +205,8 @@ router.post('/login', authLimiter, async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Generate JWT token
-    const token = generateToken(user._id);
-
-    // Set cookie with Safari compatibility
-    setCookie(res, token, req);
+    // SECURE: Create session instead of JWT token
+    await createSecureSession(req, user);
 
     res.status(200).json({
       message: 'Login successful',
@@ -238,8 +220,7 @@ router.post('/login', authLimiter, async (req, res) => {
         totalSpent: user.totalSpent,
         joinDate: user.createdAt,
         isAdmin: user.email === process.env.ADMIN_EMAIL
-      },
-      token // Also send token in response for Safari fallback
+      }
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -351,17 +332,14 @@ router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: `${process.env.CLIENT_URL}/login?error=auth_failed` }),
   async (req, res) => {
     try {
-      // Generate JWT token
-      const token = generateToken(req.user._id);
-
-      // Set cookie with Safari compatibility
-      setCookie(res, token, req);
+      // SECURE: Create session for Google OAuth
+      await createSecureSession(req, req.user);
 
       // Get redirect URL from session storage or default to home
       const redirectUrl = process.env.CLIENT_URL || 'http://localhost:5173';
       
       // Redirect with success parameter to trigger frontend auth refresh
-      res.redirect(`${redirectUrl}?auth=success&token=${token}`);
+      res.redirect(`${redirectUrl}?auth=success`);
     } catch (error) {
       console.error('Google callback error:', error);
       res.redirect(`${process.env.CLIENT_URL}/login?error=auth_failed`);
@@ -371,30 +349,37 @@ router.get('/google/callback',
 
 // Logout
 router.post('/logout', (req, res) => {
-  const cookieOptions = {
-    httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    path: '/'
-  };
-
-  res.clearCookie('token', cookieOptions);
-  
-  // Also clear session
-  if (req.session) {
-    req.session.destroy((err) => {
-      if (err) console.error('Session destroy error:', err);
+  // SECURE: Destroy session completely
+  req.session.destroy((err) => {
+    if (err) {
+      console.error('Session destroy error:', err);
+      return res.status(500).json({ message: 'Logout failed' });
+    }
+    
+    // Clear session cookie
+    res.clearCookie('sessionId', {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/'
     });
-  }
-  
-  res.status(200).json({ message: 'Logged out successfully' });
+    
+    res.status(200).json({ message: 'Logged out successfully' });
+  });
 });
 
 // Get current user
-router.get('/me', authenticateToken, async (req, res) => {
+router.get('/me', async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select('-password');
+    // SECURE: Check session instead of JWT
+    if (!req.session?.userId || !req.session?.isAuthenticated) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    const user = await User.findById(req.session.userId).select('-password');
     if (!user) {
+      // Clear invalid session
+      req.session.destroy();
       return res.status(404).json({ message: 'User not found' });
     }
 

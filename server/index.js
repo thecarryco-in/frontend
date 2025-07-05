@@ -46,7 +46,7 @@ const allowedOrigins = [
   'https://localhost:3000'
 ];
 
-// Safari/iOS specific CORS configuration
+// Enhanced CORS configuration for security
 app.use(cors({
   origin: (origin, callback) => {
     // Always allow requests with no origin (mobile apps, Postman, etc.)
@@ -98,7 +98,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// Safari/iOS compatible session configuration
+// SECURE session configuration - primary authentication method
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -109,13 +109,13 @@ app.use(session({
     touchAfter: 24 * 3600 // lazy session update
   }),
   cookie: {
-    secure: process.env.NODE_ENV === 'production' ? 'auto' : false,
-    httpOnly: false, // Allow JavaScript access for Safari compatibility
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true, // SECURE: Prevent XSS attacks
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    domain: process.env.NODE_ENV === 'production' ? undefined : undefined // Let browser handle domain
+    domain: process.env.NODE_ENV === 'production' ? undefined : undefined
   },
-  name: 'connect.sid', // Use standard session name
+  name: 'sessionId', // Custom session name for security
   rolling: true, // Reset expiry on activity
   proxy: true // Trust proxy for secure cookies
 }));
@@ -123,9 +123,15 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Add Safari-specific headers middleware
+// Security headers middleware
 app.use((req, res, next) => {
-  // Safari-specific headers
+  // Security headers
+  res.header('X-Content-Type-Options', 'nosniff');
+  res.header('X-Frame-Options', 'DENY');
+  res.header('X-XSS-Protection', '1; mode=block');
+  res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // Safari-specific headers for session handling
   res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.header('Pragma', 'no-cache');
   res.header('Expires', '0');
@@ -166,8 +172,8 @@ app.get('/api/health', (req, res) => {
     status: 'OK', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    cookies: req.cookies,
-    session: req.session?.id || 'No session'
+    session: req.session?.id || 'No session',
+    authenticated: !!req.session?.userId
   });
 });
 
@@ -192,4 +198,5 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 Client URL: ${process.env.CLIENT_URL || 'http://localhost:5173'}`);
+  console.log(`🔒 Security: Enhanced session-based authentication`);
 });

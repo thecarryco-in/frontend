@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, Loader, Chrome, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Loader, Chrome, CheckCircle, AlertTriangle, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 // Custom notification component
@@ -96,13 +96,8 @@ const Login: React.FC = () => {
     // Store the intended destination in sessionStorage for Google OAuth
     sessionStorage.setItem('authRedirect', from);
     
-    // For Safari compatibility, open in same window
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    if (isSafari) {
-      window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
-    } else {
-      window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
-    }
+    // Redirect to Google OAuth
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`;
   };
 
   return (
@@ -132,13 +127,13 @@ const Login: React.FC = () => {
             <p className="text-gray-400">Sign in to your The CarryCo account</p>
           </div>
 
-          {/* Safari Notice */}
-          <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
+          {/* Security Notice */}
+          <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-2xl">
             <div className="flex items-center space-x-3">
-              <AlertTriangle className="w-5 h-5 text-blue-400" />
+              <Shield className="w-5 h-5 text-green-400" />
               <div>
-                <p className="text-blue-400 font-medium text-sm">Safari Users</p>
-                <p className="text-gray-300 text-xs">Please ensure cookies are enabled for the best experience</p>
+                <p className="text-green-400 font-medium text-sm">Secure Authentication</p>
+                <p className="text-gray-300 text-xs">Your login is protected with secure session-based authentication</p>
               </div>
             </div>
           </div>

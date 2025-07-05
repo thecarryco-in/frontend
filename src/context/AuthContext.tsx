@@ -72,36 +72,31 @@ const initialState: AuthState = {
   isAuthenticated: false,
 };
 
-// Safari/iOS compatible Axios configuration
+// SECURE: Session-based Axios configuration (no localStorage)
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-axios.defaults.withCredentials = true;
+axios.defaults.withCredentials = true; // CRITICAL: Always send cookies
 axios.defaults.timeout = 30000; // 30 second timeout
 
-// Safari-specific headers
-const getSafariHeaders = () => ({
+// Enhanced headers for security
+const getSecureHeaders = () => ({
   'Content-Type': 'application/json',
   'Accept': 'application/json',
-  'Cache-Control': 'no-cache',
-  'Pragma': 'no-cache'
+  'Cache-Control': 'no-cache, no-store, must-revalidate',
+  'Pragma': 'no-cache',
+  'X-Requested-With': 'XMLHttpRequest'
 });
 
-// Add request interceptor for Safari compatibility
+// Request interceptor for security
 axios.interceptors.request.use(
   (config) => {
     // Ensure credentials are always sent
     config.withCredentials = true;
     
-    // Add Safari-compatible headers
+    // Add security headers
     config.headers = {
       ...config.headers,
-      ...getSafariHeaders()
+      ...getSecureHeaders()
     };
-    
-    // Add token from localStorage as fallback for Safari
-    const token = localStorage.getItem('authToken');
-    if (token && !config.headers.Authorization) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
     
     return config;
   },
@@ -111,26 +106,15 @@ axios.interceptors.request.use(
   }
 );
 
-// Add response interceptor for better error handling
+// Response interceptor for error handling
 axios.interceptors.response.use(
-  (response) => {
-    // Store token in localStorage for Safari fallback
-    if (response.data.token) {
-      localStorage.setItem('authToken', response.data.token);
-    }
-    return response;
-  },
+  (response) => response,
   (error) => {
     console.error('Response interceptor error:', error);
     
     // Handle network errors
     if (!error.response) {
       console.error('Network error or server unreachable');
-    }
-    
-    // Clear token on 401/403 errors
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      localStorage.removeItem('authToken');
     }
     
     return Promise.reject(error);
@@ -144,35 +128,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       
-      // Try with stored token first for Safari
-      const storedToken = localStorage.getItem('authToken');
-      if (storedToken) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-      }
-      
       const { data } = await axios.get('/auth/me');
       dispatch({ type: 'SET_USER', payload: data.user });
     } catch (error) {
       console.error('Auth check failed:', error);
-      localStorage.removeItem('authToken');
-      delete axios.defaults.headers.common['Authorization'];
       dispatch({ type: 'CLEAR_USER' });
     }
   };
 
   const refreshUser = async () => {
     try {
-      const storedToken = localStorage.getItem('authToken');
-      if (storedToken) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-      }
-      
       const { data } = await axios.get('/auth/me');
       dispatch({ type: 'SET_USER', payload: data.user });
     } catch (error) {
       console.error('Failed to refresh user:', error);
-      localStorage.removeItem('authToken');
-      delete axios.defaults.headers.common['Authorization'];
       dispatch({ type: 'CLEAR_USER' });
     }
   };
@@ -180,13 +149,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string) => {
     try {
       const { data } = await axios.post('/auth/login', { email, password });
-      
-      // Store token for Safari compatibility
-      if (data.token) {
-        localStorage.setItem('authToken', data.token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
-      }
-      
       dispatch({ type: 'SET_USER', payload: data.user });
       
       // Force a small delay to ensure state is updated
@@ -209,13 +171,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const verifyOTP = async (email: string, otp: string) => {
     try {
       const { data } = await axios.post('/auth/verify-otp', { email, otp });
-      
-      // Store token for Safari compatibility
-      if (data.token) {
-        localStorage.setItem('authToken', data.token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
-      }
-      
       dispatch({ type: 'SET_USER', payload: data.user });
       
       // Force a small delay to ensure state is updated
@@ -241,8 +196,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
-      localStorage.removeItem('authToken');
-      delete axios.defaults.headers.common['Authorization'];
       dispatch({ type: 'CLEAR_USER' });
     }
   };
@@ -262,20 +215,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     checkAuth();
   }, []);
 
-  // Handle Google OAuth callback with Safari compatibility
+  // Handle Google OAuth callback
   useEffect(() => {
     const handleGoogleCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
       
       if (urlParams.get('auth') === 'success') {
         try {
-          // Store token if provided
-          if (token) {
-            localStorage.setItem('authToken', token);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          }
-          
           // Google OAuth successful, refresh user data
           await refreshUser();
           // Clean up URL
