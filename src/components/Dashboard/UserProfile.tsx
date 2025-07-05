@@ -171,8 +171,8 @@ const UserProfile: React.FC = () => {
                 value={editData.phone}
                 onChange={(e) => setEditData({...editData, phone: e.target.value})}
                 placeholder="9876543210"
-                minLength={2}
-                maxLength={20}
+                minLength={10}
+                maxLength={10}
                 className="w-full bg-white/10 backdrop-blur-md text-white px-4 py-3 md:px-6 md:py-4 rounded-xl md:rounded-2xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
               />
             ) : (
