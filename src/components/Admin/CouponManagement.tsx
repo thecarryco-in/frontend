@@ -80,7 +80,37 @@ const CouponManagement: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    // Frontend validation for required fields and correct types
+    if (!formData.code.trim()) {
+      alert('Coupon code is required.');
+      return;
+    }
+    if (!formData.type || !['flat', 'percentage'].includes(formData.type)) {
+      alert('Discount type is required and must be flat or percentage.');
+      return;
+    }
+    if (!formData.value || isNaN(Number(formData.value)) || Number(formData.value) < 1) {
+      alert('Discount value is required and must be a positive number.');
+      return;
+    }
+    if (!formData.validityDays || isNaN(Number(formData.validityDays)) || Number(formData.validityDays) < 1 || Number(formData.validityDays) > 365) {
+      alert('Validity days must be between 1 and 365.');
+      return;
+    }
+    if (formData.type === 'percentage' && Number(formData.value) > 100) {
+      alert('Percentage discount cannot exceed 100%.');
+      return;
+    }
+    if (formData.minCartValue && (isNaN(Number(formData.minCartValue)) || Number(formData.minCartValue) < 0)) {
+      alert('Min cart value must be 0 or greater.');
+      return;
+    }
+    if (formData.maxUsage && (isNaN(Number(formData.maxUsage)) || Number(formData.maxUsage) < 1)) {
+      alert('Max usage must be a positive number.');
+      return;
+    }
+
     try {
       const payload = {
         ...formData,
