@@ -139,13 +139,6 @@ const Wishlist: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Tax Inclusive Notice */}
-                  <div className="text-center">
-                    <span className="text-xs text-gray-400 bg-white/5 px-2 py-1 rounded-full">
-                      Inclusive of all taxes
-                    </span>
-                  </div>
-
                   {/* Actions */}
                   <div className="flex space-x-3">
                     <button
