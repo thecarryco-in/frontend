@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Shield, Truck, CreditCard, User, MapPin, Phone, ChevronDown, ChevronUp, Info, LogIn, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Shield, Truck, CreditCard, User, MapPin, Phone, ChevronDown, ChevronUp, Info, LogIn, CheckCircle, AlertTriangle, Tag, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -60,6 +60,9 @@ const Cart: React.FC = () => {
   const [showCheckout, setShowCheckout] = useState(false);
   const [showTaxBreakdown, setShowTaxBreakdown] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({
     name: user?.name || '',
     phone: user?.phone || '',
@@ -76,8 +79,12 @@ const Cart: React.FC = () => {
   const isShippingFree = totalIncludingTax > SHIPPING_THRESHOLD;
   const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
   
+  // Apply coupon discount
+  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const totalAfterDiscount = totalIncludingTax - discountAmount;
+  
   // Final totals
-  const finalTotalWithShipping = totalIncludingTax + (shippingCost * 1.18); // Shipping also has tax
+  const finalTotalWithShipping = totalAfterDiscount + (shippingCost * 1.18); // Shipping also has tax
 
   const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
     setNotification({ type, message });
@@ -89,6 +96,34 @@ const Cart: React.FC = () => {
       ...shippingAddress,
       [e.target.name]: e.target.value
     });
+  };
+
+  const validateCoupon = async () => {
+    if (!couponCode.trim()) {
+      showNotification('error', 'Please enter a coupon code');
+      return;
+    }
+
+    setCouponLoading(true);
+    try {
+      const response = await axios.post('/coupons/validate', {
+        code: couponCode.trim(),
+        cartTotal: totalIncludingTax
+      });
+
+      setAppliedCoupon(response.data);
+      showNotification('success', `Coupon applied! You saved ₹${response.data.discountAmount}`);
+    } catch (error: any) {
+      showNotification('error', error.response?.data?.message || 'Invalid coupon code');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    showNotification('info', 'Coupon removed');
   };
 
   const loadRazorpayScript = () => {
@@ -162,7 +197,7 @@ const Cart: React.FC = () => {
         return;
       }
 
-      // Create order with proper product data including shipping
+      // Create order with proper product data including shipping and coupon
       const orderData = {
         items: items.map(item => {
           const productId = getProductId(item.product);
@@ -176,7 +211,9 @@ const Cart: React.FC = () => {
         }),
         shippingAddress,
         totalAmount: total, // Send base total, backend will calculate shipping
-        totalIncludingTax: totalIncludingTax // Send tax-inclusive total for shipping calculation
+        totalIncludingTax: totalIncludingTax, // Send tax-inclusive total for shipping calculation
+        couponCode: appliedCoupon ? appliedCoupon.coupon.code : null,
+        discountAmount: discountAmount
       };
 
       console.log('Order data being sent:', orderData);
@@ -194,6 +231,13 @@ const Cart: React.FC = () => {
         order_id: razorpayOrderId,
         handler: async (rzpResponse: any) => {
           try {
+            // Apply coupon if used
+            if (appliedCoupon) {
+              await axios.post('/coupons/apply', {
+                code: appliedCoupon.coupon.code
+              });
+            }
+
             // Verify payment and send all required data
             await axios.post('/orders/verify-payment', {
               razorpayPaymentId: rzpResponse.razorpay_payment_id,
@@ -201,10 +245,13 @@ const Cart: React.FC = () => {
               razorpaySignature: rzpResponse.razorpay_signature,
               items: orderItems,
               shippingAddress: orderShipping,
-              totalWithTax
+              totalWithTax,
+              couponCode: appliedCoupon ? appliedCoupon.coupon.code : null
             });
 
             clearCart();
+            setAppliedCoupon(null);
+            setCouponCode('');
             localStorage.removeItem('pendingCheckout');
             showNotification('success', 'Payment successful! Your order has been placed.');
             setTimeout(() => navigate('/dashboard?tab=orders'), 2000);
@@ -400,11 +447,65 @@ const Cart: React.FC = () => {
                 Order Summary
               </h2>
               
+              {/* Coupon Section */}
+              <div className="mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                  <Tag className="w-5 h-5 mr-2 text-purple-400" />
+                  Apply Coupon
+                </h3>
+                
+                {appliedCoupon ? (
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-green-400 font-semibold">{appliedCoupon.coupon.code}</p>
+                        <p className="text-gray-300 text-sm">
+                          {appliedCoupon.coupon.type === 'flat' 
+                            ? `₹${appliedCoupon.coupon.value} off` 
+                            : `${appliedCoupon.coupon.value}% off`}
+                        </p>
+                      </div>
+                      <button
+                        onClick={removeCoupon}
+                        className="text-red-400 hover:text-red-300 p-1"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      placeholder="Enter coupon code"
+                      className="flex-1 bg-white/10 text-white px-3 py-2 rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400 text-sm"
+                    />
+                    <button
+                      onClick={validateCoupon}
+                      disabled={couponLoading}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 text-sm"
+                    >
+                      {couponLoading ? 'Checking...' : 'Apply'}
+                    </button>
+                  </div>
+                )}
+              </div>
+              
               <div className="space-y-6 mb-8">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Subtotal ({itemCount} items)</span>
                   <span className="text-white font-semibold">₹{Math.round(totalIncludingTax)}</span>
                 </div>
+
+                {/* Coupon Discount */}
+                {appliedCoupon && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-green-400">Coupon Discount</span>
+                    <span className="text-green-400 font-semibold">-₹{discountAmount}</span>
+                  </div>
+                )}
 
                 {/* Shipping Row */}
                 <div className="flex justify-between items-center">
@@ -425,7 +526,7 @@ const Cart: React.FC = () => {
                 </div>
 
                 {/* Free Shipping Progress */}
-                {!isShippingFree && (
+                {!isShippingFree && !appliedCoupon && (
                   <div className="bg-white/5 rounded-lg p-4 border border-orange-500/20">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-orange-400 text-sm font-medium">Add ₹{Math.round(SHIPPING_THRESHOLD - totalIncludingTax)} for free shipping</span>
