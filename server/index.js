@@ -21,6 +21,7 @@ import productRoutes from './routes/products.js';
 import adminRoutes from './routes/admin.js';
 import contactRoutes from './routes/contact.js';
 import orderRoutes from './routes/orders.js';
+import couponRoutes from './routes/coupons.js';
 import './config/passport.js';
 
 const app = express();
@@ -137,6 +138,7 @@ mongoose.connect(process.env.MONGODB_URI)
     app.use('/api/admin', adminRoutes);
     app.use('/api/contact', contactRoutes);
     app.use('/api/orders', orderRoutes);
+    app.use('/api/coupons', couponRoutes);
 
     // Health checks
     app.get('/', (req, res) => res.send('OK'));
