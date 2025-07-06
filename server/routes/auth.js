@@ -360,7 +360,7 @@ router.post('/logout', (req, res) => {
     res.clearCookie('sessionId', {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       path: '/'
     });
     
