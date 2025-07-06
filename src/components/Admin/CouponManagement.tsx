@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, Eye, Tag, Calendar, Percent, IndianRupee, Users, TrendingUp } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Eye, Tag, Percent, IndianRupee, Users, TrendingUp } from 'lucide-react';
 import axios from 'axios';
 
+// Updated Coupon interface: removed validityDays, expiresAt
 interface Coupon {
   _id: string;
   code: string;
   type: 'flat' | 'percentage';
   value: number;
   minCartValue: number;
-  validityDays: number;
-  expiresAt: string;
   isActive: boolean;
   usageCount: number;
   maxUsage?: number;
@@ -27,12 +26,12 @@ const CouponManagement: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [stats, setStats] = useState<any>(null);
 
+  // Remove validityDays from formData
   const [formData, setFormData] = useState({
     code: '',
     type: 'flat' as 'flat' | 'percentage',
     value: '',
     minCartValue: '',
-    validityDays: '',
     maxUsage: '',
     description: ''
   });
@@ -94,10 +93,6 @@ const CouponManagement: React.FC = () => {
       alert('Discount value is required and must be a positive number.');
       return;
     }
-    if (!formData.validityDays || isNaN(Number(formData.validityDays)) || Number(formData.validityDays) < 1 || Number(formData.validityDays) > 365) {
-      alert('Validity days must be between 1 and 365.');
-      return;
-    }
     if (formData.type === 'percentage' && Number(formData.value) > 100) {
       alert('Percentage discount cannot exceed 100%.');
       return;
@@ -116,14 +111,14 @@ const CouponManagement: React.FC = () => {
         ...formData,
         value: parseFloat(formData.value),
         minCartValue: parseFloat(formData.minCartValue) || 0,
-        validityDays: parseInt(formData.validityDays),
         maxUsage: formData.maxUsage ? parseInt(formData.maxUsage) : null
       };
 
       if (editingCoupon) {
         await axios.put(`/coupons/admin/${editingCoupon._id}`, {
-          isActive: formData.type === 'flat', // This is just for demo, you'd want proper edit form
-          description: formData.description
+          isActive: editingCoupon.isActive,
+          description: formData.description,
+          maxUsage: formData.maxUsage ? parseInt(formData.maxUsage) : null
         });
       } else {
         await axios.post('/coupons/admin/create', payload);
@@ -173,24 +168,18 @@ const CouponManagement: React.FC = () => {
       type: 'flat',
       value: '',
       minCartValue: '',
-      validityDays: '',
       maxUsage: '',
       description: ''
     });
   };
 
-  const isExpired = (expiresAt: string) => {
-    return new Date(expiresAt) < new Date();
-  };
-
+  // Status color and text: only Active/Inactive
   const getStatusColor = (coupon: Coupon) => {
-    if (isExpired(coupon.expiresAt)) return 'text-red-400 bg-red-400/20';
     if (!coupon.isActive) return 'text-gray-400 bg-gray-400/20';
     return 'text-green-400 bg-green-400/20';
   };
 
   const getStatusText = (coupon: Coupon) => {
-    if (isExpired(coupon.expiresAt)) return 'Expired';
     if (!coupon.isActive) return 'Inactive';
     return 'Active';
   };
@@ -221,7 +210,7 @@ const CouponManagement: React.FC = () => {
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl md:rounded-2xl p-4 md:p-6 border border-blue-400/30">
             <div className="flex items-center justify-between">
               <div>
@@ -239,16 +228,6 @@ const CouponManagement: React.FC = () => {
                 <p className="text-2xl md:text-3xl font-bold text-white">{stats.stats.activeCoupons}</p>
               </div>
               <TrendingUp className="w-8 h-8 md:w-12 md:h-12 text-green-400" />
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-red-500/20 to-red-600/20 rounded-xl md:rounded-2xl p-4 md:p-6 border border-red-400/30">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-red-400 text-sm font-medium">Expired</p>
-                <p className="text-2xl md:text-3xl font-bold text-white">{stats.stats.expiredCoupons}</p>
-              </div>
-              <Calendar className="w-8 h-8 md:w-12 md:h-12 text-red-400" />
             </div>
           </div>
 
@@ -295,7 +274,6 @@ const CouponManagement: React.FC = () => {
           <option value="">All Status</option>
           <option value="active" className="bg-gray-800">Active</option>
           <option value="inactive" className="bg-gray-800">Inactive</option>
-          <option value="expired" className="bg-gray-800">Expired</option>
         </select>
       </div>
 
@@ -338,9 +316,9 @@ const CouponManagement: React.FC = () => {
                     </p>
                   </div>
                   <div>
-                    <span className="text-gray-400">Expires:</span>
+                    <span className="text-gray-400">Created:</span>
                     <p className="text-white font-semibold">
-                      {new Date(coupon.expiresAt).toLocaleDateString()}
+                      {new Date(coupon.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -452,20 +430,6 @@ const CouponManagement: React.FC = () => {
                     className="w-full bg-white/10 text-white px-3 py-2 md:px-4 md:py-3 rounded-lg md:rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
                     placeholder="0"
                     min="0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">Validity (Days)</label>
-                  <input
-                    type="number"
-                    value={formData.validityDays}
-                    onChange={(e) => setFormData({...formData, validityDays: e.target.value})}
-                    className="w-full bg-white/10 text-white px-3 py-2 md:px-4 md:py-3 rounded-lg md:rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
-                    placeholder="30"
-                    min="1"
-                    max="365"
-                    required
                   />
                 </div>
 
