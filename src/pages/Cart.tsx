@@ -58,6 +58,7 @@ const Cart: React.FC = () => {
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showTaxBreakdown, setShowTaxBreakdown] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
@@ -71,10 +72,19 @@ const Cart: React.FC = () => {
     pincode: ''
   });
 
-  // Client-side display calculations (for UI only)
-  const totalIncludingTax = total * 1.18;
+  // Calculate shipping charges based on tax-inclusive amount
+  const SHIPPING_THRESHOLD = 398;
+  const SHIPPING_CHARGE = 70;
+  const totalIncludingTax = total * 1.18; // Tax-inclusive subtotal
+  const isShippingFree = totalIncludingTax > SHIPPING_THRESHOLD;
+  const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
+  
+  // Apply coupon discount
   const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const totalAfterDiscount = totalIncludingTax - discountAmount;
+  
+  // Final totals
+  const finalTotalWithShipping = totalAfterDiscount + (shippingCost * 1.18); // Shipping also has tax
 
   const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
     setNotification({ type, message });
@@ -144,6 +154,7 @@ const Cart: React.FC = () => {
   const handlePayment = async () => {
     // Check authentication at payment time
     if (!isAuthenticated) {
+      // Store current cart state and redirect to login
       localStorage.setItem('pendingCheckout', 'true');
       navigate('/login');
       return;
@@ -186,7 +197,7 @@ const Cart: React.FC = () => {
         return;
       }
 
-      // SECURE: Send only product IDs to server for price calculation
+      // Create order with proper product data including shipping and coupon
       const orderData = {
         items: items.map(item => {
           const productId = getProductId(item.product);
@@ -199,32 +210,42 @@ const Cart: React.FC = () => {
           };
         }),
         shippingAddress,
-        couponCode: appliedCoupon ? appliedCoupon.coupon.code : null
+        totalAmount: total, // Send base total, backend will calculate shipping
+        totalIncludingTax: totalIncludingTax, // Send tax-inclusive total for shipping calculation
+        couponCode: appliedCoupon ? appliedCoupon.coupon.code : null,
+        discountAmount: discountAmount
       };
 
       console.log('Order data being sent:', orderData);
 
-      // Server calculates all prices securely
       const response = await axios.post('/orders/create-order', orderData);
-      const { razorpayOrderId, amount, currency, key, orderCalculation } = response.data;
+      const { razorpayOrderId, amount, currency, key, items: orderItems, shippingAddress: orderShipping, totalWithTax } = response.data;
 
-      // Razorpay options with server-calculated amount
+      // Razorpay options
       const options = {
         key,
-        amount, // Server-calculated amount in paise
+        amount,
         currency,
         name: 'The CarryCo',
         description: 'Premium Mobile Accessories',
         order_id: razorpayOrderId,
         handler: async (rzpResponse: any) => {
           try {
-            // Verify payment with server-calculated data
+            // Apply coupon if used
+            if (appliedCoupon) {
+              await axios.post('/coupons/apply', {
+                code: appliedCoupon.coupon.code
+              });
+            }
+
+            // Verify payment and send all required data
             await axios.post('/orders/verify-payment', {
               razorpayPaymentId: rzpResponse.razorpay_payment_id,
               razorpayOrderId: rzpResponse.razorpay_order_id,
               razorpaySignature: rzpResponse.razorpay_signature,
-              items: orderCalculation.validatedItems,
-              shippingAddress,
+              items: orderItems,
+              shippingAddress: orderShipping,
+              totalWithTax,
               couponCode: appliedCoupon ? appliedCoupon.coupon.code : null
             });
 
@@ -332,6 +353,7 @@ const Cart: React.FC = () => {
                 const itemOriginalPriceIncludingTax = item.product.originalPrice ? item.product.originalPrice * 1.18 : 0;
                 const productId = getProductId(item.product);
                 
+                // Skip items without valid IDs
                 if (!productId) {
                   console.warn('Cart item missing product ID:', item);
                   return null;
@@ -485,6 +507,40 @@ const Cart: React.FC = () => {
                   </div>
                 )}
 
+                {/* Shipping Row */}
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-400">Shipping</span>
+                    {!isShippingFree && (
+                      <div className="group relative">
+                        <Info className="w-4 h-4 text-gray-500 cursor-help" />
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                          Free shipping on orders ₹399+ (incl. tax)
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <span className={`font-semibold ${isShippingFree ? 'text-green-400' : 'text-white'}`}>
+                    {isShippingFree ? 'Free' : `₹${Math.round(shippingCost * 1.18)}`}
+                  </span>
+                </div>
+
+                {/* Free Shipping Progress */}
+                {!isShippingFree && !appliedCoupon && (
+                  <div className="bg-white/5 rounded-lg p-4 border border-orange-500/20">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-orange-400 text-sm font-medium">Add ₹{Math.round(SHIPPING_THRESHOLD - totalIncludingTax)} for free shipping</span>
+                      <Truck className="w-4 h-4 text-orange-400" />
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-orange-500 to-yellow-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min((totalIncludingTax / SHIPPING_THRESHOLD) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Savings Row */}
                 {totalSavings > 0 && (
                   <div className="flex justify-between items-center mb-2">
@@ -502,13 +558,10 @@ const Cart: React.FC = () => {
                 <div className="border-t border-white/20 pt-6">
                   <div className="flex justify-between items-center text-xl">
                     <span className="font-bold text-white">Total</span>
-                    <span className="font-bold text-white">₹{Math.round(totalAfterDiscount)}</span>
+                    <span className="font-bold text-white">₹{Math.round(finalTotalWithShipping)}</span>
                   </div>
                   <div className="text-xs text-gray-400 mt-1 text-right">
-                    Inclusive of all taxes & shipping
-                  </div>
-                  <div className="text-xs text-orange-400 mt-1 text-right">
-                    Final amount calculated securely on server
+                    Inclusive of all taxes {!isShippingFree && '& shipping'}
                   </div>
                 </div>
               </div>
@@ -652,7 +705,7 @@ const Cart: React.FC = () => {
                           disabled={isProcessing}
                           className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-5 rounded-2xl font-bold text-lg hover:shadow-2xl hover:shadow-green-500/25 transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {isProcessing ? 'Processing...' : 'Pay Securely'}
+                          {isProcessing ? 'Processing...' : `Pay ₹${Math.round(finalTotalWithShipping)}`}
                         </button>
                         
                         <button
@@ -667,6 +720,7 @@ const Cart: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {/* Policy Notice for Razorpay compliance */}
                   <div className="bg-white/10 rounded-xl p-4 border border-white/20 text-gray-200 text-sm text-center">
                     By placing your order, you agree to our
                     <Link to="/refund" className="text-blue-400 underline ml-1">
