@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
+import Coupon from '../models/Coupon.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
 import { sendOrderConfirmationEmail, sendOrderDeliveredEmail } from '../services/emailService.js';
@@ -19,12 +20,105 @@ const razorpay = new Razorpay({
 const SHIPPING_THRESHOLD = 398; // Tax-inclusive threshold
 const SHIPPING_CHARGE = 70;
 
+// SECURE: Server-side price calculation function
+const calculateOrderTotal = async (items, couponCode = null) => {
+  try {
+    // Validate items and get products from database
+    const productIds = items.map(item => item.productId);
+    const products = await Product.find({ _id: { $in: productIds } });
+
+    let subtotal = 0;
+    const validatedItems = [];
+
+    // Calculate subtotal with server-side product prices
+    for (const item of items) {
+      const product = products.find(p => p._id.toString() === item.productId);
+      if (!product) {
+        throw new Error(`Product not found: ${item.productId}`);
+      }
+      if (!product.inStock) {
+        throw new Error(`Product ${product.name} is out of stock`);
+      }
+      
+      const itemTotal = product.price * item.quantity;
+      subtotal += itemTotal;
+      
+      validatedItems.push({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: product.price,
+        name: product.name
+      });
+    }
+
+    // Calculate tax-inclusive subtotal
+    const subtotalWithTax = subtotal * 1.18;
+
+    // Validate and apply coupon if provided
+    let discountAmount = 0;
+    let appliedCoupon = null;
+    
+    if (couponCode) {
+      const coupon = await Coupon.findOne({ 
+        code: couponCode.toUpperCase(),
+        isActive: true
+      });
+
+      if (!coupon) {
+        throw new Error('Invalid coupon code');
+      }
+
+      // Check minimum cart value
+      if (subtotalWithTax < coupon.minCartValue) {
+        throw new Error(`Minimum cart value of ₹${coupon.minCartValue} required for this coupon`);
+      }
+
+      // Check usage limit
+      if (coupon.maxUsage && coupon.usageCount >= coupon.maxUsage) {
+        throw new Error('Coupon usage limit exceeded');
+      }
+
+      // Calculate discount
+      if (coupon.type === 'flat') {
+        discountAmount = Math.min(coupon.value, subtotalWithTax);
+      } else if (coupon.type === 'percentage') {
+        discountAmount = (subtotalWithTax * coupon.value) / 100;
+      }
+
+      // Ensure discount doesn't exceed cart total
+      discountAmount = Math.min(discountAmount, subtotalWithTax);
+      appliedCoupon = coupon;
+    }
+
+    // Calculate shipping
+    const totalAfterDiscount = subtotalWithTax - discountAmount;
+    const isShippingFree = totalAfterDiscount > SHIPPING_THRESHOLD;
+    const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
+    
+    // Final total with shipping and tax
+    const finalTotal = totalAfterDiscount + (shippingCost * 1.18);
+
+    return {
+      subtotal,
+      subtotalWithTax,
+      discountAmount,
+      shippingCost,
+      finalTotal: Math.round(finalTotal),
+      validatedItems,
+      appliedCoupon,
+      isShippingFree
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Create Razorpay order (DO NOT save order in DB here)
 router.post('/create-order', authenticateToken, async (req, res) => {
   try {
-    const { items, shippingAddress, totalIncludingTax } = req.body;
+    const { items, shippingAddress, couponCode } = req.body;
 
-    // --- Improved validation ---
+    // --- Server-side validation ---
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ message: 'Order must have at least one item.' });
     }
@@ -46,64 +140,40 @@ router.post('/create-order', authenticateToken, async (req, res) => {
     if (!/^\d{10}$/.test(phone)) {
       return res.status(400).json({ message: 'Phone must be 10 digits.' });
     }
-    // --- End improved validation ---
 
-    // Validate items and check stock
-    const productIds = items.map(item => item.productId);
-    const products = await Product.find({ _id: { $in: productIds } });
+    // SECURE: Calculate total on server-side
+    const orderCalculation = await calculateOrderTotal(items, couponCode);
 
-    let calculatedTotal = 0;
-    for (const item of items) {
-      const product = products.find(p => p._id.toString() === item.productId);
-      if (!product) {
-        return res.status(400).json({ message: `Product not found: ${item.productId}` });
-      }
-      if (!product.inStock) {
-        return res.status(400).json({ message: `Product ${product.name} is out of stock.` });
-      }
-      calculatedTotal += product.price * item.quantity;
-    }
-
-    // Calculate shipping charges based on tax-inclusive amount
-    const calculatedTotalIncludingTax = calculatedTotal * 1.18;
-    const isShippingFree = calculatedTotalIncludingTax > SHIPPING_THRESHOLD;
-    const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
-    
-    // Final total calculation
-    const totalWithShipping = calculatedTotal + shippingCost;
-    const finalTotalWithTax = totalWithShipping * 1.18;
-
-    // Create Razorpay order with final total including shipping and tax
+    // Create Razorpay order with server-calculated total
     const razorpayOrder = await razorpay.orders.create({
-      amount: Math.round(finalTotalWithTax * 100), // Amount in paise
+      amount: orderCalculation.finalTotal * 100, // Amount in paise
       currency: 'INR',
       receipt: `receipt_${Date.now()}`,
     });
 
-    // Return Razorpay order info and order details (but do NOT save order in DB)
+    // Return Razorpay order info with server-calculated totals
     res.status(201).json({
       razorpayOrderId: razorpayOrder.id,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
       key: process.env.RAZORPAY_KEY_ID,
-      items,
+      orderCalculation, // Send server-calculated totals to frontend
+      items: orderCalculation.validatedItems,
       shippingAddress,
-      totalWithTax: finalTotalWithTax,
-      shippingCost,
-      isShippingFree
+      couponCode: orderCalculation.appliedCoupon?.code || null
     });
   } catch (error) {
     console.error('Create order error:', error);
-    res.status(500).json({ message: 'Failed to create order' });
+    res.status(500).json({ message: error.message || 'Failed to create order' });
   }
 });
 
 // Verify payment and create order in DB
 router.post('/verify-payment', authenticateToken, async (req, res) => {
   try {
-    const { razorpayPaymentId, razorpayOrderId, razorpaySignature, items, shippingAddress, totalWithTax } = req.body;
+    const { razorpayPaymentId, razorpayOrderId, razorpaySignature, items, shippingAddress, couponCode } = req.body;
 
-    // --- Improved validation ---
+    // --- Server-side validation ---
     if (!razorpayPaymentId || !razorpayOrderId || !razorpaySignature) {
       return res.status(400).json({ message: 'Payment details are required.' });
     }
@@ -113,27 +183,8 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
     if (!shippingAddress || typeof shippingAddress !== 'object') {
       return res.status(400).json({ message: 'Shipping address is required.' });
     }
-    const { name, phone, address, city, state, pincode } = shippingAddress;
-    if (
-      !name || !phone || !address || !city || !state || !pincode ||
-      typeof name !== 'string' || typeof phone !== 'string' ||
-      typeof address !== 'string' || typeof city !== 'string' ||
-      typeof state !== 'string' || typeof pincode !== 'string'
-    ) {
-      return res.status(400).json({ message: 'All shipping address fields are required.' });
-    }
-    if (!/^\d{6}$/.test(pincode)) {
-      return res.status(400).json({ message: 'Pincode must be 6 digits.' });
-    }
-    if (!/^\d{10}$/.test(phone)) {
-      return res.status(400).json({ message: 'Phone must be 10 digits.' });
-    }
-    if (!totalWithTax || typeof totalWithTax !== 'number' || totalWithTax <= 0) {
-      return res.status(400).json({ message: 'Total amount is invalid.' });
-    }
-    // --- End improved validation ---
 
-    // Verify signature
+    // Verify Razorpay signature
     const body = razorpayOrderId + "|" + razorpayPaymentId;
     const expectedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
@@ -144,12 +195,14 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Invalid payment signature' });
     }
 
-    // Validate items and check stock again
+    // SECURE: Recalculate total on server-side for verification
+    const orderCalculation = await calculateOrderTotal(items, couponCode);
+
+    // Validate items and create order items
     const productIds = items.map(item => item.productId);
     const products = await Product.find({ _id: { $in: productIds } });
 
     const orderItems = [];
-    let calculatedTotal = 0;
     for (const item of items) {
       const product = products.find(p => p._id.toString() === item.productId);
       if (!product) {
@@ -170,36 +223,31 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
         quantity: item.quantity,
         price: product.price
       });
-      calculatedTotal += product.price * item.quantity;
     }
 
-    // Calculate shipping charges for verification based on tax-inclusive amount
-    const calculatedTotalIncludingTax = calculatedTotal * 1.18;
-    const isShippingFree = calculatedTotalIncludingTax > SHIPPING_THRESHOLD;
-    const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
-    const totalWithShipping = calculatedTotal + shippingCost;
-    const expectedTotalWithTax = totalWithShipping * 1.18;
-
-    // Verify the total amount matches what was paid
-    if (Math.abs(totalWithTax - expectedTotalWithTax) > 1) { // Allow 1 rupee difference for rounding
-      return res.status(400).json({ message: 'Payment amount mismatch' });
+    // Apply coupon if used
+    if (orderCalculation.appliedCoupon) {
+      orderCalculation.appliedCoupon.usageCount += 1;
+      await orderCalculation.appliedCoupon.save();
     }
 
     // Generate order number
     const orderNumber = 'ORD-' + Date.now();
 
-    // Create order in database (only after payment is verified)
+    // Create order in database with server-calculated total
     const order = new Order({
       user: req.userId,
       items: orderItems,
-      totalAmount: totalWithTax,
+      totalAmount: orderCalculation.finalTotal,
       shippingAddress,
       razorpayOrderId,
       razorpayPaymentId,
       razorpaySignature,
       status: 'confirmed',
       paymentStatus: 'completed',
-      orderNumber
+      orderNumber,
+      couponCode: orderCalculation.appliedCoupon?.code || null,
+      discountAmount: orderCalculation.discountAmount || 0
     });
 
     await order.save();
@@ -232,7 +280,7 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Payment verification error:', error);
-    res.status(500).json({ message: 'Payment verification failed' });
+    res.status(500).json({ message: error.message || 'Payment verification failed' });
   }
 });
 
