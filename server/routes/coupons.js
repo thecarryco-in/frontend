@@ -16,12 +16,11 @@ router.post('/validate', async (req, res) => {
 
     const coupon = await Coupon.findOne({ 
       code: code.toUpperCase(),
-      isActive: true,
-      expiresAt: { $gt: new Date() }
+      isActive: true
     });
 
     if (!coupon) {
-      return res.status(404).json({ message: 'Invalid or expired coupon code' });
+      return res.status(404).json({ message: 'Invalid coupon code' });
     }
 
     // Check minimum cart value
@@ -64,32 +63,6 @@ router.post('/validate', async (req, res) => {
   }
 });
 
-// Apply coupon during order (internal use)
-router.post('/apply', async (req, res) => {
-  try {
-    const { code } = req.body;
-
-    const coupon = await Coupon.findOne({ 
-      code: code.toUpperCase(),
-      isActive: true,
-      expiresAt: { $gt: new Date() }
-    });
-
-    if (!coupon) {
-      return res.status(404).json({ message: 'Invalid or expired coupon code' });
-    }
-
-    // Increment usage count
-    coupon.usageCount += 1;
-    await coupon.save();
-
-    res.status(200).json({ message: 'Coupon applied successfully' });
-  } catch (error) {
-    console.error('Coupon apply error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 // Admin: Get all coupons
 router.get('/admin/all', authenticateToken, requireAdmin, async (req, res) => {
   try {
@@ -111,7 +84,6 @@ router.get('/admin/all', authenticateToken, requireAdmin, async (req, res) => {
     if (type) filter.type = type;
     if (status === 'active') filter.isActive = true;
     if (status === 'inactive') filter.isActive = false;
-    if (status === 'expired') filter.expiresAt = { $lt: new Date() };
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const coupons = await Coupon.find(filter)
@@ -139,11 +111,11 @@ router.get('/admin/all', authenticateToken, requireAdmin, async (req, res) => {
 // Admin: Create coupon
 router.post('/admin/create', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { code, type, value, minCartValue, validityDays, maxUsage, description } = req.body;
+    const { code, type, value, minCartValue, maxUsage, description } = req.body;
 
     // Validation
-    if (!code || !type || !value || validityDays === undefined) {
-      return res.status(400).json({ message: 'All required fields must be provided' });
+    if (!code || !type || !value) {
+      return res.status(400).json({ message: 'Code, type, and value are required' });
     }
 
     if (!['flat', 'percentage'].includes(type)) {
@@ -152,10 +124,6 @@ router.post('/admin/create', authenticateToken, requireAdmin, async (req, res) =
 
     if (type === 'percentage' && value > 100) {
       return res.status(400).json({ message: 'Percentage discount cannot exceed 100%' });
-    }
-
-    if (validityDays < 1 || validityDays > 365) {
-      return res.status(400).json({ message: 'Validity days must be between 1 and 365' });
     }
 
     // Check if code already exists
@@ -169,7 +137,6 @@ router.post('/admin/create', authenticateToken, requireAdmin, async (req, res) =
       type,
       value,
       minCartValue: minCartValue || 0,
-      validityDays,
       maxUsage: maxUsage || null,
       description
     });
@@ -235,8 +202,7 @@ router.delete('/admin/:id', authenticateToken, requireAdmin, async (req, res) =>
 router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const totalCoupons = await Coupon.countDocuments();
-    const activeCoupons = await Coupon.countDocuments({ isActive: true, expiresAt: { $gt: new Date() } });
-    const expiredCoupons = await Coupon.countDocuments({ expiresAt: { $lt: new Date() } });
+    const activeCoupons = await Coupon.countDocuments({ isActive: true });
     const inactiveCoupons = await Coupon.countDocuments({ isActive: false });
 
     // Most used coupons
@@ -254,7 +220,6 @@ router.get('/admin/stats', authenticateToken, requireAdmin, async (req, res) => 
       stats: {
         totalCoupons,
         activeCoupons,
-        expiredCoupons,
         inactiveCoupons
       },
       mostUsedCoupons,
