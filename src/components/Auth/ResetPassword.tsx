@@ -1,7 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
-import { Lock, Eye, EyeOff, Loader, ArrowLeft, Shield } from 'lucide-react';
+import { Lock, Eye, EyeOff, Loader, ArrowLeft, Shield, CheckCircle, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
+
+// Custom notification component
+const Notification: React.FC<{ 
+  type: 'success' | 'error' | 'info'; 
+  message: string; 
+  onClose: () => void 
+}> = ({ type, message, onClose }) => {
+  const getIcon = () => {
+    switch (type) {
+      case 'success': return <CheckCircle className="w-6 h-6 text-green-400" />;
+      case 'error': return <AlertTriangle className="w-6 h-6 text-red-400" />;
+      case 'info': return <AlertTriangle className="w-6 h-6 text-blue-400" />;
+    }
+  };
+
+  const getColors = () => {
+    switch (type) {
+      case 'success': return 'bg-green-500/10 border-green-500/20';
+      case 'error': return 'bg-red-500/10 border-red-500/20';
+      case 'info': return 'bg-blue-500/10 border-blue-500/20';
+    }
+  };
+
+  return (
+    <div className={`fixed top-24 right-4 z-50 ${getColors()} backdrop-blur-md rounded-2xl p-6 border max-w-md animate-in slide-in-from-right duration-300`}>
+      <div className="flex items-start space-x-3">
+        {getIcon()}
+        <div className="flex-1">
+          <p className="text-white font-medium leading-relaxed">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-white transition-colors"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const ResetPassword: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -12,7 +52,7 @@ const ResetPassword: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -21,6 +61,11 @@ const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
   
   const email = location.state?.email || '';
+
+  const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
 
   useEffect(() => {
     if (!email) {
@@ -48,7 +93,6 @@ const ResetPassword: React.FC = () => {
     const newOtp = [...formData.otp];
     newOtp[index] = value;
     setFormData(prev => ({ ...prev, otp: newOtp }));
-    setError('');
 
     // Auto-focus next input
     if (value && index < 5) {
@@ -69,20 +113,19 @@ const ResetPassword: React.FC = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
-    setError('');
   };
 
   const validateForm = () => {
     if (formData.otp.some(digit => !digit)) {
-      setError('Please enter all 6 digits of the OTP');
+      showNotification('error', 'Please enter all 6 digits of the OTP');
       return false;
     }
     if (formData.newPassword.length < 8) {
-      setError('Password must be at least 8 characters long');
+      showNotification('error', 'Password must be at least 8 characters long');
       return false;
     }
     if (formData.newPassword !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      showNotification('error', 'Passwords do not match');
       return false;
     }
     return true;
@@ -94,7 +137,6 @@ const ResetPassword: React.FC = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    setError('');
 
     try {
       await axios.post('/auth/reset-password', {
@@ -103,10 +145,12 @@ const ResetPassword: React.FC = () => {
         newPassword: formData.newPassword
       });
       
-      alert('Password reset successful! You can now login with your new password.');
-      navigate('/login');
+      showNotification('success', 'Password reset successful! Redirecting to login...');
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to reset password. Please try again.');
+      showNotification('error', error.response?.data?.message || 'Failed to reset password. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -114,13 +158,13 @@ const ResetPassword: React.FC = () => {
 
   const handleResend = async () => {
     setIsResending(true);
-    setError('');
 
     try {
       await axios.post('/auth/forgot-password', { email });
       setTimer(60);
       setCanResend(false);
       setFormData(prev => ({ ...prev, otp: ['', '', '', '', '', ''] }));
+      showNotification('success', 'New OTP sent to your email');
       
       // Restart timer
       const interval = setInterval(() => {
@@ -134,7 +178,7 @@ const ResetPassword: React.FC = () => {
         });
       }, 1000);
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to resend OTP');
+      showNotification('error', error.response?.data?.message || 'Failed to resend OTP');
     } finally {
       setIsResending(false);
     }
@@ -142,6 +186,15 @@ const ResetPassword: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Notification */}
+      {notification && (
+        <Notification
+          type={notification.type}
+          message={notification.message}
+          onClose={() => setNotification(null)}
+        />
+      )}
+
       {/* Background Elements */}
       <div className="absolute inset-0">
         <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
@@ -163,13 +216,6 @@ const ResetPassword: React.FC = () => {
             </p>
             <p className="text-white font-semibold">{email}</p>
           </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 mb-6">
-              <p className="text-red-400 text-sm text-center">{error}</p>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* OTP Input */}
