@@ -4,7 +4,7 @@ const couponSchema = new mongoose.Schema({
   code: {
     type: String,
     required: true,
-    unique: true,
+    unique: true,  // Unique index is automatically created
     uppercase: true,
     trim: true,
     minlength: 3,
@@ -46,8 +46,7 @@ const couponSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for better performance
-couponSchema.index({ code: 1 });
+// Remove the redundant index on `code`
 couponSchema.index({ isActive: 1 });
 
 export default mongoose.model('Coupon', couponSchema);
