@@ -4,6 +4,7 @@ import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Shield, Truck, CreditCard
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 declare global {
   interface Window {
@@ -237,11 +238,11 @@ const Cart: React.FC = () => {
               couponCode: orderData.couponCode
             });
 
-            clearCart();
+            clearCart(false);
             setAppliedCoupon(null);
             setCouponCode('');
             localStorage.removeItem('pendingCheckout');
-            showNotification('success', 'Payment successful! Your order has been placed.');
+            toast.success('Payment successful');
             setTimeout(() => navigate('/dashboard?tab=orders'), 2000);
           } catch (error) {
             console.error('Payment verification failed:', error);
@@ -328,7 +329,7 @@ const Cart: React.FC = () => {
                 <p className="text-gray-400 mt-2">{itemCount} items in your cart</p>
               </div>
               <button
-                onClick={clearCart}
+                onClick={clearCart(true)}
                 className="text-gray-400 hover:text-red-400 text-sm font-medium transition-colors duration-200 hover:bg-red-500/10 px-4 py-2 rounded-lg"
               >
                 Clear All Items
