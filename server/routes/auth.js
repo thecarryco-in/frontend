@@ -99,13 +99,25 @@ router.post('/verify-otp', authLimiter, async (req, res) => {
     // Normalize email
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Find OTP document
-    const otpDoc = await OTP.findOne({ email: normalizedEmail, otp });
+    // Find OTP document (by email only, not otp)
+    const otpDoc = await OTP.findOne({ email: normalizedEmail });
     if (!otpDoc) {
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
 
-    // Create user
+    // Check OTP match
+    if (otpDoc.otp !== otp) {
+      otpDoc.attempts = (otpDoc.attempts || 0) + 1;
+      if (otpDoc.attempts >= 3) {
+        await OTP.deleteOne({ _id: otpDoc._id });
+        return res.status(400).json({ message: 'OTP invalidated after 3 failed attempts. Please request a new OTP.' });
+      } else {
+        await otpDoc.save();
+        return res.status(400).json({ message: `Invalid OTP. ${3 - otpDoc.attempts} attempt(s) left.` });
+      }
+    }
+
+    // OTP is correct, proceed to create user
     const user = new User({
       ...otpDoc.userData,
       email: normalizedEmail,
@@ -292,15 +304,25 @@ router.post('/reset-password', authLimiter, async (req, res) => {
     // Convert email to lowercase
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Find and verify OTP
+    // Find OTP document (by email only, not otp, but must be for resetPassword)
     const otpDoc = await OTP.findOne({ 
       email: normalizedEmail, 
-      otp,
       'userData.resetPassword': true 
     });
-    
     if (!otpDoc) {
       return res.status(400).json({ message: 'Invalid or expired OTP' });
+    }
+
+    // Check OTP match
+    if (otpDoc.otp !== otp) {
+      otpDoc.attempts = (otpDoc.attempts || 0) + 1;
+      if (otpDoc.attempts >= 3) {
+        await OTP.deleteOne({ _id: otpDoc._id });
+        return res.status(400).json({ message: 'OTP invalidated after 3 failed attempts. Please request a new OTP.' });
+      } else {
+        await otpDoc.save();
+        return res.status(400).json({ message: `Invalid OTP. ${3 - otpDoc.attempts} attempt(s) left.` });
+      }
     }
 
     // Find user
