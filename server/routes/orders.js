@@ -1,4 +1,144 @@
-one must be 10 digits.' });
+import express from 'express';
+import Razorpay from 'razorpay';
+import crypto from 'crypto';
+import Order from '../models/Order.js';
+import Product from '../models/Product.js';
+import User from '../models/User.js';
+import Coupon from '../models/Coupon.js';
+import { authenticateToken } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/adminAuth.js';
+import { sendOrderConfirmationEmail, sendOrderDeliveredEmail } from '../services/emailService.js';
+
+const router = express.Router();
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
+// Shipping configuration
+const SHIPPING_THRESHOLD = 398; // Tax-inclusive threshold
+const SHIPPING_CHARGE = 70;
+
+// SECURE: Server-side price calculation function
+const calculateOrderTotal = async (items, couponCode = null) => {
+  try {
+    // Validate items and get products from database
+    const productIds = items.map(item => item.productId);
+    const products = await Product.find({ _id: { $in: productIds } });
+
+    let subtotal = 0;
+    const validatedItems = [];
+
+    // Calculate subtotal with server-side product prices
+    for (const item of items) {
+      const product = products.find(p => p._id.toString() === item.productId);
+      if (!product) {
+        throw new Error(`Product not found: ${item.productId}`);
+      }
+      if (!product.inStock) {
+        throw new Error(`Product ${product.name} is out of stock`);
+      }
+      
+      const itemTotal = product.price * item.quantity;
+      subtotal += itemTotal;
+      
+      validatedItems.push({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: product.price,
+        name: product.name
+      });
+    }
+
+    // Calculate tax-inclusive subtotal
+    const subtotalWithTax = subtotal * 1.18;
+
+    // Validate and apply coupon if provided
+    let discountAmount = 0;
+    let appliedCoupon = null;
+    
+    if (couponCode) {
+      const coupon = await Coupon.findOne({ 
+        code: couponCode.toUpperCase(),
+        isActive: true
+      });
+
+      if (!coupon) {
+        throw new Error('Invalid coupon code');
+      }
+
+      // Check minimum cart value
+      if (subtotalWithTax < coupon.minCartValue) {
+        throw new Error(`Minimum cart value of ₹${coupon.minCartValue} required for this coupon`);
+      }
+
+      // Check usage limit
+      if (coupon.maxUsage && coupon.usageCount >= coupon.maxUsage) {
+        throw new Error('Coupon usage limit exceeded');
+      }
+
+      // Calculate discount
+      if (coupon.type === 'flat') {
+        discountAmount = Math.min(coupon.value, subtotalWithTax);
+      } else if (coupon.type === 'percentage') {
+        discountAmount = (subtotalWithTax * coupon.value) / 100;
+      }
+
+      // Ensure discount doesn't exceed cart total
+      discountAmount = Math.min(discountAmount, subtotalWithTax);
+      appliedCoupon = coupon;
+    }
+
+    // Calculate shipping
+    const totalAfterDiscount = subtotalWithTax - discountAmount;
+    const isShippingFree = totalAfterDiscount > SHIPPING_THRESHOLD;
+    const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
+    
+    // Final total with shipping and tax
+    const finalTotal = totalAfterDiscount + (shippingCost * 1.18);
+
+    return {
+      subtotal,
+      subtotalWithTax,
+      discountAmount,
+      shippingCost,
+      finalTotal: Math.round(finalTotal),
+      validatedItems,
+      appliedCoupon,
+      isShippingFree
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Create Razorpay order (DO NOT save order in DB here)
+router.post('/create-order', authenticateToken, async (req, res) => {
+  try {
+    const { items, shippingAddress, couponCode } = req.body;
+
+    // --- Server-side validation ---
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ message: 'Order must have at least one item.' });
+    }
+    if (!shippingAddress || typeof shippingAddress !== 'object') {
+      return res.status(400).json({ message: 'Shipping address is required.' });
+    }
+    const { name, phone, address, city, state, pincode } = shippingAddress;
+    if (
+      !name || !phone || !address || !city || !state || !pincode ||
+      typeof name !== 'string' || typeof phone !== 'string' ||
+      typeof address !== 'string' || typeof city !== 'string' ||
+      typeof state !== 'string' || typeof pincode !== 'string'
+    ) {
+      return res.status(400).json({ message: 'All shipping address fields are required.' });
+    }
+    if (!/^\d{6}$/.test(pincode)) {
+      return res.status(400).json({ message: 'Pincode must be 6 digits.' });
+    }
+    if (!/^\d{10}$/.test(phone)) {
+      return res.status(400).json({ message: 'Phone must be 10 digits.' });
     }
 
     // SECURE: Calculate total on server-side
