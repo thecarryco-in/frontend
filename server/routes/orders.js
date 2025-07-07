@@ -232,6 +232,7 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
     }
 
     // Create order in database with server-calculated total
+    const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const order = new Order({
       user: req.userId,
       items: orderItems,
@@ -243,7 +244,8 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
       status: 'confirmed',
       paymentStatus: 'completed',
       couponCode: orderCalculation.appliedCoupon?.code || null,
-      discountAmount: orderCalculation.discountAmount || 0
+      discountAmount: orderCalculation.discountAmount || 0,
+      orderNumber
     });
 
     await order.save();
