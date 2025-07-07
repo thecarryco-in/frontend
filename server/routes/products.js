@@ -3,7 +3,6 @@ import Product from '../models/Product.js';
 import Review from '../models/Review.js';
 import Order from '../models/Order.js';
 import { authenticateToken } from '../middleware/auth.js';
-import { reviewLimiter } from '../middleware/rateLimiters.js';
 
 const router = express.Router();
 
@@ -112,7 +111,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Add product review (authenticated users only) - STRICT DELIVERY CHECK
-router.post('/:id/review', reviewLimiter, authenticateToken, async (req, res) => {
+router.post('/:id/review', authenticateToken, async (req, res) => {
   try {
     const { rating, comment } = req.body;
     const productId = req.params.id;
