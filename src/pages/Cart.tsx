@@ -58,7 +58,6 @@ const Cart: React.FC = () => {
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [showTaxBreakdown, setShowTaxBreakdown] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
@@ -210,16 +209,13 @@ const Cart: React.FC = () => {
           };
         }),
         shippingAddress,
-        totalAmount: total, // Send base total, backend will calculate shipping
-        totalIncludingTax: totalIncludingTax, // Send tax-inclusive total for shipping calculation
-        couponCode: appliedCoupon ? appliedCoupon.coupon.code : null,
-        discountAmount: discountAmount
+        couponCode: appliedCoupon ? appliedCoupon.coupon.code : null
       };
 
       console.log('Order data being sent:', orderData);
 
       const response = await axios.post('/orders/create-order', orderData);
-      const { razorpayOrderId, amount, currency, key, items: orderItems, shippingAddress: orderShipping, totalWithTax } = response.data;
+      const { razorpayOrderId, amount, currency, key, orderCalculation } = response.data;
 
       // Razorpay options
       const options = {
@@ -231,22 +227,14 @@ const Cart: React.FC = () => {
         order_id: razorpayOrderId,
         handler: async (rzpResponse: any) => {
           try {
-            // Apply coupon if used
-            if (appliedCoupon) {
-              await axios.post('/coupons/apply', {
-                code: appliedCoupon.coupon.code
-              });
-            }
-
             // Verify payment and send all required data
             await axios.post('/orders/verify-payment', {
               razorpayPaymentId: rzpResponse.razorpay_payment_id,
               razorpayOrderId: rzpResponse.razorpay_order_id,
               razorpaySignature: rzpResponse.razorpay_signature,
-              items: orderItems,
-              shippingAddress: orderShipping,
-              totalWithTax,
-              couponCode: appliedCoupon ? appliedCoupon.coupon.code : null
+              items: orderData.items,
+              shippingAddress: orderData.shippingAddress,
+              couponCode: orderData.couponCode
             });
 
             clearCart();

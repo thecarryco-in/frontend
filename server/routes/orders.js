@@ -231,9 +231,6 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
       await orderCalculation.appliedCoupon.save();
     }
 
-    // Generate order number
-    const orderNumber = 'ORD-' + Date.now();
-
     // Create order in database with server-calculated total
     const order = new Order({
       user: req.userId,
@@ -245,7 +242,6 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
       razorpaySignature,
       status: 'confirmed',
       paymentStatus: 'completed',
-      orderNumber,
       couponCode: orderCalculation.appliedCoupon?.code || null,
       discountAmount: orderCalculation.discountAmount || 0
     });
