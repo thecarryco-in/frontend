@@ -12,7 +12,7 @@ interface CartContextType extends CartState {
   addToCart: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
-  clearCart: () => void;
+  clearCart: (showToast?: boolean) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -152,9 +152,11 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const clearCart = () => {
+  const clearCart = (showToast = true) => {
     dispatch({ type: 'CLEAR_CART' });
-    toast.info('Cart cleared');
+    if (showToast) {
+      toast.info('Cart cleared');
+    }
   };
 
   return (
