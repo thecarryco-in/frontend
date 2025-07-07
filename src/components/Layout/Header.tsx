@@ -137,23 +137,43 @@ const Header: React.FC = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 md:space-x-3 group">
             <div className="relative">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-xl md:rounded-2xl flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg overflow-hidden">
-                <img 
+              <div
+                className="w-10 h-10 md:w-12 md:h-12
+                          bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500
+                          rounded-xl md:rounded-2xl
+                          flex items-center justify-center
+                          transform transition-all duration-300
+                          group-hover:scale-110 group-hover:rotate-3
+                          shadow-lg overflow-hidden"
+              >
+                <img
                   src={logo}
-                  alt="The CarryCo Logo" 
-                  className="w-full h-full object-contain"
+                  alt="The CarryCo Logo"
+                  className="w-full h-full object-contain transform scale-[1.2]"
                 />
               </div>
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500 rounded-xl md:rounded-2xl blur opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
+
+              {/* always-on colored blur */}
+              <div
+                className="absolute inset-0
+                          bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-500
+                          rounded-xl md:rounded-2xl
+                          blur opacity-50"
+              />
             </div>
+
             <div className="hidden sm:block">
-              <span className="text-white font-bold text-lg md:text-2xl bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
+              <span className="text-white font-bold text-lg md:text-2xl
+                              bg-gradient-to-r from-purple-400 to-cyan-400
+                              bg-clip-text text-transparent"
+              >
                 The CarryCo
               </span>
-              <div className="text-xs text-gray-400 font-medium">Premium Accessories</div>
+              <div className="text-xs text-gray-400 font-medium">
+                Premium Accessories
+              </div>
             </div>
           </Link>
-
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
             {navigation.map((item) => (
