@@ -2,9 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <!-- dynamic favicon import -->
+    <script type="module">
+      import logoUrl from './src/assets/logo.jpg';
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.type = 'image/jpg';
+      link.href = logoUrl;
+      document.head.appendChild(link);
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Modern Mobile Accessories E-commerce Store</title>
+    <title>The CarryCo</title>
   </head>
   <body>
     <div id="root"></div>
