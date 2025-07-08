@@ -324,7 +324,7 @@ const UserOrders: React.FC<UserOrdersProps> = ({ onOrdersCountChange }) => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Total Amount:</span>
-                        <span className="text-white font-bold">₹{order.totalAmount.toFixed(2)}</span>
+                        <span className="text-white font-bold">₹{order.totalAmount.toFixed(2)} <span className="text-xs text-gray-400 font-normal">incl tax</span></span>
                       </div>
                       {order.deliveredAt && (
                         <div className="flex justify-between">
