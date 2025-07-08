@@ -2,10 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Sparkles, TrendingUp, Loader } from 'lucide-react';
 import ProductCard from '../Product/ProductCard';
-import { useFeaturedProducts } from '../../hooks/useProducts';
+import { useProducts } from '../../context/ProductContext';
 
 const FeaturedProducts: React.FC = () => {
-  const { products, loading, error } = useFeaturedProducts();
+  const { getFeaturedProducts, loading, error } = useProducts();
+  const products = getFeaturedProducts();
 
   if (loading) {
     return (

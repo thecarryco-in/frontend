@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Filter, Grid, List, SlidersHorizontal, Search, Star, Loader, ChevronDown } from 'lucide-react';
 import ProductCard from '../components/Product/ProductCard';
-import { useProducts } from '../hooks/useProducts';
+import { useProducts } from '../context/ProductContext';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { useAuth } from '../context/AuthContext';
 
@@ -24,6 +24,12 @@ const Shop: React.FC = () => {
   });
 
   const { isAuthenticated } = useAuth();
+  const { 
+    loading, 
+    error, 
+    brands, 
+    filterProducts 
+  } = useProducts();
 
   // Update filters when query changes
   useEffect(() => {
@@ -40,22 +46,25 @@ const Shop: React.FC = () => {
   const debouncedMinPrice = useDebouncedValue(filters.minPrice, 1000);
   const debouncedMaxPrice = useDebouncedValue(filters.maxPrice, 1000);
 
-  const { data, loading, error } = useProducts({
-    ...filters,
-    minPrice: debouncedMinPrice,
-    maxPrice: debouncedMaxPrice,
-    search: debouncedSearch || undefined,
-    sortBy,
-    sortOrder,
-    page: 1,
-    limit: 50
-  });
-
-  const products = data?.products || [];
-  const brands = useMemo(() => {
-    const uniqueBrands = [...new Set(products.map(p => p.brand))];
-    return uniqueBrands.sort();
-  }, [products]);
+  // Get filtered products using the centralized system
+  const products = useMemo(() => {
+    return filterProducts({
+      ...filters,
+      minPrice: debouncedMinPrice,
+      maxPrice: debouncedMaxPrice,
+      search: debouncedSearch || undefined,
+      sortBy,
+      sortOrder
+    });
+  }, [
+    filters, 
+    debouncedMinPrice, 
+    debouncedMaxPrice, 
+    debouncedSearch, 
+    sortBy, 
+    sortOrder, 
+    filterProducts
+  ]);
 
   const workEssentialsSubcategories = [
     { value: '', label: 'All Work Essentials' },
