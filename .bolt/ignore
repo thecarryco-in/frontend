@@ -1,0 +1,6 @@
+src/pages/Disclaimer.tsx  
+src/pages/PrivacyPolicy.tsx  
+src/pages/TermsAndConditions.tsx  
+src/pages/ShippingPolicy.tsx  
+src/pages/CancellationRefundPolicy.tsx  
+src/assets/*
