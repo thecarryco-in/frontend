@@ -78,7 +78,7 @@ const initialState: ProductState = {
 };
 
 // Cache duration: 5 minutes
-const CACHE_DURATION = 5 * 60 * 1000;
+const CACHE_DURATION = 60 * 60 * 1000;
 
 export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(productReducer, initialState);
