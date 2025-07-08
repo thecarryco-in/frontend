@@ -2,6 +2,7 @@ import express from 'express';
 import Product from '../models/Product.js';
 import Review from '../models/Review.js';
 import User from '../models/User.js';
+import Gallery from '../models/Gallery.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/adminAuth.js';
 import { upload, deleteImage, getPublicIdFromUrl } from '../config/cloudinary.js';
@@ -421,6 +422,116 @@ router.get('/dashboard', authenticateToken, requireAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Admin dashboard error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Gallery Management Routes
+
+// Get all gallery images
+router.get('/gallery', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const images = await Gallery.find().sort({ category: 1, order: 1 });
+    res.status(200).json({ images });
+  } catch (error) {
+    console.error('Error fetching gallery images:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Upload gallery images
+router.post('/gallery/upload', authenticateToken, requireAdmin, upload.array('images', 10), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'No images provided' });
+    }
+
+    const { category } = req.body;
+    if (!category || !['shop', 'new-arrivals', 'gifts', 'work-essentials'].includes(category)) {
+      return res.status(400).json({ message: 'Valid category is required' });
+    }
+
+    // Get the current highest order for this category
+    const lastImage = await Gallery.findOne({ category }).sort({ order: -1 });
+    let nextOrder = lastImage ? lastImage.order + 1 : 1;
+
+    const savedImages = [];
+    for (const file of req.files) {
+      const galleryImage = new Gallery({
+        url: file.path,
+        category,
+        order: nextOrder++,
+        publicId: file.filename
+      });
+      
+      await galleryImage.save();
+      savedImages.push(galleryImage);
+    }
+
+    res.status(201).json({
+      message: 'Images uploaded successfully',
+      images: savedImages
+    });
+  } catch (error) {
+    console.error('Gallery upload error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete gallery image
+router.delete('/gallery/:id', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    const image = await Gallery.findById(req.params.id);
+    
+    if (!image) {
+      return res.status(404).json({ message: 'Image not found' });
+    }
+
+    // Delete from Cloudinary
+    if (image.publicId) {
+      try {
+        await deleteImage(image.publicId);
+      } catch (error) {
+        console.error('Error deleting from Cloudinary:', error);
+      }
+    }
+
+    // Delete from database
+    await Gallery.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({ message: 'Image deleted successfully' });
+  } catch (error) {
+    console.error('Gallery delete error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get gallery statistics
+router.get('/gallery/stats', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const totalImages = await Gallery.countDocuments();
+    
+    const imagesByCategory = await Gallery.aggregate([
+      {
+        $group: {
+          _id: '$category',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const categoryStats = {};
+    imagesByCategory.forEach(item => {
+      categoryStats[item._id] = item.count;
+    });
+
+    res.status(200).json({
+      totalImages,
+      imagesByCategory: categoryStats
+    });
+  } catch (error) {
+    console.error('Gallery stats error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

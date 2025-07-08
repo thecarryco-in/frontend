@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Filter, Grid, List, SlidersHorizontal, Search, Star, Loader, ChevronDown } from 'lucide-react';
 import ProductCard from '../components/Product/ProductCard';
+import CategoryBanner from '../components/Shop/CategoryBanner';
 import { useProducts } from '../context/ProductContext';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { useAuth } from '../context/AuthContext';
@@ -140,6 +141,12 @@ const Shop: React.FC = () => {
     return 'Discover our curated selection of premium mobile accessories';
   };
 
+  const getBannerCategory = () => {
+    if (filters.filter === 'new') return 'new-arrivals';
+    if (filters.filter === 'gifts') return 'gifts';
+    if (filters.category === 'work-essentials') return 'work-essentials';
+    return 'shop'; // Default to shop banners
+  };
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-slate-900 to-black text-white pt-24">
@@ -177,6 +184,9 @@ const Shop: React.FC = () => {
             {getPageDescription()}
           </p>
         </div>
+
+        {/* Category Banner */}
+        <CategoryBanner category={getBannerCategory()} />
 
         {/* Work Essentials Subcategory Filter */}
         {filters.category === 'work-essentials' && (
