@@ -238,11 +238,11 @@ const Cart: React.FC = () => {
               couponCode: orderData.couponCode
             });
 
-            clearCart(false);
+            clearCart(false); // Do not show toast when clearing cart after payment
             setAppliedCoupon(null);
             setCouponCode('');
             localStorage.removeItem('pendingCheckout');
-            toast.success('Payment successful');
+            toast.success('Thanks for Purchase!');
             setTimeout(() => navigate('/dashboard?tab=orders'), 2000);
           } catch (error) {
             console.error('Payment verification failed:', error);
@@ -329,7 +329,12 @@ const Cart: React.FC = () => {
                 <p className="text-gray-400 mt-2">{itemCount} items in your cart</p>
               </div>
               <button
-                onClick={clearCart(true)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (window.confirm('Are you sure you want to clear your cart? This action cannot be undone.')) {
+                    clearCart(true);
+                  }
+                }}
                 className="text-gray-400 hover:text-red-400 text-sm font-medium transition-colors duration-200 hover:bg-red-500/10 px-4 py-2 rounded-lg"
               >
                 Clear All Items
