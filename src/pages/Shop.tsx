@@ -42,9 +42,9 @@ const Shop: React.FC = () => {
   }, [searchParams]);
 
   // Debounce search and price range
-  const debouncedSearch = useDebouncedValue(searchQuery, 1000);
-  const debouncedMinPrice = useDebouncedValue(filters.minPrice, 1000);
-  const debouncedMaxPrice = useDebouncedValue(filters.maxPrice, 1000);
+  const debouncedSearch = useDebouncedValue(searchQuery, 100);
+  const debouncedMinPrice = useDebouncedValue(filters.minPrice, 100);
+  const debouncedMaxPrice = useDebouncedValue(filters.maxPrice, 100);
 
   // Get filtered products using the centralized system
   const products = useMemo(() => {
