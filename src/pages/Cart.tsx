@@ -74,7 +74,7 @@ const Cart: React.FC = () => {
 
   // Calculate shipping charges based on tax-inclusive amount
   const SHIPPING_THRESHOLD = 398;
-  const SHIPPING_CHARGE = 70;
+  const SHIPPING_CHARGE = 59;
   const totalIncludingTax = total * 1.18; // Tax-inclusive subtotal
   const isShippingFree = totalIncludingTax > SHIPPING_THRESHOLD;
   const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
