@@ -432,6 +432,7 @@ router.get('/dashboard', authenticateToken, requireAdmin, async (req, res) => {
 router.get('/gallery', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const images = await Gallery.find().sort({ category: 1, order: 1 });
+    console.log('Admin gallery fetch - found images:', images.length);
     res.status(200).json({ images });
   } catch (error) {
     console.error('Error fetching gallery images:', error);

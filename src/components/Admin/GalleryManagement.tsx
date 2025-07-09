@@ -126,10 +126,49 @@ const GalleryManagement: React.FC = () => {
   const handleCloseModal = () => {
     setShowUploadModal(false);
     setSelectedFiles(null);
+    
+    // Clean up preview URLs before clearing
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
     setPreviewUrls([]);
+    
+    // Reset file input
+    const fileInput = document.getElementById('gallery-upload') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
+  // Clean up preview URLs on component unmount
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, [previewUrls]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    // Clean up previous preview URLs
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
+
+    setSelectedFiles(files);
+
+    // Create new preview URLs
+    const urls: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      urls.push(URL.createObjectURL(files[i]));
+    }
+    setPreviewUrls(urls);
+  };
+
+  const handleCloseModal = () => {
+    setShowUploadModal(false);
+    setSelectedFiles(null);
     
     // Clean up preview URLs
     previewUrls.forEach(url => URL.revokeObjectURL(url));
+    setPreviewUrls([]);
   };
 
   const getImagesByCategory = (category: string) => {
