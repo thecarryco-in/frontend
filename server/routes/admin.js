@@ -446,6 +446,8 @@ router.post('/gallery/upload', authenticateToken, requireAdmin, upload.single('i
     if (!req.file) {
       return res.status(400).json({ message: 'No image provided' });
     }
+    // Log the file for debugging
+    console.log('Uploaded file:', req.file);
     const { category } = req.body;
     if (!category || !['shop', 'new-arrivals', 'gifts', 'work-essentials'].includes(category)) {
       return res.status(400).json({ message: 'Valid category is required' });
@@ -453,11 +455,14 @@ router.post('/gallery/upload', authenticateToken, requireAdmin, upload.single('i
     // Get the current highest order for this category
     const lastImage = await Gallery.findOne({ category }).sort({ order: -1 });
     let nextOrder = lastImage ? lastImage.order + 1 : 1;
+    // Use the correct URL property from multer-cloudinary
+    const imageUrl = req.file.path || req.file.secure_url || req.file.url;
+    const publicId = req.file.filename || req.file.public_id;
     const galleryImage = new Gallery({
-      url: req.file.path,
+      url: imageUrl,
       category,
       order: nextOrder,
-      publicId: req.file.filename
+      publicId: publicId
     });
     await galleryImage.save();
     res.status(201).json({
