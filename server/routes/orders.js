@@ -18,7 +18,7 @@ const razorpay = new Razorpay({
 
 // Shipping configuration
 const SHIPPING_THRESHOLD = 398; // Tax-inclusive threshold
-const SHIPPING_CHARGE = 70;
+const SHIPPING_CHARGE = 59;
 
 // SECURE: Server-side price calculation function
 const calculateOrderTotal = async (items, couponCode = null) => {
