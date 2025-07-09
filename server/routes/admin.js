@@ -481,7 +481,6 @@ router.post('/gallery/upload', authenticateToken, requireAdmin, upload.array('im
 // Delete gallery image
 router.delete('/gallery/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const { imageUrl } = req.body;
     const image = await Gallery.findById(req.params.id);
     
     if (!image) {

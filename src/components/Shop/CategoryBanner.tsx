@@ -34,10 +34,15 @@ const CategoryBanner: React.FC<CategoryBannerProps> = ({ category }) => {
   const fetchBannerImages = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/gallery/category/${category}`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/gallery/category/${category}`, {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
+        console.log('Banner images for', category, ':', data.images);
         setImages(data.images || []);
+      } else {
+        console.error('Failed to fetch banner images:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error fetching banner images:', error);

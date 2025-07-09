@@ -14,6 +14,8 @@ router.get('/category/:category', async (req, res) => {
 
     const images = await Gallery.find({ category }).sort({ order: 1 });
     
+    console.log(`Gallery images for ${category}:`, images.length);
+    
     res.status(200).json({ images });
   } catch (error) {
     console.error('Error fetching gallery images:', error);

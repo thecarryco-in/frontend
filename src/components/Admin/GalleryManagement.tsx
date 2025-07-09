@@ -41,9 +41,11 @@ const GalleryManagement: React.FC = () => {
     try {
       setLoading(true);
       const response = await axios.get('/admin/gallery');
+      console.log('Fetched images response:', response.data);
       setImages(response.data.images || []);
     } catch (error) {
       console.error('Error fetching gallery images:', error);
+      setImages([]);
     } finally {
       setLoading(false);
     }
@@ -52,6 +54,7 @@ const GalleryManagement: React.FC = () => {
   const fetchStats = async () => {
     try {
       const response = await axios.get('/admin/gallery/stats');
+      console.log('Gallery stats:', response.data);
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching gallery stats:', error);
@@ -87,15 +90,18 @@ const GalleryManagement: React.FC = () => {
       }
       formData.append('category', selectedCategory);
 
-      await axios.post('/admin/gallery/upload', formData, {
+      const response = await axios.post('/admin/gallery/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
+      console.log('Upload response:', response.data);
+      
       await fetchImages();
       await fetchStats();
       handleCloseModal();
       alert('Images uploaded successfully!');
     } catch (error: any) {
+      console.error('Upload error:', error);
       alert(error.response?.data?.message || 'Failed to upload images');
     } finally {
       setUploading(false);
@@ -106,14 +112,13 @@ const GalleryManagement: React.FC = () => {
     if (!confirm('Are you sure you want to delete this image?')) return;
 
     try {
-      await axios.delete(`/admin/gallery/${imageId}`, {
-        data: { imageUrl }
-      });
+      await axios.delete(`/admin/gallery/${imageId}`);
       
       await fetchImages();
       await fetchStats();
       alert('Image deleted successfully!');
     } catch (error) {
+      console.error('Delete error:', error);
       alert('Failed to delete image');
     }
   };
