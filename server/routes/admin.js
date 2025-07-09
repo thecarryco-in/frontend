@@ -440,38 +440,29 @@ router.get('/gallery', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
-// Upload gallery images
-router.post('/gallery/upload', authenticateToken, requireAdmin, upload.array('images', 10), async (req, res) => {
+// Upload gallery image (single file only)
+router.post('/gallery/upload', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
   try {
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ message: 'No images provided' });
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image provided' });
     }
-
     const { category } = req.body;
     if (!category || !['shop', 'new-arrivals', 'gifts', 'work-essentials'].includes(category)) {
       return res.status(400).json({ message: 'Valid category is required' });
     }
-
     // Get the current highest order for this category
     const lastImage = await Gallery.findOne({ category }).sort({ order: -1 });
     let nextOrder = lastImage ? lastImage.order + 1 : 1;
-
-    const savedImages = [];
-    for (const file of req.files) {
-      const galleryImage = new Gallery({
-        url: file.path,
-        category,
-        order: nextOrder++,
-        publicId: file.filename
-      });
-      
-      await galleryImage.save();
-      savedImages.push(galleryImage);
-    }
-
+    const galleryImage = new Gallery({
+      url: req.file.path,
+      category,
+      order: nextOrder,
+      publicId: req.file.filename
+    });
+    await galleryImage.save();
     res.status(201).json({
-      message: 'Images uploaded successfully',
-      images: savedImages
+      message: 'Image uploaded successfully',
+      image: galleryImage
     });
   } catch (error) {
     console.error('Gallery upload error:', error);
