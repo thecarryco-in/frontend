@@ -432,7 +432,6 @@ router.get('/dashboard', authenticateToken, requireAdmin, async (req, res) => {
 router.get('/gallery', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const images = await Gallery.find().sort({ category: 1, order: 1 });
-    console.log('Admin gallery fetch - found images:', images.length);
     res.status(200).json({ images });
   } catch (error) {
     console.error('Error fetching gallery images:', error);
@@ -440,34 +439,38 @@ router.get('/gallery', authenticateToken, requireAdmin, async (req, res) => {
   }
 });
 
-// Upload gallery image (single file only)
-router.post('/gallery/upload', authenticateToken, requireAdmin, upload.single('image'), async (req, res) => {
+// Upload gallery images
+router.post('/gallery/upload', authenticateToken, requireAdmin, upload.array('images', 10), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No image provided' });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'No images provided' });
     }
-    // Log the file for debugging
-    console.log('Uploaded file:', req.file);
+
     const { category } = req.body;
     if (!category || !['shop', 'new-arrivals', 'gifts', 'work-essentials'].includes(category)) {
       return res.status(400).json({ message: 'Valid category is required' });
     }
+
     // Get the current highest order for this category
     const lastImage = await Gallery.findOne({ category }).sort({ order: -1 });
     let nextOrder = lastImage ? lastImage.order + 1 : 1;
-    // Use the correct URL property from multer-cloudinary
-    const imageUrl = req.file.path || req.file.secure_url || req.file.url;
-    const publicId = req.file.filename || req.file.public_id;
-    const galleryImage = new Gallery({
-      url: imageUrl,
-      category,
-      order: nextOrder,
-      publicId: publicId
-    });
-    await galleryImage.save();
+
+    const savedImages = [];
+    for (const file of req.files) {
+      const galleryImage = new Gallery({
+        url: file.path,
+        category,
+        order: nextOrder++,
+        publicId: file.filename
+      });
+      
+      await galleryImage.save();
+      savedImages.push(galleryImage);
+    }
+
     res.status(201).json({
-      message: 'Image uploaded successfully',
-      image: galleryImage
+      message: 'Images uploaded successfully',
+      images: savedImages
     });
   } catch (error) {
     console.error('Gallery upload error:', error);
@@ -478,6 +481,7 @@ router.post('/gallery/upload', authenticateToken, requireAdmin, upload.single('i
 // Delete gallery image
 router.delete('/gallery/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
+    const { imageUrl } = req.body;
     const image = await Gallery.findById(req.params.id);
     
     if (!image) {
