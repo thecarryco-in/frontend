@@ -41,11 +41,9 @@ const GalleryManagement: React.FC = () => {
     try {
       setLoading(true);
       const response = await axios.get('/admin/gallery');
-      console.log('Fetched images response:', response.data);
       setImages(response.data.images || []);
     } catch (error) {
       console.error('Error fetching gallery images:', error);
-      setImages([]);
     } finally {
       setLoading(false);
     }
@@ -54,7 +52,6 @@ const GalleryManagement: React.FC = () => {
   const fetchStats = async () => {
     try {
       const response = await axios.get('/admin/gallery/stats');
-      console.log('Gallery stats:', response.data);
       setStats(response.data);
     } catch (error) {
       console.error('Error fetching gallery stats:', error);
@@ -90,18 +87,15 @@ const GalleryManagement: React.FC = () => {
       }
       formData.append('category', selectedCategory);
 
-      const response = await axios.post('/admin/gallery/upload', formData, {
+      await axios.post('/admin/gallery/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      console.log('Upload response:', response.data);
-      
       await fetchImages();
       await fetchStats();
       handleCloseModal();
       alert('Images uploaded successfully!');
     } catch (error: any) {
-      console.error('Upload error:', error);
       alert(error.response?.data?.message || 'Failed to upload images');
     } finally {
       setUploading(false);
@@ -112,13 +106,14 @@ const GalleryManagement: React.FC = () => {
     if (!confirm('Are you sure you want to delete this image?')) return;
 
     try {
-      await axios.delete(`/admin/gallery/${imageId}`);
+      await axios.delete(`/admin/gallery/${imageId}`, {
+        data: { imageUrl }
+      });
       
       await fetchImages();
       await fetchStats();
       alert('Image deleted successfully!');
     } catch (error) {
-      console.error('Delete error:', error);
       alert('Failed to delete image');
     }
   };
@@ -126,49 +121,10 @@ const GalleryManagement: React.FC = () => {
   const handleCloseModal = () => {
     setShowUploadModal(false);
     setSelectedFiles(null);
-    
-    // Clean up preview URLs before clearing
-    previewUrls.forEach(url => URL.revokeObjectURL(url));
     setPreviewUrls([]);
-    
-    // Reset file input
-    const fileInput = document.getElementById('gallery-upload') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = '';
-    }
-  };
-
-  // Clean up preview URLs on component unmount
-  useEffect(() => {
-    return () => {
-      previewUrls.forEach(url => URL.revokeObjectURL(url));
-    };
-  }, [previewUrls]);
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    // Clean up previous preview URLs
-    previewUrls.forEach(url => URL.revokeObjectURL(url));
-
-    setSelectedFiles(files);
-
-    // Create new preview URLs
-    const urls: string[] = [];
-    for (let i = 0; i < files.length; i++) {
-      urls.push(URL.createObjectURL(files[i]));
-    }
-    setPreviewUrls(urls);
-  };
-
-  const handleCloseModal = () => {
-    setShowUploadModal(false);
-    setSelectedFiles(null);
     
     // Clean up preview URLs
     previewUrls.forEach(url => URL.revokeObjectURL(url));
-    setPreviewUrls([]);
   };
 
   const getImagesByCategory = (category: string) => {
