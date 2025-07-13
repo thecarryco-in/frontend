@@ -77,26 +77,34 @@ axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/
 axios.defaults.withCredentials = true; // CRITICAL: Always send cookies
 axios.defaults.timeout = 30000; // 30 second timeout
 
-// Enhanced headers for security
-const getSecureHeaders = () => ({
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
-  'Cache-Control': 'no-cache, no-store, must-revalidate',
-  'Pragma': 'no-cache',
-  'X-Requested-With': 'XMLHttpRequest'
-});
+// Basic headers for requests
+const getSecureHeaders = (isFormData = false): Record<string, string> => {
+  const headers: Record<string, string> = {
+    'Accept': 'application/json'
+  };
+  
+  // Don't set Content-Type for FormData - let browser set it with boundary
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  return headers;
+};
 
-// Request interceptor for security
+// Request interceptor for credentials and basic headers
 axios.interceptors.request.use(
   (config) => {
     // Ensure credentials are always sent
     config.withCredentials = true;
     
-    // Add security headers
-    config.headers = {
-      ...config.headers,
-      ...getSecureHeaders()
-    };
+    // Check if this is a FormData request
+    const isFormData = config.data instanceof FormData;
+    
+    // Add basic headers (skip Content-Type for FormData)
+    const basicHeaders = getSecureHeaders(isFormData);
+    Object.keys(basicHeaders).forEach(key => {
+      config.headers[key] = basicHeaders[key];
+    });
     
     return config;
   },
