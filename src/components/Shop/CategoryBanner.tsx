@@ -80,7 +80,7 @@ const CategoryBanner: React.FC<CategoryBannerProps> = ({ category }) => {
             <img
               src={image.url}
               alt={`${category} banner ${index + 1}`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-fill"
             />
             
             {/* Gradient Overlay */}
