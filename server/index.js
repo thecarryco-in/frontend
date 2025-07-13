@@ -59,24 +59,20 @@ app.use(cors({
     'Content-Type',
     'Accept',
     'Authorization',
-    'Cookie',
-    'Set-Cookie',
-    'Access-Control-Allow-Credentials',
-    'Access-Control-Allow-Origin',
-    'Cache-Control',
-    'Pragma'
+    'Cookie'
   ],
-  exposedHeaders: ['Set-Cookie', 'Access-Control-Allow-Credentials'],
   optionsSuccessStatus: 200
 }));
 
 // Handle preflight
 app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  const origin = req.headers.origin;
+  if (origin && (allowedOrigins.includes(origin) || origin.includes('localhost'))) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,HEAD,PATCH');
-  res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization,Cookie,Set-Cookie');
-  res.header('Access-Control-Max-Age', '86400');
+  res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization,Cookie');
   res.sendStatus(200);
 });
 
@@ -98,7 +94,7 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 7 * 24 * 60 * 60 * 1000,
-    sameSite: 'none'
+    sameSite: 'strict'
   },
   name: 'sessionId',
   rolling: true,
@@ -108,15 +104,10 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Security headers middleware
+// Basic security headers middleware
 app.use((req, res, next) => {
   res.header('X-Content-Type-Options', 'nosniff');
   res.header('X-Frame-Options', 'DENY');
-  res.header('X-XSS-Protection', '1; mode=block');
-  res.header('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.header('Pragma', 'no-cache');
-  res.header('Expires', '0');
 
   const origin = req.headers.origin;
   if (origin && (allowedOrigins.includes(origin) || origin.includes('localhost'))) {
