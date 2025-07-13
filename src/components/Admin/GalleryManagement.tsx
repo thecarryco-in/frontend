@@ -87,9 +87,7 @@ const GalleryManagement: React.FC = () => {
       }
       formData.append('category', selectedCategory);
 
-      await axios.post('/admin/gallery/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await axios.post('/admin/gallery/upload', formData);
 
       await fetchImages();
       await fetchStats();
