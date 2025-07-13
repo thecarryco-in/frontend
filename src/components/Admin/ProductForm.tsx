@@ -111,9 +111,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
       const formDataUpload = new FormData();
       formDataUpload.append('image', file);
 
-      const response = await axios.post('/admin/upload-image', formDataUpload, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const response = await axios.post('/admin/upload-image', formDataUpload);
 
       setFormData(prev => ({ ...prev, image: response.data.imageUrl }));
     } catch (error: any) {
