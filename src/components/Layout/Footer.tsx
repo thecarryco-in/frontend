@@ -162,7 +162,7 @@ const Footer: React.FC = () => {
         <div className="mt-16 pt-8 border-t border-white/10">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex items-center space-x-2 text-gray-400 text-sm">
-              <span>© 2025 The CarryCo. All Rights Reserved</span>
+              <span>© {new Date().getFullYear()} The CarryCo. All Rights Reserved</span>
             </div>
             
             <div className="flex items-center space-x-8">
