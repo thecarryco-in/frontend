@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Filter, Grid, List, SlidersHorizontal, Search, Star, Loader, ChevronDown } from 'lucide-react';
 import ProductCard from '../components/Product/ProductCard';
 import CategoryBanner from '../components/Shop/CategoryBanner';
@@ -8,16 +8,21 @@ import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { useAuth } from '../context/AuthContext';
 
 const Shop: React.FC = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { category, subcategory, filter } = useParams<{
+    category?: string;
+    subcategory?: string;
+    filter?: string;
+  }>();
+  const navigate = useNavigate();
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
-    category: searchParams.get('category') || '',
-    subcategory: searchParams.get('subcategory') || '',
-    filter: searchParams.get('filter') || '',
+    category: category || '',
+    subcategory: subcategory || '',
+    filter: filter || '',
     brand: '',
     minPrice: undefined as number | undefined,
     maxPrice: undefined as number | undefined,
@@ -32,15 +37,15 @@ const Shop: React.FC = () => {
     filterProducts 
   } = useProducts();
 
-  // Update filters when query changes
+  // Update filters when URL parameters change
   useEffect(() => {
     setFilters((prev) => ({
       ...prev,
-      category: searchParams.get('category') || '',
-      subcategory: searchParams.get('subcategory') || '',
-      filter: searchParams.get('filter') || '',
+      category: category || '',
+      subcategory: subcategory || '',
+      filter: filter || '',
     }));
-  }, [searchParams]);
+  }, [category, subcategory, filter]);
 
   // Debounce search and price range
   const debouncedSearch = useDebouncedValue(searchQuery, 100);
@@ -101,16 +106,14 @@ const Shop: React.FC = () => {
     }
   };
 
-  const handleSubcategoryChange = (subcategory: string) => {
-    const newSearchParams = new URLSearchParams(searchParams);
-    
-    if (subcategory) {
-      newSearchParams.set('subcategory', subcategory);
-    } else {
-      newSearchParams.delete('subcategory');
+  const handleSubcategoryChange = (newSubcategory: string) => {
+    if (category) {
+      if (newSubcategory) {
+        navigate(`/shop/category/${category}/${newSubcategory}`);
+      } else {
+        navigate(`/shop/category/${category}`);
+      }
     }
-    
-    setSearchParams(newSearchParams);
   };
 
   const getPageTitle = () => {
@@ -355,7 +358,7 @@ const Shop: React.FC = () => {
                       rating: 0,
                     });
                     setSearchQuery('');
-                    setSearchParams(new URLSearchParams());
+                    navigate('/shop');
                   }}
                   className="bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 text-sm"
                 >
@@ -387,7 +390,7 @@ const Shop: React.FC = () => {
                     maxPrice: undefined,
                     rating: 0,
                   });
-                  setSearchParams(new URLSearchParams());
+                  navigate('/shop');
                 }}
                 className="bg-gradient-to-r from-purple-600 to-cyan-600 text-white px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-semibold hover:shadow-lg transition-all duration-300"
               >
