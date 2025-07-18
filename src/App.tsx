@@ -79,6 +79,9 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/shop" element={<Shop />} />
+                  <Route path="/shop/filter/:filter" element={<Shop />} />
+                  <Route path="/shop/category/:category" element={<Shop />} />
+                  <Route path="/shop/category/:category/:subcategory" element={<Shop />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/refund" element={<RefundPolicy />} />
