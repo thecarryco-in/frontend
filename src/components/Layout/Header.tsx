@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { ShoppingCart, User, Menu, X, Heart, Smartphone, LogOut, Package, ChevronDown } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ShoppingCart, User, Menu, X, Heart, LogOut, Package, ChevronDown } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useAuth } from '../../context/AuthContext';
@@ -17,7 +17,6 @@ const Header: React.FC = () => {
   const { user, isAuthenticated, logout, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   // scroll header background on window scroll
   useEffect(() => {
@@ -56,40 +55,38 @@ const Header: React.FC = () => {
       hasDropdown: true,
       dropdownItems: [
         { name: 'All Products', href: '/shop' },
-        { name: 'Cases', href: '/shop?category=cases' },
-        { name: 'Tempered Glass', href: '/shop?category=tempered-glass' },
-        { name: 'Chargers', href: '/shop?category=chargers' },
-        { name: 'Accessories', href: '/shop?category=accessories' }
+        { name: 'Cases', href: '/shop/category/cases' },
+        { name: 'Tempered Glass', href: '/shop/category/tempered-glass' },
+        { name: 'Chargers', href: '/shop/category/chargers' },
+        { name: 'Accessories', href: '/shop/category/accessories' }
       ]
     },
-    { name: 'New Arrivals', href: '/shop?filter=new' },
-    { name: 'Gifts', href: '/shop?filter=gifts' },
+    { name: 'New Arrivals', href: '/shop/filter/new' },
+    { name: 'Gifts', href: '/shop/filter/gifts' },
     { 
       name: 'Work Essentials', 
-      href: '/shop?category=work-essentials',
+      href: '/shop/category/work-essentials',
       hasDropdown: true,
       dropdownItems: [
-        { name: 'All Work Essentials', href: '/shop?category=work-essentials' },
-        { name: 'Laptop Accessories', href: '/shop?category=work-essentials&subcategory=laptop-accessories' },
-        { name: 'Desk Setup', href: '/shop?category=work-essentials&subcategory=desk-setup' },
-        { name: 'Cable Management', href: '/shop?category=work-essentials&subcategory=cable-management' },
-        { name: 'Productivity Tools', href: '/shop?category=work-essentials&subcategory=productivity-tools' }
+        { name: 'All Work Essentials', href: '/shop/category/work-essentials' },
+        { name: 'Laptop Accessories', href: '/shop/category/work-essentials/laptop-accessories' },
+        { name: 'Desk Setup', href: '/shop/category/work-essentials/desk-setup' },
+        { name: 'Cable Management', href: '/shop/category/work-essentials/cable-management' },
+        { name: 'Productivity Tools', href: '/shop/category/work-essentials/productivity-tools' }
       ]
     },
   ];
 
   const isActive = (href: string) => {
     if (href === '/') return location.pathname === '/';
-    if (href.startsWith('/shop?category=')) {
-      const category = href.split('=')[1];
-      return location.pathname === '/shop' && searchParams.get('category') === category;
+    if (href.startsWith('/shop/category/')) {
+      return location.pathname === href;
     }
-    if (href.startsWith('/shop?filter=')) {
-      const filter = href.split('=')[1];
-      return location.pathname === '/shop' && searchParams.get('filter') === filter;
+    if (href.startsWith('/shop/filter/')) {
+      return location.pathname === href;
     }
     if (href === '/shop') {
-      return location.pathname === '/shop' && !searchParams.get('category') && !searchParams.get('filter');
+      return location.pathname === '/shop';
     }
     return location.pathname.startsWith(href);
   };
