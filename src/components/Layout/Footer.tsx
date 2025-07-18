@@ -107,7 +107,7 @@ const Footer: React.FC = () => {
               ].map((item) => (
                 <li key={item}>
                   <Link 
-                    to={`/shop?category=${item.toLowerCase().replace(' ', '-')}`}
+                    to={`/shop/category/${item.toLowerCase().replace(' ', '-')}`}
                     onClick={scrollToTop}
                     className="text-gray-400 hover:text-white transition-colors duration-200 text-sm hover:translate-x-1 transform inline-block"
                   >
