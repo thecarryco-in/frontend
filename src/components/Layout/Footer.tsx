@@ -42,7 +42,7 @@ const Footer: React.FC = () => {
               Elevating your mobile experience with premium accessories that combine cutting-edge technology, 
               exceptional quality plus stunning design. Your device deserves the best.
             </p>
-            {/* <div className="flex space-x-4">
+            <div className="flex space-x-4">
               <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-purple-500 transition-all duration-300">
                 <Facebook className="w-5 h-5" />
               </a>
@@ -63,7 +63,7 @@ const Footer: React.FC = () => {
               >
                 <Youtube className="w-5 h-5" />
               </a>
-            </div> */}
+            </div>
           </div>
 
           {/* Quick Links */}
