@@ -43,9 +43,17 @@ const Footer: React.FC = () => {
               exceptional quality plus stunning design. Your device deserves the best.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-purple-500 transition-all duration-300">
+              {/* Facebook */}
+              <a
+                href="https://www.facebook.com/share/16im4bdvEr/?mibextid=wwXIfr"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-purple-500 transition-all duration-300"
+              >
                 <Facebook className="w-5 h-5" />
               </a>
+            
+              {/* Instagram */}
               <a
                 href="https://www.instagram.com/thecarryco.in/"
                 target="_blank"
@@ -54,7 +62,18 @@ const Footer: React.FC = () => {
               >
                 <Instagram className="w-5 h-5" />
               </a>
-              
+            
+              {/* Twitter (X) */}
+              <a
+                href="https://x.com/CarrycoIndia"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center text-gray-400 hover:text-white hover:bg-blue-500 transition-all duration-300"
+              >
+                <Twitter className="w-5 h-5" />
+              </a>
+            
+              {/* YouTube */}
               <a
                 href="https://www.youtube.com/@TheCarryCo.18"
                 target="_blank"
