@@ -185,52 +185,58 @@ const About: React.FC = () => {
         </div>
       </section>
 
-      {/* Team Section */}
-{/* Team Section */}
-<section className="py-24 bg-gradient-to-b from-black to-slate-900">
-  <div className="container mx-auto px-4">
-    <div className="text-center mb-20 max-w-3xl mx-auto">
-      <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-        Meet the Founders
-      </h2>
-      <p className="text-xl text-gray-400">
-        The CarryCo isn’t just a brand — it’s a vision born from two individuals who saw mobile accessories as more than utility. We're building a legacy of style, protection, and innovation.
-      </p>
-    </div>
-
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
-      {[
-        {
-          name: 'Akul Chauhan',
-          role: 'Founder & Vision Architect',
-          image: 'https://res.cloudinary.com/dgcnjh1tr/image/upload/v1750706378/77acb058-cc30-453f-b5b1-bc882c67a4b3_y32cen.jpg',
-          bio: 'I started The CarryCo to redefine how people relate to the devices they carry every day. It’s not just about protection — it’s about identity, presence, and pride in what you own.'
-        },
-        {
-          name: 'Shaurya Tyagi',
-          role: 'Co-Founder & Product Strategist',
-          image: 'https://res.cloudinary.com/dgcnjh1tr/image/upload/v1750705626/2befb358-2ae6-4771-9ae9-a9b5633dd6bc_pucxzp.jpg',
-          bio: 'Every CarryCo product is designed to be an extension of you — stylish, reliable, and forward-thinking. We’re obsessed with pushing boundaries and creating products people love.'
-        },
-      ].map((member, index) => (
-        <div
-          key={index}
-          className="text-center group"
-          style={{ animationDelay: `${index * 150}ms` }}
-        >
-          <div className="relative mb-8">
-            <img
-              src={member.image}
-              alt={member.name}
-              className="w-48 h-48 rounded-full mx-auto object-cover border-4 border-blue-400/20 group-hover:border-blue-400 transition-all duration-300"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-blue-500/20 to-transparent rounded-full"></div>
-          </div>
-          <h3 className="text-2xl font-bold text-white mb-2">{member.name}</h3>
-          <p className="text-cyan-400 font-semibold mb-4">{member.role}</p>
-          <p className="text-gray-400 leading-relaxed">{member.bio}</p>
+{/* Quote Section - Akul Chauhan */}
+<section className="py-20 bg-white">
+  <div className="container mx-auto px-6">
+    <div className="flex flex-col lg:flex-row items-center gap-12">
+      <div className="lg:w-1/2">
+        <div className="relative">
+          <img
+            src="https://res.cloudinary.com/dgcnjh1tr/image/upload/v1750706378/77acb058-cc30-453f-b5b1-bc882c67a4b3_y32cen.jpg"
+            alt="Akul Chauhan"
+            className="rounded-2xl shadow-2xl w-full max-w-md mx-auto"
+          />
         </div>
-      ))}
+      </div>
+      <div className="lg:w-1/2">
+        <blockquote className="text-3xl md:text-4xl font-light text-gray-800 leading-relaxed mb-8 italic">
+          "We build brands that don't compete- they dominate."
+        </blockquote>
+        <div className="flex items-center">
+          <div>
+            <p className="text-xl font-semibold text-gray-900">Akul Chauhan</p>
+            <p className="text-blue-600">Founder & CEO, Sparkify Social</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{/* Quote Section - Shaurya Tyagi */}
+<section className="py-20 bg-gray-50">
+  <div className="container mx-auto px-6">
+    <div className="flex flex-col lg:flex-row items-center gap-12">
+      <div className="lg:w-1/2">
+        <div className="relative">
+          <img
+            src="https://res.cloudinary.com/dgcnjh1tr/image/upload/v1750705626/2befb358-2ae6-4771-9ae9-a9b5633dd6bc_pucxzp.jpg"
+            alt="Shaurya Tyagi"
+            className="rounded-2xl shadow-2xl w-full max-w-md mx-auto"
+          />
+        </div>
+      </div>
+      <div className="lg:w-1/2">
+        <blockquote className="text-3xl md:text-4xl font-light text-gray-800 leading-relaxed mb-8 italic">
+          "Technology is not just about building solutions, it’s about creating possibilities for the future."
+        </blockquote>
+        <div className="flex items-center">
+          <div>
+            <p className="text-xl font-semibold text-gray-900">Shaurya Tyagi</p>
+            <p className="text-blue-600">Tech Lead, Sparkify Social</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
