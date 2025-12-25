@@ -70,62 +70,7 @@ function App() {
   }
 
   return (
-    <AuthProvider>
-      <ProductProvider>
-        <WishlistProvider>
-          <CartProvider>
-            <Router>
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/shop" element={<Shop />} />
-                  <Route path="/shop/filter/:filter" element={<Shop />} />
-                  <Route path="/shop/category/:category" element={<Shop />} />
-                  <Route path="/shop/category/:category/:subcategory" element={<Shop />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/privacy" element={<PrivacyPolicy />} />
-                  <Route path="/refund" element={<RefundPolicy />} />
-                  <Route path="/shipping" element={<ShippingPolicy />} />
-                  <Route path="/service" element={<TermsOfService />} />
-                  <Route path="/disclaimer" element={<Disclaimer />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/verify-otp" element={<VerifyOTP />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/reset-password" element={<ResetPassword />} />
-                  <Route path="/cart" element={<Cart />} />
-                  <Route 
-                    path="/wishlist" 
-                    element={
-                      <ProtectedRoute>
-                        <Wishlist />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/dashboard" 
-                    element={
-                      <ProtectedRoute>
-                        <Dashboard />
-                      </ProtectedRoute>
-                    } 
-                  />
-                  <Route 
-                    path="/admin" 
-                    element={
-                      <AdminRoute>
-                        <AdminPanel />
-                      </AdminRoute>
-                    } 
-                  />
-                </Routes>
-              </Layout>
-            </Router>
-          </CartProvider>
-        </WishlistProvider>
-      </ProductProvider>
-    </AuthProvider>
+    <div style={{ width: "100vw", height: "100vh", backgroundColor: "white" }} />
   );
 }
 
