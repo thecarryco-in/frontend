@@ -81,6 +81,10 @@ router.get('/products', authenticateToken, requireAdmin, async (req, res) => {
       inStock 
     } = req.query;
 
+    // Cap pagination limits
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(parseInt(limit) || 20, 100);
+
     const filter = {};
     if (search) {
       filter.name = { $regex: search, $options: 'i' }; // Case-insensitive partial match
@@ -88,21 +92,21 @@ router.get('/products', authenticateToken, requireAdmin, async (req, res) => {
     if (category) filter.category = category;
     if (inStock !== undefined) filter.inStock = inStock === 'true';
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
     const products = await Product.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(limitNum);
 
     const total = await Product.countDocuments(filter);
 
     res.status(200).json({
       products,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: pageNum,
+        limit: limitNum,
         total,
-        pages: Math.ceil(total / parseInt(limit))
+        pages: Math.ceil(total / limitNum)
       }
     });
   } catch (error) {
@@ -122,6 +126,10 @@ router.get('/reviews', authenticateToken, requireAdmin, async (req, res) => {
       rating,
       status = 'approved'
     } = req.query;
+
+    // Cap pagination limits
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(parseInt(limit) || 20, 100);
 
     // Build aggregation pipeline
     const pipeline = [
@@ -179,9 +187,9 @@ router.get('/reviews', authenticateToken, requireAdmin, async (req, res) => {
     const total = totalResult[0]?.total || 0;
 
     // Add pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
     pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: parseInt(limit) });
+    pipeline.push({ $limit: limitNum });
 
     // Execute main query
     const reviews = await Review.aggregate(pipeline);
@@ -189,10 +197,10 @@ router.get('/reviews', authenticateToken, requireAdmin, async (req, res) => {
     res.status(200).json({
       reviews,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: pageNum,
+        limit: limitNum,
         total,
-        pages: Math.ceil(total / parseInt(limit))
+        pages: Math.ceil(total / limitNum)
       }
     });
   } catch (error) {
@@ -216,6 +224,11 @@ router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
       if (!productData[field]) {
         return res.status(400).json({ message: `${field} is required` });
       }
+    }
+
+    // Validate stock quantity
+    if (typeof productData.stock !== 'number' || productData.stock < 0) {
+      return res.status(400).json({ message: 'Stock must be a non-negative number' });
     }
 
     // Ensure arrays are properly formatted
@@ -252,6 +265,13 @@ router.post('/products', authenticateToken, requireAdmin, async (req, res) => {
 router.put('/products/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const productData = req.body;
+
+    // Validate stock quantity if provided
+    if ('stock' in productData) {
+      if (typeof productData.stock !== 'number' || productData.stock < 0) {
+        return res.status(400).json({ message: 'Stock must be a non-negative number' });
+      }
+    }
 
     // Ensure arrays are properly formatted
     if (typeof productData.features === 'string') {

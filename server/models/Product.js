@@ -40,6 +40,12 @@ const productSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  stock: {
+    type: Number,
+    default: 0,
+    min: 0,
+    description: 'Quantity available in inventory'
+  },
   // Dynamic rating fields - calculated from Review collection
   rating: {
     type: Number,

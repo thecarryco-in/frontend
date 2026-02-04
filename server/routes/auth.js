@@ -38,6 +38,9 @@ const createSecureSession = (req, user) => {
   });
 };
 
+// Email validation regex
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // Register user (send OTP)
 router.post('/register', authLimiter, async (req, res) => {
   try {
@@ -54,6 +57,11 @@ router.post('/register', authLimiter, async (req, res) => {
 
     // Convert email to lowercase for case insensitive handling
     const normalizedEmail = email.toLowerCase().trim();
+    
+    // Validate email format
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email: normalizedEmail });
@@ -199,6 +207,11 @@ router.post('/login', authLimiter, async (req, res) => {
 
     // Convert email to lowercase for case insensitive login
     const normalizedEmail = email.toLowerCase().trim();
+    
+    // Validate email format
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
 
     // Find user
     const user = await User.findOne({ email: normalizedEmail });
@@ -248,9 +261,12 @@ router.post('/forgot-password', authLimiter, async (req, res) => {
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
     }
-
-    // Convert email to lowercase
+    
+    // Validate email format
     const normalizedEmail = email.toLowerCase().trim();
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
 
     // Check if user exists
     const user = await User.findOne({ email: normalizedEmail });

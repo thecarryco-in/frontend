@@ -26,7 +26,7 @@ import galleryRoutes from './routes/gallery.js';
 import './config/passport.js';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 7000;
 
 // Trust the first proxy (e.g. Render/GCP/Heroku)
 app.set('trust proxy', 1);
@@ -35,11 +35,7 @@ app.set('trust proxy', 1);
 const allowedOrigins = [
   process.env.CLIENT_URL,
   process.env.CLIENT_URL2,
-  process.env.CLIENT_URL3,
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://localhost:5173',
-  'https://localhost:3000'
+  process.env.CLIENT_URL3
 ];
 
 app.use(cors({
@@ -145,7 +141,7 @@ mongoose.connect(process.env.MONGODB_URI)
       });
     });
 
-    // 404 handler
+    // 404 handler - return error for invalid API routes
     app.use('*', (req, res) => {
       res.status(404).json({ message: 'Route not found' });
     });

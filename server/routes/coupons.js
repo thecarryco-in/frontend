@@ -74,6 +74,10 @@ router.get('/admin/all', authenticateToken, requireAdmin, async (req, res) => {
       status 
     } = req.query;
 
+    // Cap pagination limits
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(parseInt(limit) || 20, 100);
+
     const filter = {};
     if (search) {
       filter.$or = [
@@ -85,21 +89,21 @@ router.get('/admin/all', authenticateToken, requireAdmin, async (req, res) => {
     if (status === 'active') filter.isActive = true;
     if (status === 'inactive') filter.isActive = false;
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
     const coupons = await Coupon.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(limitNum);
 
     const total = await Coupon.countDocuments(filter);
 
     res.status(200).json({
       coupons,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: pageNum,
+        limit: limitNum,
         total,
-        pages: Math.ceil(total / parseInt(limit))
+        pages: Math.ceil(total / limitNum)
       }
     });
   } catch (error) {

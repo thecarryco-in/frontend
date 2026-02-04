@@ -25,6 +25,10 @@ router.get('/', async (req, res) => {
       limit = 20
     } = req.query;
 
+    // Cap pagination limits to prevent DOS
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.min(parseInt(limit) || 20, 100); // Max 100 per page
+
     // Build filter object
     const filterObj = { inStock: true }; // Only show in-stock items to users
 
@@ -53,21 +57,21 @@ router.get('/', async (req, res) => {
     sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
     // Execute query with pagination
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
     const products = await Product.find(filterObj)
       .sort(sort)
       .skip(skip)
-      .limit(parseInt(limit));
+      .limit(limitNum);
 
     const total = await Product.countDocuments(filterObj);
 
     res.status(200).json({
       products,
       pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
+        page: pageNum,
+        limit: limitNum,
         total,
-        pages: Math.ceil(total / parseInt(limit))
+        pages: Math.ceil(total / limitNum)
       }
     });
   } catch (error) {

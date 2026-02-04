@@ -7,6 +7,9 @@ import { contactLimiter } from '../middleware/rateLimiters.js';
 
 const router = express.Router();
 
+// Email validation regex
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // Submit contact form (public) - NO EMAIL SENDING
 router.post('/submit', contactLimiter, async (req, res) => {
   try {
@@ -16,11 +19,17 @@ router.post('/submit', contactLimiter, async (req, res) => {
     if (!name || !email || !queryType || !subject || !message) {
       return res.status(400).json({ message: 'All required fields must be filled' });
     }
+    
+    // Validate email format
+    const normalizedEmail = email.toLowerCase().trim();
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
 
     // Create contact
     const contact = new Contact({
       name,
-      email,
+      email: normalizedEmail,
       phone,
       queryType,
       subject,

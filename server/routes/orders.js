@@ -225,10 +225,13 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
       });
     }
 
-    // Apply coupon if used
+    // Apply coupon if used (atomic increment to prevent race conditions)
     if (orderCalculation.appliedCoupon) {
-      orderCalculation.appliedCoupon.usageCount += 1;
-      await orderCalculation.appliedCoupon.save();
+      await Coupon.findByIdAndUpdate(
+        orderCalculation.appliedCoupon._id,
+        { $inc: { usageCount: 1 } },
+        { new: true }
+      );
     }
 
     // Create order in database with server-calculated total
@@ -249,6 +252,15 @@ router.post('/verify-payment', authenticateToken, async (req, res) => {
     });
 
     await order.save();
+
+    // CRITICAL: Decrement product stock to prevent overselling
+    for (const item of orderItems) {
+      await Product.findByIdAndUpdate(
+        item.product,
+        { $inc: { stock: -item.quantity } },
+        { new: true }
+      );
+    }
 
     // Update user total spent
     await User.findByIdAndUpdate(
