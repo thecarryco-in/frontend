@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Shield, Truck, CreditCard, User, MapPin, Phone, ChevronDown, ChevronUp, Info, LogIn, CheckCircle, AlertTriangle, Tag, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -72,33 +72,40 @@ const Cart: React.FC = () => {
     pincode: ''
   });
 
-  // Calculate shipping charges based on tax-inclusive amount
+  // Calculate shipping charges based on tax-inclusive amount (memoized)
   const SHIPPING_THRESHOLD = 398;
   const SHIPPING_CHARGE = 59;
-  const totalIncludingTax = total * 1.18; // Tax-inclusive subtotal
-  const isShippingFree = totalIncludingTax > SHIPPING_THRESHOLD;
-  const shippingCost = isShippingFree ? 0 : SHIPPING_CHARGE;
   
-  // Apply coupon discount
-  const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
-  const totalAfterDiscount = totalIncludingTax - discountAmount;
-  
-  // Final totals
-  const finalTotalWithShipping = totalAfterDiscount + (shippingCost * 1.18); // Shipping also has tax
+  const { totalIncludingTax, isShippingFree, shippingCost, discountAmount, finalTotalWithShipping } = useMemo(() => {
+    const totalWithTax = total * 1.18;
+    const isFree = totalWithTax > SHIPPING_THRESHOLD;
+    const cost = isFree ? 0 : SHIPPING_CHARGE;
+    const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+    const afterDiscount = totalWithTax - discount;
+    const finalTotal = afterDiscount + (cost * 1.18);
+    
+    return {
+      totalIncludingTax: totalWithTax,
+      isShippingFree: isFree,
+      shippingCost: cost,
+      discountAmount: discount,
+      finalTotalWithShipping: finalTotal
+    };
+  }, [total, appliedCoupon]);
 
   const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 5000);
   };
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setShippingAddress({
-      ...shippingAddress,
+  const handleAddressChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setShippingAddress((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value
-    });
-  };
+    }));
+  }, []);
 
-  const validateCoupon = async () => {
+  const validateCoupon = useCallback(async () => {
     if (!couponCode.trim()) {
       showNotification('error', 'Please enter a coupon code');
       return;
@@ -118,15 +125,15 @@ const Cart: React.FC = () => {
     } finally {
       setCouponLoading(false);
     }
-  };
+  }, [couponCode, totalIncludingTax]);
 
-  const removeCoupon = () => {
+  const removeCoupon = useCallback(() => {
     setAppliedCoupon(null);
     setCouponCode('');
     showNotification('info', 'Coupon removed');
-  };
+  }, []);
 
-  const loadRazorpayScript = () => {
+  const loadRazorpayScript = useCallback(() => {
     return new Promise((resolve) => {
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -134,17 +141,19 @@ const Cart: React.FC = () => {
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
     });
-  };
+  }, []);
 
-  // Calculate total savings based on original prices
-  const totalSavings = items.reduce((sum, item) => {
-    const original = item.product.originalPrice || 0;
-    const current = item.product.price;
-    if (original > current) {
-      return sum + (original - current) * item.quantity;
-    }
-    return sum;
-  }, 0);
+  // Calculate total savings based on original prices (memoized)
+  const totalSavings = useMemo(() => {
+    return items.reduce((sum, item) => {
+      const original = item.product.originalPrice || 0;
+      const current = item.product.price;
+      if (original > current) {
+        return sum + (original - current) * item.quantity;
+      }
+      return sum;
+    }, 0);
+  }, [items]);
 
   // Helper function to safely get product ID
   const getProductId = (product: any): string => {
@@ -243,10 +252,12 @@ const Cart: React.FC = () => {
             setCouponCode('');
             localStorage.removeItem('pendingCheckout');
             toast.success('Thanks for Purchase!');
+            setIsProcessing(false); // Re-enable UI after successful payment
             setTimeout(() => navigate('/dashboard?tab=orders'), 2000);
           } catch (error) {
             console.error('Payment verification failed:', error);
             showNotification('error', 'Payment verification failed. Please contact support.');
+            setIsProcessing(false); // Re-enable UI on verification failure so user can retry
           }
         },
         prefill: {

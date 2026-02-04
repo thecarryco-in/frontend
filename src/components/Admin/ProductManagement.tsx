@@ -14,6 +14,7 @@ interface Product {
   images: string[];
   features: string[];
   inStock: boolean;
+  stock?: number;
   rating: number;
   reviews: number;
   isNewProduct?: boolean;
@@ -54,7 +55,7 @@ const ProductManagement: React.FC = () => {
           search: searchTerm || undefined,
           category: categoryFilter || undefined,
           inStock: stockFilter || undefined,
-          limit: 100
+          limit: 100 // Server enforces max 100
         }
       });
       setProducts(response.data.products);
@@ -235,6 +236,25 @@ const ProductManagement: React.FC = () => {
                 }`}>
                   {product.inStock ? 'In Stock' : 'Out of Stock'}
                 </span>
+              </div>
+
+              <div className="bg-slate-700/50 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-300">Stock Quantity:</span>
+                  <span className={`font-bold ${(product.stock || 0) > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {product.stock || 0} units
+                  </span>
+                </div>
+                <div className="w-full bg-slate-600 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all ${
+                      (product.stock || 0) > 20 ? 'bg-green-500' : 
+                      (product.stock || 0) > 5 ? 'bg-yellow-500' : 
+                      'bg-red-500'
+                    }`}
+                    style={{ width: `${Math.min(((product.stock || 0) / 100) * 100, 100)}%` }}
+                  />
+                </div>
               </div>
 
               <div className="flex items-center justify-between text-sm text-gray-400">

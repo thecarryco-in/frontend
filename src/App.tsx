@@ -119,6 +119,8 @@ function App() {
                       </AdminRoute>
                     } 
                   />
+                  {/* Catch-all route - redirect to home */}
+                  <Route path="*" element={<Home />} />
                 </Routes>
               </Layout>
             </Router>

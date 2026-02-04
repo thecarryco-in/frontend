@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, ReactNode, useCallback } from 'react';
 import axios from 'axios';
 import { Product } from '../types';
 
@@ -98,7 +98,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
 
       const response = await axios.get('/products', {
         params: {
-          limit: 1000, // Get all products
+          limit: 100, // Cap at 100 (server enforces max)
           sortBy: 'createdAt',
           sortOrder: 'desc'
         }
@@ -212,7 +212,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     );
   };
 
-  const filterProducts = (filters: ProductFilters): Product[] => {
+  const filterProducts = useCallback((filters: ProductFilters): Product[] => {
     let filtered = state.products.filter(product => product.inStock);
 
     // Apply filters
@@ -287,7 +287,7 @@ export const ProductProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
 
     return filtered;
-  };
+  }, [state.products]);
 
   const getFeaturedProducts = (): Product[] => {
     return state.products.filter(product => 

@@ -49,7 +49,7 @@ const CouponManagement: React.FC = () => {
           search: searchTerm || undefined,
           type: typeFilter || undefined,
           status: statusFilter || undefined,
-          limit: 100
+          limit: 100 // Server enforces max 100
         }
       });
       setCoupons(response.data.coupons);

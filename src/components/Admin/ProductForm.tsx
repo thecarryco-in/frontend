@@ -13,6 +13,7 @@ interface Product {
   image: string;
   features: string[];
   inStock: boolean;
+  stock?: number;
   isNewProduct?: boolean;
   isFeatured?: boolean;
   isOnSale?: boolean;
@@ -41,6 +42,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
     image: '',
     features: [],
     inStock: true,
+    stock: 0,
     isNewProduct: false,
     isFeatured: false,
     isOnSale: false,
@@ -308,6 +310,22 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onClose, onSave }) =
                   className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
                   placeholder="0.00"
                 />
+
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-300">Stock Quantity *</label>
+                <input
+                  type="number"
+                  name="stock"
+                  value={formData.stock}
+                  onChange={handleInputChange}
+                  step="1"
+                  min="0"
+                  className="w-full bg-white/10 text-white px-4 py-3 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+                  placeholder="0"
+                  required
+                />
+                <p className="text-gray-400 text-xs mt-2">Total units available for this product</p>
+              </div>
               </div>
             </div>
           </div>

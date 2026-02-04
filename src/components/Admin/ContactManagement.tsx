@@ -34,7 +34,7 @@ const ContactManagement: React.FC = () => {
         params: {
           search: searchTerm || undefined,
           status: statusFilter || undefined,
-          limit: 100
+          limit: 100 // Server enforces max 100
         }
       });
       setContacts(response.data.contacts);

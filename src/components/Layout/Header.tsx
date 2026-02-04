@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingCart, User, Menu, X, Heart, LogOut, Package, ChevronDown } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
@@ -7,11 +7,13 @@ import { useAuth } from '../../context/AuthContext';
 import logo from '../../assets/logo.jpg';
 
 const Header: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isShopDropdownOpen, setIsShopDropdownOpen] = useState(false);
-  const [isWorkEssentialsDropdownOpen, setIsWorkEssentialsDropdownOpen] = useState(false);
+  const [uiState, setUiState] = useState({
+    isMenuOpen: false,
+    isScrolled: false,
+    isUserMenuOpen: false,
+    isShopDropdownOpen: false,
+    isWorkEssentialsDropdownOpen: false
+  });
   const { itemCount } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
@@ -21,7 +23,7 @@ const Header: React.FC = () => {
   // scroll header background on window scroll
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setUiState(prev => ({ ...prev, isScrolled: window.scrollY > 20 }));
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -34,14 +36,13 @@ const Header: React.FC = () => {
 
   // Close user menu when user changes (login/logout)
   useEffect(() => {
-    setIsUserMenuOpen(false);
+    setUiState(prev => ({ ...prev, isUserMenuOpen: false }));
   }, [user, isAuthenticated]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
-      setIsShopDropdownOpen(false);
-      setIsWorkEssentialsDropdownOpen(false);
+      setUiState(prev => ({ ...prev, isShopDropdownOpen: false, isWorkEssentialsDropdownOpen: false }));
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
@@ -91,15 +92,15 @@ const Header: React.FC = () => {
     return location.pathname.startsWith(href);
   };
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       await logout();
-      setIsUserMenuOpen(false);
+      setUiState(prev => ({ ...prev, isUserMenuOpen: false }));
       navigate('/');
     } catch (error) {
       console.error('Logout error:', error);
     }
-  };
+  }, [logout, navigate]);
 
   const getMemberStatus = (totalSpent: number = 0) => {
     if (totalSpent >= 10000) return 'Platinum';
@@ -125,7 +126,7 @@ const Header: React.FC = () => {
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-      isScrolled 
+      uiState.isScrolled 
         ? 'bg-slate-900/95 backdrop-blur-xl border-b border-white/10 shadow-2xl' 
         : 'bg-transparent'
     }`}>
@@ -181,11 +182,9 @@ const Header: React.FC = () => {
                     onClick={(e) => {
                       e.stopPropagation();
                       if (item.name === 'Shop') {
-                        setIsShopDropdownOpen(!isShopDropdownOpen);
-                        setIsWorkEssentialsDropdownOpen(false);
+                        setUiState(prev => ({ ...prev, isShopDropdownOpen: !prev.isShopDropdownOpen, isWorkEssentialsDropdownOpen: false }));
                       } else if (item.name === 'Work Essentials') {
-                        setIsWorkEssentialsDropdownOpen(!isWorkEssentialsDropdownOpen);
-                        setIsShopDropdownOpen(false);
+                        setUiState(prev => ({ ...prev, isWorkEssentialsDropdownOpen: !prev.isWorkEssentialsDropdownOpen, isShopDropdownOpen: false }));
                       }
                     }}
                   >
@@ -194,8 +193,8 @@ const Header: React.FC = () => {
                     }`}>
                       <span>{item.name}</span>
                       <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${
-                        (item.name === 'Shop' && isShopDropdownOpen) || 
-                        (item.name === 'Work Essentials' && isWorkEssentialsDropdownOpen) 
+                        (item.name === 'Shop' && uiState.isShopDropdownOpen) || 
+                        (item.name === 'Work Essentials' && uiState.isWorkEssentialsDropdownOpen) 
                           ? 'rotate-180' : ''
                       }`} />
                     </button>
@@ -204,8 +203,8 @@ const Header: React.FC = () => {
                     }`}></span>
 
                     {/* Dropdown Menu */}
-                    {((item.name === 'Shop' && isShopDropdownOpen) || 
-                      (item.name === 'Work Essentials' && isWorkEssentialsDropdownOpen)) && (
+                    {((item.name === 'Shop' && uiState.isShopDropdownOpen) || 
+                      (item.name === 'Work Essentials' && uiState.isWorkEssentialsDropdownOpen)) && (
                       <div className="absolute top-full left-0 mt-2 w-56 bg-slate-800/95 backdrop-blur-xl rounded-xl border border-white/10 shadow-2xl py-2 z-50">
                         {item.dropdownItems?.map((dropdownItem) => (
                           <Link
@@ -213,8 +212,7 @@ const Header: React.FC = () => {
                             to={dropdownItem.href}
                             className="block px-4 py-3 text-sm text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200"
                             onClick={() => {
-                              setIsShopDropdownOpen(false);
-                              setIsWorkEssentialsDropdownOpen(false);
+                              setUiState(prev => ({ ...prev, isShopDropdownOpen: false, isWorkEssentialsDropdownOpen: false }));
                             }}
                           >
                             {dropdownItem.name}
@@ -271,7 +269,7 @@ const Header: React.FC = () => {
                 {/* User Menu */}
                 <div className="relative">
                   <button
-                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    onClick={() => setUiState(prev => ({ ...prev, isUserMenuOpen: !prev.isUserMenuOpen }))}
                     className="flex items-center space-x-1 md:space-x-2 p-1.5 md:p-2 text-gray-300 hover:text-white transition-all duration-200 hover:bg-white/10 rounded-lg md:rounded-xl backdrop-blur-sm"
                   >
                     {user.avatar ? (
@@ -289,7 +287,7 @@ const Header: React.FC = () => {
                   </button>
 
                   {/* User Dropdown */}
-                  {isUserMenuOpen && (
+                  {uiState.isUserMenuOpen && (
                     <div className="absolute right-0 top-full mt-2 w-56 md:w-64 bg-slate-800/95 backdrop-blur-xl rounded-xl md:rounded-2xl border border-white/10 shadow-2xl py-2 z-50">
                       <div className="px-3 md:px-4 py-2 md:py-3 border-b border-white/10">
                         <p className="text-white font-semibold text-sm md:text-base">{user.name}</p>
@@ -303,7 +301,7 @@ const Header: React.FC = () => {
                       </div>
                       <Link
                         to="/dashboard"
-                        onClick={() => setIsUserMenuOpen(false)}
+                        onClick={() => setUiState(prev => ({ ...prev, isUserMenuOpen: false }))}
                         className="flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 text-sm md:text-base"
                       >
                         <User className="w-4 h-4 md:w-5 md:h-5" />
@@ -311,7 +309,7 @@ const Header: React.FC = () => {
                       </Link>
                       <Link
                         to="/dashboard?tab=orders"
-                        onClick={() => setIsUserMenuOpen(false)}
+                        onClick={() => setUiState(prev => ({ ...prev, isUserMenuOpen: false }))}
                         className="flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 text-sm md:text-base"
                       >
                         <Package className="w-4 h-4 md:w-5 md:h-5" />
@@ -320,7 +318,7 @@ const Header: React.FC = () => {
                       {user.isAdmin && (
                         <Link
                           to="/admin"
-                          onClick={() => setIsUserMenuOpen(false)}
+                          onClick={() => setUiState(prev => ({ ...prev, isUserMenuOpen: false }))}
                           className="flex items-center space-x-2 md:space-x-3 px-3 md:px-4 py-2 md:py-3 text-gray-300 hover:text-white hover:bg-white/10 transition-all duration-200 text-sm md:text-base"
                         >
                           <User className="w-4 h-4 md:w-5 md:h-5" />
@@ -375,16 +373,16 @@ const Header: React.FC = () => {
             {/* Mobile Menu Button */}
             <button
               className="lg:hidden p-2 md:p-3 text-gray-300 hover:text-white transition-colors duration-200 hover:bg-white/10 rounded-lg md:rounded-xl backdrop-blur-sm"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={() => setUiState(prev => ({ ...prev, isMenuOpen: !prev.isMenuOpen }))}
             >
-              {isMenuOpen ? <X className="w-5 h-5 md:w-6 md:h-6" /> : <Menu className="w-5 h-5 md:w-6 md:h-6" />}
+              {uiState.isMenuOpen ? <X className="w-5 h-5 md:w-6 md:h-6" /> : <Menu className="w-5 h-5 md:w-6 md:h-6" />}
             </button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
         <div className={`lg:hidden transition-all duration-500 overflow-hidden ${
-          isMenuOpen ? 'max-h-96 opacity-100 pb-4 md:pb-6' : 'max-h-0 opacity-0'
+          uiState.isMenuOpen ? 'max-h-96 opacity-100 pb-4 md:pb-6' : 'max-h-0 opacity-0'
         }`}>
           <nav className="space-y-1 md:space-y-2 pt-3 md:pt-4">
             {navigation.map((item) => (
@@ -394,7 +392,7 @@ const Header: React.FC = () => {
                   className={`block px-4 py-3 md:px-6 md:py-4 text-sm font-medium transition-all duration-200 hover:text-purple-400 hover:bg-white/10 rounded-xl md:rounded-2xl backdrop-blur-sm ${
                     isActive(item.href) ? 'text-purple-400 bg-white/10' : 'text-gray-300'
                   }`}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => setUiState(prev => ({ ...prev, isMenuOpen: false }))}
                 >
                   {item.name}
                 </Link>
@@ -406,7 +404,7 @@ const Header: React.FC = () => {
                         key={dropdownItem.name}
                         to={dropdownItem.href}
                         className="block px-4 py-2 text-xs text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all duration-200"
-                        onClick={() => setIsMenuOpen(false)}
+                        onClick={() => setUiState(prev => ({ ...prev, isMenuOpen: false }))}
                       >
                         {dropdownItem.name}
                       </Link>

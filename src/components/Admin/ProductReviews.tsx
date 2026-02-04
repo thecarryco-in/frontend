@@ -47,7 +47,7 @@ const ProductReviews: React.FC = () => {
           rating: ratingFilter || undefined,
           category: categoryFilter || undefined,
           status: statusFilter || undefined,
-          limit: 100
+          limit: 100 // Server enforces max 100
         }
       });
       setReviews(response.data.reviews || []);
