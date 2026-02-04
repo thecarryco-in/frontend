@@ -1,0 +1,35 @@
+# Robots.txt for The Carry Co
+# Allow search engines to crawl public pages
+
+User-agent: *
+Allow: /
+Allow: /shop
+Allow: /shop/filter/
+Allow: /shop/category/
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /refund
+Allow: /shipping
+Allow: /service
+Allow: /disclaimer
+
+# Disallow private pages
+Disallow: /login
+Disallow: /register
+Disallow: /verify-otp
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /cart
+Disallow: /wishlist
+
+# Disallow API routes (if served from frontend)
+Disallow: /api
+
+# Slow down crawlers
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://thecarryco.in/sitemap.xml
